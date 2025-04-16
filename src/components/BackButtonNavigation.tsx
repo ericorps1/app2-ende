@@ -1,6 +1,6 @@
 import React from 'react'
 import { View, Text, StyleSheet, Button } from 'react-native';
-// import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
+import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
 import { platformTheme, colors } from '../theme/platformTheme';
 
 interface PropsBackButtonNavigation {
@@ -12,18 +12,12 @@ export const BackButtonNavigation = ({onPressBack,title}:PropsBackButtonNavigati
   return (
     <>
         <View style={ { ...platformTheme.fila, marginBottom: 10 } }>
-            {/* <FontAwesome5Icon 
+            <FontAwesome5Icon 
                 style={ platformTheme.iconBack } 
                 onPress={ onPressBack } 
                 size={ 30 } 
                 name={'arrow-left'} 
                 color={colors.darkBlue} 
-            /> */}
-            <Button
-                onPress={ onPressBack }
-                title='Atras'
-                color={colors.darkBlue}
-                accessibilityLabel='Atras'
             />
             <Text 
                 style={{

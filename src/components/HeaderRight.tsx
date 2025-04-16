@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
-// import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
+import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
 import { colors } from '../theme/platformTheme';
 import { PanelNotifications } from './PanelNotifications';
 import { AuthContext } from '../context/AuthContext';
@@ -31,12 +31,11 @@ export const HeaderRight = () => {
   return (
     <View style={styles.container}>
       <View style={{...styles.iconContainer, backgroundColor: showNotifications ? colors.darkBlue : colors.softSilver}}>
-        <Text>Atras</Text>
-        {/* <FontAwesome5Icon 
+        <FontAwesome5Icon 
           name={'bell'}
           style={{...styles.icon, color: showNotifications ? colors.softSilver : colors.darkBlue}}
           onPress={toggleNotifications}
-        /> */}
+        />
       </View>
       {showNotifications && (
       <View style={{...styles.contentNotifications, width}}>

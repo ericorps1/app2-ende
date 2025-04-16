@@ -1,28 +1,26 @@
 import React, {useCallback, useRef} from 'react';
 import {JitsiMeeting} from '@jitsi/react-native-sdk';
-import { useNavigation } from '@react-navigation/core';
 
 
 interface MeetingProps {
   route: any;
+  navigation: any;
 }
 
-export const JitsiMeetScreen = () => {
+export const JitsiMeetScreen = ( { route, navigation }: MeetingProps ) => {
   const jitsiMeeting = useRef(null);
-  const navigation = useNavigation();
-
-  // const { room } = route.params;
-  const room = 'id_sub_hor=1025';
-
+  const { id_sub_hor, title } = route.params;
+  const room = `id_sub_hor=${id_sub_hor}`;
+  console.log('Este es el rooommm =>>>>>>>>   ',room);
   const onReadyToClose = useCallback(() => {
     // @ts-ignore
-    navigation.navigate('Home');
-    // @ts-ignore
     jitsiMeeting.current.close();
+    // @ts-ignore
+    navigation.pop()
   }, [navigation]);
 
   const onEndpointMessageReceived = useCallback(() => {
-      console.log('You got a message!');
+      console.log('Recibiste un mensaje');
   }, []);
 
   const eventListeners = {

@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react'
 import { ActivityIndicator, View, Text, ScrollView, SafeAreaView } from 'react-native';
-import cafeApi from '../api/estudianteAPI';
+import endeApi from '../api/estudianteAPI';
 import { LoadingScreen } from './LoadingScreen';
 import { TarjetaBloque } from '../components/TarjetaBloque';
 import { BloqueDataInfo } from '../interfaces/appInterfaces';
@@ -16,7 +16,7 @@ export const Materias = ({route}:any) => {
     const {id_sub_hor,nom_mat} = route.params;
     const getBloques = async () => {
         setIsLoading(true);
-        const {data} = await cafeApi.get('/bloque', {params: {id_sub_hor}})
+        const {data} = await endeApi.get('/bloque', {params: {id_sub_hor}})
         setBloques(data.data);
         setIsLoading(false);
     }
@@ -27,7 +27,7 @@ export const Materias = ({route}:any) => {
     }, [id_sub_hor])
 
     const loadDataMiniChat = async(id_sub_hor:number,nom_mat:string) => {
-        const {data} = await cafeApi.get('/sub_hor/dataProfesorxSubHor/'+id_sub_hor);
+        const {data} = await endeApi.get('/sub_hor/dataProfesorxSubHor/'+id_sub_hor);
         if(data.trans){
             const dataPro = data.data[0];
             dispatch(updateInfo(

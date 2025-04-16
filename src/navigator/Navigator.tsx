@@ -8,14 +8,14 @@ import { LoadingScreen } from '../screens/LoadingScreen';
 import MenuNavigator from './MenuNavigator';
 import PagoDetalle from '../screens/PagoDetalle';
 import { Home } from '../screens/Home';
-// import { BloqueDetalle } from '../screens/BloqueDetalle';
-// import { WebViewFullScreen } from '../components/WebViewFullScreen';
-// import { Foro } from '../screens/Foro';
-// import { Entregable } from '../screens/Entregable';
-// import { Examen } from '../screens/Examen';
-// import { ExamenRespuesta } from '../screens/ExamenRespuesta';
+import { BloqueDetalle } from '../screens/BloqueDetalle';
+import { WebViewFullScreen } from '../components/WebViewFullScreen';
+import { Foro } from '../screens/Foro';
+import { Entregable } from '../screens/Entregable';
+import { Examen } from '../screens/Examen';
+import { ExamenRespuesta } from '../screens/ExamenRespuesta';
 import { ChatSala } from '../screens/ChatSala';
-// import JitsiMeetScreen from '../screens/JitsiMeetScreen';
+import { JitsiMeetScreen } from '../screens/JitsiMeetScreen';
 
 
 const Stack = createStackNavigator();
@@ -49,14 +49,14 @@ export const Navigator = () => {
               <Stack.Screen name="ProtectedScreen" component={ MenuNavigator } />
               <Stack.Screen name="PagoDetalle" component={ PagoDetalle } />
               <Stack.Screen name="Home" component={ Home } />
-              {/* <Stack.Screen name="BloqueDetalle" component={ BloqueDetalle } />
+              <Stack.Screen name="BloqueDetalle" component={ BloqueDetalle } />
               <Stack.Screen name="WebViewFullScreen" component={ WebViewFullScreen } />
               <Stack.Screen name="Foro" component={ Foro } />
               <Stack.Screen name="Entregable" component={ Entregable } />
               <Stack.Screen name="Examen" component={ Examen } />
-              <Stack.Screen name="ExamenRespuesta" component={ ExamenRespuesta } />*/}
+              <Stack.Screen name="ExamenRespuesta" component={ ExamenRespuesta } />
               <Stack.Screen name="ChatSala" component={ ChatSala } />
-              {/*<Stack.Screen name="JitsiMeetScreen" component={ JitsiMeetScreen } /> */}
+              <Stack.Screen name="JitsiMeetScreen" component={ JitsiMeetScreen } />
             </>          
           )
       }
