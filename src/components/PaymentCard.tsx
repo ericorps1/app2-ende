@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
-// import Icon from 'react-native-vector-icons/Ionicons';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { FormatAmount, formatDate } from '../hooks/useFormats';
 import { colors, statusColors } from '../theme/platformTheme';
 import { useNavigation } from '@react-navigation/core';
@@ -39,8 +39,7 @@ const PaymentCard = ({ data_pagos }: PropsPaymentCard) => {
         <FormatAmount amount={(data_pagos.est_pag==='Pagado') ? data_pagos.mon_ori_pag : data_pagos.mon_pag }/>
       </Text>
       <View style={styles.row}>
-        {/* <Icon name="calendar-outline" size={30} color={colors.mediumSilver} /> */}
-        <Text>ICONO</Text>
+        <Icon name="calendar-outline" size={30} color={colors.mediumSilver} />
         <Text style={[styles.date, { color: colors.mediumSilver }]}>{formatDate(data_pagos.fec_pag)}</Text>
       </View>
     </Touchable>

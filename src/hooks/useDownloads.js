@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 // Import RNFetchBlob for the file download
-import RNFetchBlob from 'rn-fetch-blob';
+import RNFetchBlob from 'react-native-blob-util';
 
 const fnDownloadFile = async (fileUrl, fileName='') => {
   

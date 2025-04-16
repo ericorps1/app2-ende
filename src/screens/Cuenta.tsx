@@ -244,7 +244,7 @@ export const Cuenta = () => {
                                 ?   (
                                         <>
                                             <Button 
-                                                icon={() => <Icon name="bell" size={20} color="white" />}
+                                                icon={() => <Icon name="camera" size={20} color="white" />}
                                                 textColor='white'
                                                 onPress={() => getPhoto('photo')}
                                                 style={ [platformTheme.btnInfo, platformTheme.btn] }
