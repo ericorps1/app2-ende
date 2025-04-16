@@ -1,0 +1,6 @@
+module Pods_RNSDKTester {
+  umbrella header "Pods-RNSDKTester-umbrella.h"
+
+  export *
+  module * { export * }
+}

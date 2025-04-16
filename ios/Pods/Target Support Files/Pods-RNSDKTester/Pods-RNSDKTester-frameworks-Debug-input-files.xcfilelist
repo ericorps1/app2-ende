@@ -1,0 +1,4 @@
+${PODS_ROOT}/Target Support Files/Pods-RNSDKTester/Pods-RNSDKTester-frameworks.sh
+${PODS_XCFRAMEWORKS_BUILD_DIR}/Giphy/GiphyUISDK.framework/GiphyUISDK
+${PODS_XCFRAMEWORKS_BUILD_DIR}/JitsiWebRTC/WebRTC.framework/WebRTC
+${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes

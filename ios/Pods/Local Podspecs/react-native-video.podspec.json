@@ -1,0 +1,34 @@
+{
+  "name": "react-native-video",
+  "version": "6.0.0-alpha.11",
+  "summary": "A <Video /> element for react-native",
+  "description": "A <Video /> element for react-native",
+  "license": "MIT",
+  "authors": "Community Contributors",
+  "homepage": "https://github.com/react-native-video/react-native-video",
+  "source": {
+    "git": "https://github.com/react-native-video/react-native-video.git",
+    "tag": "v6.0.0-alpha.11"
+  },
+  "platforms": {
+    "ios": "9.0",
+    "tvos": "10.0"
+  },
+  "dependencies": {
+    "React-Core": []
+  },
+  "default_subspecs": "Video",
+  "static_framework": true,
+  "xcconfig": {
+    "OTHER_LDFLAGS": "-ObjC"
+  },
+  "subspecs": [
+    {
+      "name": "Video",
+      "source_files": "ios/Video/**/*.{h,m,swift}",
+      "dependencies": {
+        "PromisesSwift": []
+      }
+    }
+  ]
+}

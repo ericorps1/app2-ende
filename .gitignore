@@ -1,0 +1,19 @@
+# React Native
+node_modules/
+*.log
+*.tmp
+*.swp
+*.idea/
+*.vscode/
+*.xcworkspace
+*.xcodeproj
+.DS_Store
+.env
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+.expo/
+# Ignorar archivos DWARF grandes de JitsiWebRTC
+ios/Pods/JitsiWebRTC/WebRTC.xcframework/ios-arm64/dSYMs/WebRTC.dSYM/Contents/Resources/DWARF/WebRTC
+ios/Pods/JitsiWebRTC/WebRTC.xcframework/ios-arm64_x86_64-simulator/dSYMs/WebRTC.dSYM/Contents/Resources/DWARF/WebRTC
+ios/Pods/JitsiWebRTC/WebRTC.xcframework/macos-arm64_x86_64/dSYMs/WebRTC.dSYM/Contents/Resources/DWARF/WebRTC

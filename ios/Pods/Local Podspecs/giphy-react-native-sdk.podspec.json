@@ -1,0 +1,22 @@
+{
+  "name": "giphy-react-native-sdk",
+  "version": "2.3.0",
+  "summary": "Giphy React Native SDK",
+  "homepage": "https://github.com/Giphy/giphy-react-native-sdk#readme",
+  "license": "Apache-2.0",
+  "authors": "Giphy Engineering <developers@giphy.com> (https://developers.giphy.com)",
+  "platforms": {
+    "ios": "10.2"
+  },
+  "source": {
+    "git": "https://github.com/Giphy/giphy-react-native-sdk.git",
+    "tag": "2.3.0"
+  },
+  "source_files": "ios/**/*.{h,m,mm,swift}",
+  "dependencies": {
+    "React-Core": [],
+    "Giphy": [
+      "2.2.4"
+    ]
+  }
+}

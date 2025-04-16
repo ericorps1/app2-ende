@@ -1,0 +1,1 @@
+../../../../../node_modules/@jitsi/react-native-sdk/ios/src/JitsiAudioSession.h

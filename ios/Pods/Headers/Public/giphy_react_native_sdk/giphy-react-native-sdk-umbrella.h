@@ -1,0 +1,1 @@
+../../../Target Support Files/giphy-react-native-sdk/giphy-react-native-sdk-umbrella.h

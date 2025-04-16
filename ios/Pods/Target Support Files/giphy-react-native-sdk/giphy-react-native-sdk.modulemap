@@ -1,0 +1,6 @@
+module giphy_react_native_sdk {
+  umbrella header "giphy-react-native-sdk-umbrella.h"
+
+  export *
+  module * { export * }
+}

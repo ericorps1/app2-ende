@@ -1,0 +1,30 @@
+{
+  "name": "jitsi-meet-rnsdk",
+  "version": "11.0.4",
+  "summary": "React Native SDK for Jitsi Meet.",
+  "description": "React Native SDK for Jitsi Meet.",
+  "license": "Apache-2.0",
+  "authors": "",
+  "homepage": "https://jitsi.org",
+  "source": {
+    "git": "git+https://github.com/jitsi/jitsi-meet.git",
+    "tag": "11.0.4"
+  },
+  "requires_arc": true,
+  "platforms": {
+    "ios": "15.1"
+  },
+  "preserve_paths": "ios/**/*",
+  "source_files": "ios/**/*.{h,m}",
+  "dependencies": {
+    "React-Core": [],
+    "react-native-webrtc": [],
+    "ObjectiveDropboxOfficial": [
+      "6.2.3"
+    ]
+  },
+  "script_phases": {
+    "name": "Copy Sound Files",
+    "script": "\n          SOURCE_PATH=\"${PODS_TARGET_SRCROOT}/sounds/\"\n          TARGET_PATH=$(dirname \"${CONFIGURATION_BUILD_DIR}\")\n          PROJECT_NAME=$(basename $(dirname $(dirname \"${PROJECT_DIR}\"))).app\n          cp -R \"${SOURCE_PATH}\" \"${TARGET_PATH}/${PROJECT_NAME}\"\n      "
+  }
+}

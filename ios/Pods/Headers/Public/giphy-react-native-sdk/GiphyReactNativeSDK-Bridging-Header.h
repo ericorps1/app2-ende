@@ -1,0 +1,1 @@
+../../../../../node_modules/@giphy/react-native-sdk/ios/GiphyReactNativeSDK-Bridging-Header.h

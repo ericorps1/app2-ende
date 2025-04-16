@@ -1,0 +1,19 @@
+{
+  "name": "react-native-performance",
+  "version": "5.0.0",
+  "summary": "Measure React Native performance",
+  "authors": "Joel Arvidsson",
+  "homepage": "https://github.com/oblador/react-native-performance",
+  "license": "MIT",
+  "source": {
+    "git": "https://github.com/oblador/react-native-performance.git",
+    "tag": "v5.0.0"
+  },
+  "platforms": {
+    "ios": "11.0"
+  },
+  "source_files": "ios/**/*.{h,m,mm}",
+  "dependencies": {
+    "React-Core": []
+  }
+}
