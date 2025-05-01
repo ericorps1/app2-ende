@@ -31,8 +31,8 @@ const PaperMessages = ({visible, title, message, buttonText, dismissable, styleB
               <Paragraph style={{color: colorBody }}>{ message }</Paragraph>
             </Dialog.Content>
             <Dialog.Actions>
-              {btnTxtCancel!=='' && <Button color='white' style={ [{marginRight: 5},styleBtnCancel] } onPress={evtBtnCancel}> { btnTxtCancel } </Button>}
-              <Button color='white' style={ styleButton } onPress={pressButton}> { buttonText } </Button>
+              {btnTxtCancel!=='' && <Button textColor='white' style={ [{marginRight: 5},styleBtnCancel] } onPress={evtBtnCancel}> { btnTxtCancel } </Button>}
+              <Button textColor='white' style={ styleButton } onPress={pressButton}> { buttonText } </Button>
             </Dialog.Actions>
           </Dialog>
         </Portal>

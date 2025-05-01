@@ -1,49 +1,75 @@
 import { useNavigation } from '@react-navigation/core';
-import React from 'react'
+import { StackNavigationProp } from '@react-navigation/stack';
+import React from 'react';
 import { StyleSheet } from 'react-native';
 import { Card } from 'react-native-paper';
 import { TarjetaBloqueINT } from '../interfaces/appInterfaces';
+import { colors } from '../theme/platformTheme';
+import LinearGradient from 'react-native-linear-gradient';
 
-// const LeftContent = props => <Avatar.Icon {...props} icon="folder" />
+type RootStackParamList = {
+  BloqueDetalle: { bloque_data: TarjetaBloqueINT['bloque_data']; nom_mat: string | undefined };
+};
 
-export const TarjetaBloque = ({bloque_data,nom_mat}:TarjetaBloqueINT) => {
-  
-    const {id_blo, nom_blo,des_blo,img_blo} = bloque_data;
-  // console.log(bloque_data.id_blo,bloque_data.nom_blo,bloque_data.des_blo,bloque_data.img_blo,bloque_data.ord_blo,bloque_data.id_mat6,
-  //   bloque_data.id_sub_hor,bloque_data.nom_sub_hor,bloque_data.est_sub_hor,bloque_data.fec_sub_hor,bloque_data.id_sub_hor_nat,
-  //   bloque_data.id_sal1,bloque_data.id_gru1,bloque_data.id_mat1,bloque_data.id_pro1,bloque_data.id_fus2);
-
-  const navigation = useNavigation();
+export const TarjetaBloque = ({ bloque_data, nom_mat }: TarjetaBloqueINT) => {
+  const { id_blo, nom_blo, des_blo, img_blo } = bloque_data;
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const pressTarjetaBloque = () => {
-    navigation.navigate('BloqueDetalle', {bloque_data: bloque_data, nom_mat})
-  }
+    navigation.navigate('BloqueDetalle', { bloque_data, nom_mat });
+  };
 
   return (
-    <Card style={ styles.card } elevation={5} onLongPress={()=>console.log('card longpress '+id_blo)} onPress={pressTarjetaBloque}>
-      {/* <Card.Title title="Card Title" subtitle="Card Subtitle" left={LeftContent} /> */}
-      <Card.Title title={nom_blo} subtitle={des_blo} />
-      {/* <Card.Content>
-        <Title>{nom_blo}</Title>
-        <Paragraph>{des_blo}</Paragraph>
-      </Card.Content> */}
-      <Card.Cover style={styles.cardCover} source={{ uri: 'https://plataforma.ahjende.com/fondos_clase/'+img_blo }} />
-      {/* <Card.Actions>
-        <Button>Cancel</Button>
-        <Button>Ok</Button>
-      </Card.Actions> */}
+    <Card
+      style={styles.card}
+      elevation={5}
+      onLongPress={() => console.log('card longpress ' + id_blo)}
+      onPress={pressTarjetaBloque}
+    >
+      <LinearGradient
+        colors={['#e0f7fa', colors.primary]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientBackground}
+      >
+        <Card.Title
+          title={nom_blo}
+          subtitle={des_blo}
+          titleStyle={styles.title}
+          subtitleStyle={styles.subtitle}
+        />
+        <Card.Cover
+          style={styles.cardCover}
+          source={{ uri: 'https://plataforma.ahjende.com/fondos_clase/' + img_blo }}
+        />
+      </LinearGradient>
     </Card>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
-    card: {
-      marginHorizontal: 10,
-      marginVertical: 5,
-      flex: 1
-    },
-    cardCover: {
-      borderRadius: 10,
-      margin: 5
-    }
+  card: {
+    marginHorizontal: 12,
+    marginVertical: 8,
+    backgroundColor: 'transparent', // esto ayuda pero no es suficiente sin los otros ajustes
+  },
+  gradientBackground: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    paddingBottom: 10,
+  },
+  cardCover: {
+    height: 180,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    margin: 5,
+  },
+  title: {
+    color: '#004d40',
+    fontWeight: 'bold',
+    fontSize: 24,
+  },
+  subtitle: {
+    color: '#006064',
+  },
 });
