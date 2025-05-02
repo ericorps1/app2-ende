@@ -109,7 +109,7 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
     />
   )
   const onPressVideoConference = () => {
-    navigation.navigate('JitsiMeetScreen', {id_sub_hor, title: 'Videoconferencia - '+nom_blo+' - '+des_blo})
+    navigation.navigate('JitsiMeetScreen', {id_sub_hor, title: 'Videoconferencia - '+nom_blo+' - '+des_blo, nom_mat})
   }
 
   return (
@@ -124,7 +124,7 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
               backgroundColor: colors.primary
             }}
           >
-            <Icon name="videocam-outline" size={30} color="#fff" />
+            <Icon name="videocam-outline" size={50} color="#fff" />
           </Touchable>
         </View>
         <View style={ styles.bodyBloDetalle }>
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
       position: 'absolute',
       top: -15,
       right: -15,
-      borderRadius: 25,
+      borderRadius: 40,
       padding: 10,
       elevation: 10,  // Sombra en Android
       shadowColor: '#000',  // Sombra en iOS

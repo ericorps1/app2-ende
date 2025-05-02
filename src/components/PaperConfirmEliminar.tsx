@@ -14,41 +14,39 @@ interface PropsPaperConfirmEliminar {
 
 export const PaperConfirmEliminar = ({visible,title,text,evDismiss,pressDelete,btnDisabled}:PropsPaperConfirmEliminar) => {
     return (
-        <Provider>
-            <Portal>
-                <Dialog visible={visible} onDismiss={evDismiss}>
-                    {/* <Dialog.Icon icon="alert" /> */}
-                    <Dialog.Title style={styles.title}>{ title }</Dialog.Title>
-                    <Dialog.Content>
-                        <Paragraph>{ text }</Paragraph>
-                    </Dialog.Content>
-                    <View style={{ ...platformTheme.fila, alignSelf: 'center' }}>
-                        <Button 
-                            style={styles.btnAceptar}
-                            icon="delete"
-                            mode="outlined"
-                            onPress={pressDelete}
-                            color={colors.error}
-                            loading={btnDisabled}
-                            disabled={btnDisabled}
-                        >
-                            ELIMINAR
-                        </Button>
-                        <Button 
-                            style={styles.btnCancelar}
-                            icon="cancel"
-                            mode="outlined"
-                            onPress={evDismiss}
-                            color={colors.darkSilver}
-                            loading={btnDisabled}
-                            disabled={btnDisabled}
-                        >
-                            CANCELAR
-                        </Button>
-                    </View>
-                </Dialog>
-            </Portal>
-        </Provider>
+      <Portal>
+        <Dialog visible={visible} onDismiss={evDismiss}>
+          {/* <Dialog.Icon icon="alert" /> */}
+          <Dialog.Title style={styles.title}>{ title }</Dialog.Title>
+          <Dialog.Content>
+            <Paragraph>{ text }</Paragraph>
+          </Dialog.Content>
+          <View style={{ ...platformTheme.fila, alignSelf: 'center' }}>
+            <Button 
+              style={styles.btnAceptar}
+              icon="delete"
+              mode="outlined"
+              onPress={pressDelete}
+              textColor={colors.white}
+              loading={btnDisabled}
+              disabled={btnDisabled}
+            >
+              ELIMINAR
+            </Button>
+            <Button 
+              style={styles.btnCancelar}
+              icon="cancel"
+              mode="outlined"
+              onPress={evDismiss}
+              textColor={colors.white}
+              loading={btnDisabled}
+              disabled={btnDisabled}
+            >
+              CANCELAR
+            </Button>
+          </View>
+        </Dialog>
+      </Portal>
     );
 };
 
@@ -57,13 +55,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   btnAceptar: {
+    ...platformTheme.btn,
+    ...platformTheme.btnDanger,
     margin: 10,
-    borderWidth: 1,
     borderColor: colors.error,
   },
   btnCancelar: {
+    ...platformTheme.btnPrimary,
     margin: 10,
-    borderWidth: 1,
-    borderColor: colors.darkSilver,
   }
 })

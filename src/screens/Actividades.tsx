@@ -92,14 +92,14 @@ export const Actividades = () => {
         <View style={platformTheme.fila}>
           <View style={styles.containerCardInfo}>
             <Card.Title
-              title={""+dataActTable.tableInfo.length}
+              title=<Text style={styles.points}>{""+dataActTable.tableInfo.length}</Text>
               subtitle="Total actividades"
               left={(props) => <FontAwesome5 {...props} style={styles.iconCardStyle}  name="list-ol" />}
             />
           </View>
           <View style={styles.containerCardInfo}>
             <Card.Title
-              title={""+totales.puntos}
+              title=<Text style={styles.points}>{""+totales.puntos}</Text>
               subtitle="Puntos"
               left={(props) => <FontAwesome5 {...props} style={styles.iconCardStyle}  name="check" />}
             />
@@ -108,14 +108,14 @@ export const Actividades = () => {
         <View style={platformTheme.fila}>
           <View style={styles.containerCardInfo}>
             <Card.Title
-              title={""+totales.puntosObtenidos}
+              title=<Text style={styles.points}>{""+totales.puntosObtenidos}</Text>
               subtitle="Puntos obtenidos"
               left={(props) => <FontAwesome5 {...props} style={styles.iconCardStyle}  name="check-square" />}
             />
           </View>
           <View style={styles.containerCardInfo}>
             <Card.Title
-              title={""+totales.aprovechamiento.toFixed(2)+"%"}
+              title=<Text style={styles.points}>{""+totales.aprovechamiento.toFixed(2)+"%"}</Text>
               subtitle="Aprovechamiento"
               left={(props) => <FontAwesome5 {...props} style={styles.iconCardStyle}  name="percent" />}
             />
@@ -194,7 +194,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   iconCardStyle: {
-    color: colors.darkBlue,
+    color: colors.blue,
+  },
+  points: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: colors.primary,
   },
   container: {
     ...platformTheme.shadowBox,
@@ -208,7 +213,7 @@ const styles = StyleSheet.create({
   },
   header: {
     height: 50,
-    backgroundColor: colors.darkBlue,
+    backgroundColor: colors.primary,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
   },

@@ -9,6 +9,7 @@ import { Navigator } from './src/navigator/Navigator';
 import { Provider } from 'react-redux';
 import { store } from './src/app/store';
 import { Platform, NativeEventEmitter, NativeModules, View, Text } from 'react-native';
+import { Provider as PaperProvider } from 'react-native-paper';
 
 
 if (Platform.OS === 'android') {
@@ -18,7 +19,9 @@ if (Platform.OS === 'android') {
 const AppState = ({ children }: any ) => {
   return (
     <AuthProvider>
-      { children }
+      <PaperProvider>
+        { children }
+      </PaperProvider>
     </AuthProvider>
   )
 }

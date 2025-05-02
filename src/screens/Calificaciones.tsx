@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   },
   header: {
     height: 50,
-    backgroundColor: colors.darkBlue,
+    backgroundColor: colors.primary,
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
   },
