@@ -15,6 +15,7 @@ import { FormReplica } from '../components/FormReplica';
 import { PaperConfirmElimReplica } from '../components/PaperConfirmElimReplica';
 import { HtmlToJsx } from '../components/HtmlToJsx';
 import { ChatAlumno } from '../components/ChatAlumno';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 
 export const Foro = ({route,navigation}:PropsActividad) => {
   const { data_alumno } = useContext( AuthContext );
@@ -130,8 +131,14 @@ export const Foro = ({route,navigation}:PropsActividad) => {
       <BackButtonNavigation onPressBack={() => navigation.pop()} title={titulo}/>
       <ScrollView style={{marginBottom: 60}}>
         <View style={ styles.bodyBloDetalle }>
-          <View style={ styles.foroPregunta }>
-            <HtmlToJsx strHtml={descripcion}/>
+          <View style={styles.foroPreguntaContainer}>
+            <View style={styles.foroPreguntaHeader}>
+              <Icon name="question-circle" size={18} color="#333" />
+              <Text style={styles.foroPreguntaTitle}>Pregunta</Text>
+            </View>
+            <View style={styles.foroPreguntaContent}>
+              <HtmlToJsx strHtml={descripcion} />
+            </View>
           </View>
           <View style={ styles.containerMiComentario }>
             <Text style={ styles.titleMiComentario }>Mi Comentario:</Text>
@@ -239,19 +246,35 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     marginBottom: 20,
   },
-  foroPregunta: {
-    backgroundColor: colors.softSilver,
-    paddingVertical: 20,
-    paddingHorizontal: 10,
-    marginRight: 20,
-    borderRadius: 10
+  foroPreguntaContainer: {
+    ...platformTheme.floating,
+    backgroundColor: '#f0f2f5',
+    padding: 16,
+    marginRight: 16,
+    marginVertical: 12,
+    borderRadius: 12,
+  },
+  foroPreguntaHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10
+  },
+  foroPreguntaTitle: {
+    marginLeft: 8,
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#333'
+  },
+  foroPreguntaContent: {
+    paddingLeft: 4
   },
   containerMiComentario: {
-    backgroundColor: colors.softSilver,
+    ...platformTheme.floating,
+    backgroundColor: '#f0f2f5',
     marginRight: 20,
     marginTop: 10,
     borderRadius: 10,
-    paddingBottom: 20,
+    paddingBottom: 20
   },
   titleMiComentario: {
     color: colors.darkBlue,
@@ -270,7 +293,7 @@ const styles = StyleSheet.create({
   },
   buttonGuardarMiComentario: {
     ...platformTheme.btn,
-    ...platformTheme.btnDarkBlue,
+    ...platformTheme.btnPrimary,
     padding: 10,
     borderRadius: 10,
   },
@@ -279,6 +302,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   foroRespuestas: {
+    ...platformTheme.floating,
     backgroundColor: colors.softBlue,
     paddingVertical: 20,
     paddingHorizontal: 10,

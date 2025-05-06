@@ -24,7 +24,7 @@ export const ModalMessages = ({ visible, typeMsgModal, modalText, onDismiss}:Pro
             <Button 
                 onPress={ onDismiss }
                 style={ styles.botonCerrar }
-                color='white'
+                textColor='white'
             >Aceptar</Button>
         </View>
     </Modal>
@@ -32,27 +32,27 @@ export const ModalMessages = ({ visible, typeMsgModal, modalText, onDismiss}:Pro
 }
 
 const styles = StyleSheet.create({
-    modalContainer: {
-        backgroundColor: 'white',
-        padding: 20,
-        marginHorizontal: '5%',
-        borderRadius: 5,
-    },
-    modalContainerTitle: {
-        fontSize: 25,
-        fontWeight: '800',
-        marginBottom: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.softSilver,
-        paddingBottom: 10,
-    },
-    modalContainerText: {
-        fontSize: 16,
-        color: colors.darkBlue,
-        marginBottom: 20
-    },
-    botonCerrar: {
-        backgroundColor: colors.primary,
-        color: 'white'
-    }
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    marginHorizontal: '5%',
+    borderRadius: 5,
+  },
+  modalContainerTitle: {
+    fontSize: 25,
+    fontWeight: '800',
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.softSilver,
+    paddingBottom: 10,
+  },
+  modalContainerText: {
+    fontSize: 16,
+    color: colors.darkBlue,
+    marginBottom: 20
+  },
+  botonCerrar: {
+    backgroundColor: colors.primary,
+    color: 'white'
+  }
 });

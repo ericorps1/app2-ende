@@ -364,7 +364,7 @@ export const Cuenta = () => {
                                 loading={ loadingForm }
                                 style={ [styles.botonActualizar, platformTheme.btn] }
                             >
-                                Actualizar
+                                ACTUALIZAR
                             </Button>
                             <Button 
                                 icon="lock"
@@ -465,13 +465,13 @@ const styles = StyleSheet.create({
         
     },
     botonActualizar: {
-        backgroundColor: colors.primary,
+        backgroundColor: colors.info,
     },
     buttonContainer: {
         alignItems: 'center',
     },
     botonCerrar: {
-        backgroundColor: colors.primary,
+        backgroundColor: colors.info,
         color: 'white'
     },
     divider: {

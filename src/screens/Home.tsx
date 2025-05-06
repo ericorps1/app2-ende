@@ -87,22 +87,6 @@ export const Home = () => {
     }
 
     return (
-        // <ScrollView
-        //     style={{
-        //         marginTop: refreshing ? top : 0
-        //     }}
-            // refreshControl={
-            //     <RefreshControl 
-            //         refreshing={ refreshing }
-            //         onRefresh={ onRefresh }
-            //         progressViewOffset={ 10 }
-            //         progressBackgroundColor="#5856D6"
-            //         colors={ ['white','red','orange'] }
-            //         // style={{ backgroundColor: '#5856D6' }}
-            //         // tintColor="white"
-            //     />
-            // }
-        // >
         <SafeAreaView style={styles.container}>
             <ScrollView>
                 {/* <WhiteLogo /> */}

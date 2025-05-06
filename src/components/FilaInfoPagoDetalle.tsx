@@ -1,39 +1,37 @@
-import React from 'react'
-import { View, Text, StyleSheet, ColorValue } from 'react-native';
-import { FormatAmount } from '../hooks/useFormats';
-import { colors } from '../theme/platformTheme';
+import { View, Text, StyleSheet } from 'react-native';
+import React from 'react';
 
-interface PropsFilaInfoPagoDetalle{
-    texto: string;
-    valor: any;
-    colorTexto?: ColorValue;
-    colorValor?: ColorValue;
-    tamanoTexto?: number;
-    tamanoValor?: number;
-    flex?: number;
+interface Props {
+  texto: string;
+  valor: any;
+  colorValor?: string;
+  tamanoValor?: number;
+  flex?: number;
+  iconName?: string; // Ícono opcional
+  iconColor?: string; // Color opcional
 }
 
-export const FilaInfoPagoDetalle = ({texto,valor,colorTexto=colors.darkBlue,colorValor=colors.silver, tamanoTexto=15, tamanoValor=20, flex=10}:PropsFilaInfoPagoDetalle) => {
+export const FilaInfoPagoDetalle = ({ 
+  texto, 
+  valor, 
+  colorValor = 'black', 
+  tamanoValor = 18, 
+  flex = 10,
+}: Props) => {
   return (
-    <View style={ styles.container }>
-        <Text style={ { ...styles.text, color: colorTexto, fontSize: tamanoTexto } }>{texto}</Text>
-        <Text style={ { ...styles.text, color: colorValor, fontSize: tamanoValor } }>{valor}</Text>
+    <View style={styles.container}>
+      <Text style={{ flex: flex, fontSize: 18 }}>{texto}</Text>
+      <Text style={{ flex: 14, fontSize: tamanoValor, fontWeight: 'bold', color: colorValor, textAlign: 'right' }}>
+        {valor}
+      </Text>
     </View>
-    // <View style={ {...styles.fila, flex: flex } }>
-    //     <Text style={ { ...styles.text, color: colorTexto, fontSize: tamanoTexto } }>{texto}</Text>
-    //     <Text style={ { ...styles.text, color: colorValor, fontSize: tamanoValor } }>{valor}</Text>
-    // </View>
   )
 }
 
 const styles = StyleSheet.create({
-    container: {
-        marginBottom: 10
-    },
-    fila: {
-        marginRight: 5,
-    },
-    text: {
-        textAlignVertical: 'center',
-    }
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 18,
+  },
 });
