@@ -32,7 +32,9 @@
     "VideoToolbox"
   ],
   "dependencies": {
-    "React-Core": [],
+    "React-Core": [
+
+    ],
     "JitsiWebRTC": [
       "~> 124.0.0"
     ]

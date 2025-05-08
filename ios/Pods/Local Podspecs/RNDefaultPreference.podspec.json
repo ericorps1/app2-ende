@@ -20,6 +20,8 @@
     "git": "https://github.com/kevinresol/react-native-default-preference.git"
   },
   "dependencies": {
-    "React-Core": []
+    "React-Core": [
+
+    ]
   }
 }

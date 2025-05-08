@@ -1,5 +1,5 @@
 {
-  "name": "RNSDKTester",
+  "name": "appmobileende",
   "version": "0.4.1",
   "private": true,
   "scripts": {
@@ -18,6 +18,8 @@
     "@react-native-clipboard/clipboard": "1.14.3",
     "@react-native-community/netinfo": "11.1.0",
     "@react-native-community/slider": "4.4.3",
+    "@react-native-firebase/app": "^22.1.0",
+    "@react-native-firebase/messaging": "^22.1.0",
     "@react-native-google-signin/google-signin": "10.1.0",
     "@react-navigation/drawer": "^6.6.2",
     "@reduxjs/toolkit": "^2.6.1",

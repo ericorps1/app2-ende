@@ -15,7 +15,9 @@
     "tvos": "10.0"
   },
   "dependencies": {
-    "React-Core": []
+    "React-Core": [
+
+    ]
   },
   "default_subspecs": "Video",
   "static_framework": true,
@@ -27,7 +29,9 @@
       "name": "Video",
       "source_files": "ios/Video/**/*.{h,m,swift}",
       "dependencies": {
-        "PromisesSwift": []
+        "PromisesSwift": [
+
+        ]
       }
     }
   ]

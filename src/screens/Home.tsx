@@ -9,7 +9,7 @@ import { colors, platformTheme } from '../theme/platformTheme';
 import { ActividadesPendientes } from '../components/ActividadesPendientes';
 import { AvisosEstudiante } from '../components/AvisosEstudiante';
 import { baseUrlSite } from '../hooks/useGlobal';
-// import {requestUserPermission,NotificationListener} from '../utils/pushnotification_helper'
+import {requestUserPermission,NotificationListener} from '../utils/pushnotification_helper'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeviceInfo from 'react-native-device-info';
 import { PagosAnticipadosVencidos } from '../components/PagosAnticipadosVencidos';
@@ -31,7 +31,7 @@ export const Home = () => {
 
     useEffect(() => {
         validarToken();
-        // NotificationListener();
+        NotificationListener();
         getEncuestasAlumno();
         return () => {
             setEncuestasPendientes([]);
@@ -40,13 +40,11 @@ export const Home = () => {
     }, [])
 
     const validarToken = async () => {
-        // await requestUserPermission();
+        await requestUserPermission();
         const token = await AsyncStorage.getItem('fcmtoken');
         const {data} = await cafeApi.get('push_notification/validarToken', {params:{token, usuario: data_alumno?.id_alu}});
         if(data.trans && token!==null){
-            if(data.otroUsuario){//si fue asignado a otro usuario, se notificara al usuario
-                setTokenOtroUsuario(true);
-            }else if(!data.miUsuario){//Si no ha sido asignado a otro usuario y no ha sido asignado a mi usuario lo asigno a mi usuario
+            if(!data.miUsuario){//Si no ha sido asignado a otro usuario y no ha sido asignado a mi usuario lo asigno a mi usuario
                 await vincularUsuario();
             }
         }
@@ -59,15 +57,11 @@ export const Home = () => {
         }
     }
 
-    const vincularUsuario = async (desvincularOtrosUsuarios=false) => {
+    const vincularUsuario = async () => {
         const token = await AsyncStorage.getItem('fcmtoken');
         if(token && data_alumno?.id_alu){//Si existe el token ya sea desde el AsyncStorage o generado desde firebase, se asocia al usuario en la base de datos (dispositivo -> usuario)
             const headers = {headers:{ 'Content-Type':'multipart/form-data' }};
             let dataDesv = true;
-            if(desvincularOtrosUsuarios){
-                const {data} = await cafeApi.post('/push_notification/desvincularUsuariosToken', {token}, headers);//Se quita el token a cualquier usuario que ya lo tenga asignado.
-                dataDesv = data.trans;
-            }
             if(dataDesv){
                 const deviceInfo = {
                     deviceId: await DeviceInfo.getDeviceId(),
@@ -107,22 +101,6 @@ export const Home = () => {
                 pressButton = { () => {Linking.openURL(baseUrlSite);setEncuestasPendientes([])} }
                 btnTxtCancel='AHORA NO'
                 evtBtnCancel={() => setEncuestasPendientes([])}
-                styleButton={platformTheme.btnBlue}
-                styleBtnCancel={platformTheme.btnSilver}
-            />
-            <PaperMessages
-                visible={tokenOtroUsuario}
-                title='Dispositivo vinculado a otro usuario'
-                message=<Text>
-                    Este dispositivo se encuentra asociado a otro usuario, si vincula este usuario a este dispositivo, dejará de recibir notificaciones del otro usuario.
-                    </Text>
-                buttonText='Vincular este usuario'
-                dismissable={true}
-                colorTitle={colors.blue}
-                colorBody={colors.darkBlue}
-                pressButton = { () => vincularUsuario(true) }
-                btnTxtCancel='No vincular'
-                evtBtnCancel={() => setTokenOtroUsuario(false)}
                 styleButton={platformTheme.btnBlue}
                 styleBtnCancel={platformTheme.btnSilver}
             />
