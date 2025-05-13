@@ -1,25 +1,23 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { View, Text, SafeAreaView, ScrollView, useWindowDimensions, StyleSheet, TextInput, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, useWindowDimensions, StyleSheet, Dimensions } from 'react-native';
 import { BackButtonNavigation } from '../components/BackButtonNavigation';
 import { AuthContext } from '../context/AuthContext';
 import { FilePick, PropsActividad, TypesMsgModalType } from '../interfaces/appInterfaces';
-import RenderHtml, { CustomBlockRenderer } from 'react-native-render-html';
-import DocumentPicker, { DocumentPickerOptions } from 'react-native-document-picker';
+import DocumentPicker from 'react-native-document-picker';
 import { colors, platformTheme } from '../theme/platformTheme';
-import { cleanHtmlRenderHtml, nombreGuionesMinus } from '../hooks/useFormats';
+import { nombreGuionesMinus } from '../hooks/useFormats';
 import cafeApi from '../api/estudianteAPI';
 import { LoadingScreen } from './LoadingScreen';
 import { Button } from 'react-native-paper';
 import { useUploads } from '../hooks/useUploads';
 import { ModalMessages } from '../components/ModalMessages';
-import WebView from 'react-native-webview';
 import { baseUrlFiles } from '../hooks/useGlobal';
 import { fnDownloadFile } from '../hooks/useDownloads';
-import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
 import { PaperConfirmEliminar } from '../components/PaperConfirmEliminar';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { HtmlToJsx } from '../components/HtmlToJsx';
 import { ChatAlumno } from '../components/ChatAlumno';
+import { requestCameraPermission } from '../hooks/usePermisions';
 
 export const Entregable = ({route,navigation}:PropsActividad) => {
   useEffect(() => {
@@ -70,6 +68,12 @@ export const Entregable = ({route,navigation}:PropsActividad) => {
   const getPhoto = async (type:'photo'|'img') => {
     let result:any = { assets: undefined };
     if(type==='photo'){
+      const permission = await requestCameraPermission();
+      if(!permission){
+        setTypeMsg('error');
+        setAlertMsg('No se ha concedido el permiso para usar la cámara.');
+        return false;
+      }
       result = await launchCamera({mediaType: 'photo', cameraType: 'front', maxWidth: 500, maxHeight: 500});
     }else{
       result = await launchImageLibrary({mediaType: 'photo', maxWidth: 500, maxHeight: 500});

@@ -13,6 +13,7 @@ import { useUploads } from '../hooks/useUploads';
 import { GradientBackground } from '../components/GradientBackground';
 import { ModalMessages } from '../components/ModalMessages';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { requestCameraPermission } from '../hooks/usePermisions';
 
 export const Cuenta = () => {
     const { data_alumno, checkToken } = useContext( AuthContext );
@@ -131,10 +132,18 @@ export const Cuenta = () => {
     const getPhoto = async (type:'photo'|'img') => {
         let result:any = { assets: undefined };
         if(type==='photo'){
+            const permission = await requestCameraPermission();
+            if(!permission){
+                setModalText('No se ha concedido el permiso para usar la cámara.');
+                setTypeMsgModal('error');
+                setVisible(true);
+                return;
+            }
             result = await launchCamera({mediaType: 'photo', cameraType: 'front', maxWidth: 500, maxHeight: 500});
         }else{
             result = await launchImageLibrary({mediaType: 'photo', maxWidth: 500, maxHeight: 500});
         }
+        console.log('result',result);
         if(result.assets){
             setObjImg(result);
             setNewProfilePic(result.assets[0].uri);
