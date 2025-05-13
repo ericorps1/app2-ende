@@ -14,7 +14,9 @@
   },
   "source_files": "ios/**/*.{h,m,mm,swift}",
   "dependencies": {
-    "React-Core": [],
+    "React-Core": [
+
+    ],
     "Giphy": [
       "2.2.4"
     ]

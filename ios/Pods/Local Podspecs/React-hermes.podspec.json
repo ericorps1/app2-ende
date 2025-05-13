@@ -31,20 +31,32 @@
     "React-jsiexecutor": [
       "0.75.5"
     ],
-    "React-jsinspector": [],
+    "React-jsinspector": [
+
+    ],
     "React-perflogger": [
       "0.75.5"
     ],
     "RCT-Folly": [
       "2024.01.01.00"
     ],
-    "DoubleConversion": [],
+    "DoubleConversion": [
+
+    ],
     "fmt": [
       "9.1.0"
     ],
-    "glog": [],
-    "hermes-engine": [],
-    "React-jsi": [],
-    "React-runtimeexecutor": []
+    "glog": [
+
+    ],
+    "hermes-engine": [
+
+    ],
+    "React-jsi": [
+
+    ],
+    "React-runtimeexecutor": [
+
+    ]
   }
 }

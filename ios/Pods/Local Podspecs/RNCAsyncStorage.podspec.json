@@ -20,6 +20,8 @@
     "visionos": "1.0"
   },
   "dependencies": {
-    "React-Core": []
+    "React-Core": [
+
+    ]
   }
 }

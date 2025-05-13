@@ -15,7 +15,9 @@
     "ios": "7.0"
   },
   "dependencies": {
-    "React-Core": []
+    "React-Core": [
+
+    ]
   },
   "subspecs": [
     {

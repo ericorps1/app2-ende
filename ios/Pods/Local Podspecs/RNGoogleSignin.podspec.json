@@ -14,7 +14,9 @@
   },
   "source_files": "ios/**/*.{h,m,mm}",
   "dependencies": {
-    "React-Core": [],
+    "React-Core": [
+
+    ],
     "GoogleSignIn": [
       "~> 7.0"
     ]

@@ -17,8 +17,12 @@
   "preserve_paths": "ios/**/*",
   "source_files": "ios/**/*.{h,m}",
   "dependencies": {
-    "React-Core": [],
-    "react-native-webrtc": [],
+    "React-Core": [
+
+    ],
+    "react-native-webrtc": [
+
+    ],
     "ObjectiveDropboxOfficial": [
       "6.2.3"
     ]

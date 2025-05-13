@@ -22,6 +22,8 @@
   ],
   "source_files": "iOS/**/*.{h,m}",
   "dependencies": {
-    "React-Core": []
+    "React-Core": [
+
+    ]
   }
 }

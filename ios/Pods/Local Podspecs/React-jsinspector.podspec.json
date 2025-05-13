@@ -21,16 +21,26 @@
     "DEFINES_MODULE": "YES"
   },
   "dependencies": {
-    "glog": [],
+    "glog": [
+
+    ],
     "RCT-Folly": [
       "2024.01.01.00"
     ],
-    "React-featureflags": [],
-    "DoubleConversion": [],
+    "React-featureflags": [
+
+    ],
+    "DoubleConversion": [
+
+    ],
     "React-runtimeexecutor": [
       "0.75.5"
     ],
-    "React-jsi": [],
-    "hermes-engine": []
+    "React-jsi": [
+
+    ],
+    "hermes-engine": [
+
+    ]
   }
 }

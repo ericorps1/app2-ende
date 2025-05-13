@@ -20,6 +20,8 @@
   "source_files": "ios/**/*.{h,m,swift}",
   "requires_arc": true,
   "dependencies": {
-    "React-Core": []
+    "React-Core": [
+
+    ]
   }
 }
