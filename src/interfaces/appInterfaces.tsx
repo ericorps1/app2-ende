@@ -230,6 +230,15 @@ export interface PropsActividad {
     navigation: any
 }
 
+export interface PropsNotificationDetail {
+  route: {
+    params: {
+      notification: Notification
+    }
+  },
+  navigation: any
+}
+
 export interface FilePick {
     fileCopyUri: null | string;
     name: string; 
@@ -293,3 +302,16 @@ export interface PayExpired{
   description: string;
   date: string;
 }
+
+export interface Notification{
+  id_not: number;
+  tit_not: string;
+  men_not: string;
+  fec_not: string;
+  id_eje: number | null;
+  id_alu_token: number;
+  est_not: StatusNotificationType;
+  firebase_response: string;
+}
+
+export type StatusNotificationType = 'Pendiente' | 'Enviada' | 'Recibida' | 'Leida';
