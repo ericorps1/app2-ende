@@ -35,6 +35,7 @@ export const Home = () => {
     validarToken();
     NotificationListener();
     getEncuestasAlumno();
+    updateNotifications();
     const unsubscribe = getMessaging().onMessage(async remoteMessage => {
       const id_not = remoteMessage?.data?.not_id ?? 0;
       await updateStatusNotificationService(id_not, 'Recibida');
