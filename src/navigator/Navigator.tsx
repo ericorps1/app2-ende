@@ -16,6 +16,8 @@ import { Examen } from '../screens/Examen';
 import { ExamenRespuesta } from '../screens/ExamenRespuesta';
 import { ChatSala } from '../screens/ChatSala';
 import { JitsiMeetScreen } from '../screens/JitsiMeetScreen';
+import { NotificationsScreen } from '../screens/NotificationsScreen';
+import { NotificationDetailScreen } from '../screens/NotificationDetailScreen';
 
 
 const Stack = createStackNavigator();
@@ -57,6 +59,8 @@ export const Navigator = () => {
               <Stack.Screen name="ExamenRespuesta" component={ ExamenRespuesta } />
               <Stack.Screen name="ChatSala" component={ ChatSala } />
               <Stack.Screen name="JitsiMeetScreen" component={ JitsiMeetScreen } />
+              <Stack.Screen name="Notificaciones" component={ NotificationsScreen } />
+              <Stack.Screen name="DetalleNotificacion" component={ NotificationDetailScreen } />
             </>          
           )
       }

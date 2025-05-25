@@ -171,12 +171,7 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
                 return <Actividad 
                           key={actividad.identificador} 
                           actividad={actividad} 
-                          onPress={
-                              // !actividad.fec_cal_act && actividad.estatus_fecha==='Vencida' ?
-                              //     () => setViewAlertVencida(true)
-                              // :
-                                  () => viewDetailActividad(actividad)
-                          }
+                          onPress={() => viewDetailActividad(actividad)}
                         />
               })
             :

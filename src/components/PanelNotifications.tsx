@@ -1,21 +1,38 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { Text, useWindowDimensions, View } from 'react-native'
-import cafeApi from '../api/estudianteAPI';
+import React from 'react'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { CardActividadPendiente } from './CardActividadPendiente';
-import { ActividadPendiente } from '../interfaces/appInterfaces';
-import { AuthContext } from '../context/AuthContext';
+import { ActividadPendiente, Notification } from '../interfaces/appInterfaces';
 import { LoadingScreen } from '../screens/LoadingScreen';
+import { CardNotification } from './CardNotification';
+import { useNavigation } from "@react-navigation/core";
+import { ScrollView } from 'react-native-gesture-handler';
 
 interface PropsPanelNotifications {
   actividadesPendientes: ActividadPendiente[];
+  notifications: Notification[]
   loading: boolean;
 }
 
-export const PanelNotifications = ({actividadesPendientes, loading}:PropsPanelNotifications) => {
+export const PanelNotifications = ({actividadesPendientes, notifications, loading}:PropsPanelNotifications) => {
+  const navigation = useNavigation<any>();
+  if(loading)
+    return (<View style={{marginVertical: 20}}>
+      <LoadingScreen text='Cargando notificaciones...'/>
+    </View>)
+
   return (
-    <>
+    <ScrollView style={{height: 600}}>
       {
-        actividadesPendientes.length>0 ?
+        notifications.length > 0 &&
+          notifications.map((notification:Notification)=>
+            <CardNotification
+              key={'notification'+notification.id_not}
+              notification={notification}
+            />
+          )
+      }
+      {
+        actividadesPendientes.length > 0 &&
           actividadesPendientes.map((actividadPendiente:ActividadPendiente)=>
             <CardActividadPendiente
               key={actividadPendiente.id}
@@ -23,18 +40,38 @@ export const PanelNotifications = ({actividadesPendientes, loading}:PropsPanelNo
               viewType='mini'
             />
           )
-        :
-          loading ? 
-            (<View style={{marginVertical: 20}}>
-              <LoadingScreen text='Cargando notificaciones...'/>
-            </View>)
-          :
-            <View style={{marginVertical: 20}}>
-              <Text style={{textAlign: 'center', marginHorizontal: 20}}>
-                No hay actividades pendientes
-              </Text>
-            </View>
-        }
-    </>
+      }
+      {//Si no hay notificaciones ni actividades pendientes
+        actividadesPendientes.length === 0 && notifications.length === 0 &&
+          <View>
+            <Text style={styles.noNotifications}>No tienes ninguna notificación</Text>
+          </View>
+      }
+      {//Si hay alguna notificacion mostramos opcion para ver todas las notificaciones
+        notifications.length > 0 &&
+          <Pressable
+            onPress={() => navigation.navigate('Notificaciones')}
+          >
+            <Text style={styles.allNotifications}>Ver todas las notificaciones</Text>
+          </Pressable>
+      }
+    </ScrollView>
   )
 }
+
+const styles = StyleSheet.create({
+  noNotifications: {
+    marginVertical: 20,
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#555',
+    fontWeight: 'bold',
+  },
+  allNotifications: {
+    marginVertical: 20,
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#555',
+    fontWeight: 'bold',
+  }
+})

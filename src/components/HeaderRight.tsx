@@ -1,31 +1,44 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import { Animated, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
 import { colors } from '../theme/platformTheme';
 import { PanelNotifications } from './PanelNotifications';
 import { AuthContext } from '../context/AuthContext';
-import cafeApi from '../api/estudianteAPI';
+import { NumberNotification } from './NumberNotification';
+import endeApi from '../api/estudianteAPI';
+import { addNotifications } from '../features/notifications/dataNotificationsSlice';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { getNotificationsService } from '../services/PushNotificationsService';
+import { ScrollView } from 'react-native-gesture-handler';
 
 export const HeaderRight = () => {
+  const dispatch = useAppDispatch();
   const { data_alumno } = useContext( AuthContext );
   const [actividadesPendientes, setActividadesPendientes] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false)
   const [loading, setLoading] = useState(true)
   const width = useWindowDimensions().width-100;
+  const notifications = useAppSelector(state => state.datanotifications);
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications);
   }
   useEffect(() => {
-    console.log("re-render");
     getActividadesPendientes();
+    getNotifications();
     return () => {}
   }, [])
+
   const getActividadesPendientes = async() => {
-    const {data} = await cafeApi.get(`notificaciones_actividad/${data_alumno?.id_alu}`);
+    const {data} = await endeApi.get(`notificaciones_actividad/${data_alumno?.id_alu}`);
     if(data.trans){
       setActividadesPendientes(data.data);
       setLoading(false);
     }
+  }
+
+  const getNotifications = async() => {
+    const {data} = await getNotificationsService(data_alumno?.id_alu);
+    dispatch(addNotifications(data))
   }
 
   return (
@@ -36,11 +49,13 @@ export const HeaderRight = () => {
           style={{...styles.icon, color: showNotifications ? colors.softSilver : colors.darkBlue}}
           onPress={toggleNotifications}
         />
+        <NumberNotification actividadesPendientes={actividadesPendientes} pressed={toggleNotifications}/>
       </View>
       {showNotifications && (
       <View style={{...styles.contentNotifications, width}}>
         <PanelNotifications
           actividadesPendientes={actividadesPendientes}
+          notifications={notifications}
           loading={loading}
         />
       </View>
