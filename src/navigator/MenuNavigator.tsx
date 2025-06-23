@@ -28,8 +28,7 @@ export default function MenuNavigator() {
     const { data } = await endeApi.get('/pagos_vencidos/'+data_alumno?.id_alu_ram);
     if(data.trans===true){
         if(data.data.length>0){//si hay pagos vencidos se setea a true para mostrar el modal
-          console.log('Pagos vencidos: ',data.data);  
-          setPagosVencidos(true);
+           setPagosVencidos(true);
         }
     }
   }

@@ -4,6 +4,7 @@ export interface AuthState {
     status: 'checking' | 'authenticated' | 'not-authenticated';
     token: string | null;
     errorMessage: string;
+    stripeAccountId: string;
     data_alumno: DataAlumno | null;
 }
 
@@ -44,10 +45,11 @@ export interface DataAlumno {
     estatus_documentacion: null | string;
     estatus_documentacion2: null | string;
     carga_alumno: null | number | string;
+    nom_pla: null | string;
 }
 
 type AuthAction = 
-    | { type: 'signIn', payload: { token: string, data_alumno: DataAlumno | null} }
+    | { type: 'signIn', payload: { token: string, data_alumno: DataAlumno | null, stripeAccountId: string} }
     | { type: 'addError', payload: string }
     | { type: 'removeError' }
     | { type: 'notAuthenticated' }
@@ -78,7 +80,8 @@ export const authReducer = ( state: AuthState, action: AuthAction ): AuthState =
                 errorMessage: '',
                 status: 'authenticated',
                 token: action.payload.token,
-                data_alumno: action.payload.data_alumno
+                data_alumno: action.payload.data_alumno,
+                stripeAccountId: action.payload.stripeAccountId || ''
             }
 
         case 'logout':
