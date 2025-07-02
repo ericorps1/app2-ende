@@ -23,6 +23,7 @@
     "@react-native-google-signin/google-signin": "10.1.0",
     "@react-navigation/drawer": "^6.6.2",
     "@reduxjs/toolkit": "^2.6.1",
+    "@stripe/stripe-react-native": "^0.38.6",
     "axios": "^1.8.4",
     "intl": "^1.2.5",
     "lodash": "^4.17.21",

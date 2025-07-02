@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
-import React, { useEffect }  from 'react'
+import React, { useEffect, useState }  from 'react'
 import { colors } from '../theme/platformTheme';
 import { Pagos } from '../interfaces/appInterfaces';
 import { BackButtonNavigation } from '../components/BackButtonNavigation';
@@ -7,6 +7,7 @@ import { FilaInfoPagoDetalle } from '../components/FilaInfoPagoDetalle';
 import { FormatAmount, formatDate } from '../hooks/useFormats';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Animatable from 'react-native-animatable';
+import { PaymentStripe } from '../components/PaymentStripe';
 
 
 interface PropsPagoDetalle {
@@ -20,6 +21,8 @@ export default function PagoDetalle({ route, navigation }: PropsPagoDetalle) {
   const { top } = useSafeAreaInsets();
   const data_pagos = route.params;
   const { est_pag, mon_ori_pag, mon_pag, tip_pag, fec_pag } = data_pagos;
+  const [paid, setPaid] = useState(data_pagos.est_pag === 'Pagado')
+  const [payStatus, setPayStatus] = useState(est_pag)
 
   useEffect(() => {
     navigation.setOptions({
@@ -40,14 +43,14 @@ export default function PagoDetalle({ route, navigation }: PropsPagoDetalle) {
       >
         <FilaInfoPagoDetalle 
           texto="Monto:"
-          valor={<FormatAmount amount={(est_pag === 'Pagado') ? mon_ori_pag : mon_pag} />}
-          colorValor={(est_pag === 'Pagado') ? colors.success : colors.error}
+          valor={<FormatAmount amount={paid ? mon_ori_pag : mon_pag} />}
+          colorValor={(paid) ? colors.success : colors.error}
           tamanoValor={22}
         />
         <FilaInfoPagoDetalle 
           texto="Estado:" 
-          valor={est_pag} 
-          colorValor={(est_pag === 'Pagado') ? colors.success : colors.error}
+          valor={payStatus} 
+          colorValor={(paid) ? colors.success : colors.error}
         />
         <FilaInfoPagoDetalle 
           texto="Tipo de pago:" 
@@ -58,6 +61,9 @@ export default function PagoDetalle({ route, navigation }: PropsPagoDetalle) {
           texto="Fecha:" 
           valor={formatDate(fec_pag)}
         />
+        {!paid && <View style={styles.row}>
+          <PaymentStripe data_pagos={data_pagos} onPaySuccess={async () => { await setPaid(true); await setPayStatus('Pagado')}}/>
+        </View>}
       </Animatable.View>
     </View>
   )
@@ -90,5 +96,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 5, // para Android
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
 });

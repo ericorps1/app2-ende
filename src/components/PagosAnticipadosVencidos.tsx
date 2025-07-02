@@ -5,12 +5,16 @@ import { AuthContext } from '../context/AuthContext';
 import { colors, platformTheme } from '../theme/platformTheme';
 import { LoadingScreen } from '../screens/LoadingScreen';
 import PaymentCard from './PaymentCard';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { updateInfoPagos } from '../features/pagos/dataPagosSlice';
+import { Pagos } from '../interfaces/appInterfaces';
 
 export const PagosAnticipadosVencidos = () => {
     const [loadingPayExp, setLoadingPayExp] = useState(false);
-    const [paysExpired, setPaysExpired] = useState([]);
     const { data_alumno } = useContext( AuthContext );
     const [viewContent, setViewContent] = useState(false)
+    const paysExpired:Pagos[] = useAppSelector(state => state.datapagos);
+    const dispatch = useAppDispatch();
     useEffect(() => {
         getPaysExpired();
         return () => {}
@@ -20,9 +24,9 @@ export const PagosAnticipadosVencidos = () => {
         setLoadingPayExp(true);
         const {data} = await cafeApi.get('/pagos', { params: { 'id_alu_ram': data_alumno!.id_alu_ram } });
         if(data.data.length>0){
-          setPaysExpired(data.data);
+          dispatch(updateInfoPagos(data.data));
         }else{
-          setPaysExpired([]);
+          dispatch(updateInfoPagos([]));
         }
         setLoadingPayExp(false);
     }

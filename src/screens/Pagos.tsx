@@ -6,22 +6,23 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { platformTheme, colors } from '../theme/platformTheme';
 import { LoadingScreen } from './LoadingScreen';
 import endeApi from '../api/estudianteAPI';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { updateInfoPagos } from '../features/pagos/dataPagosSlice';
 
 export const Pagos = () => {
     
     const { top } = useSafeAreaInsets();
 
     const [ refreshing, setRefreshing] = useState(false);
-
+    const dispatch = useAppDispatch();
+    const [noData, setNoData] = useState(false)
     
     const onRefresh = () => {
-        setPagos([]);
         setRefreshing(false);
         obtener_pagos_alumno();
     }
-    type Pagos = [] | false;
     const { data_alumno } = useContext( AuthContext );
-    const [pagos,setPagos] = useState<Pagos>([]);
+    const pagos = useAppSelector(state => state.datapagos);
 
     useEffect(() => {
         obtener_pagos_alumno();
@@ -31,9 +32,10 @@ export const Pagos = () => {
         try { 
             const {data} = await endeApi.get('/pagos', { params: { 'id_alu_ram': data_alumno!.id_alu_ram } });
             if(data.data.length>0){
-                setPagos(data.data);
+                dispatch(updateInfoPagos(data.data));
             }else{
-                setPagos(false);
+              setNoData(true);
+              dispatch(updateInfoPagos([]));
             }
         } catch (error:any) {
             console.log(error);
@@ -62,7 +64,7 @@ export const Pagos = () => {
                 }
             >
                 {
-                    (pagos===false)
+                    (noData===true)
                         ? 
                             <Text style={styles.title}>No hay pagos registrados</Text>
                         : 
