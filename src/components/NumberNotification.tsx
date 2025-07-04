@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { Animated, Pressable, StyleSheet, Text } from 'react-native';
 import { useAppSelector } from '../app/hooks';
 
-export const NumberNotification = ({actividadesPendientes, pressed=()=>{}}:any) => {
+export const NumberNotification = ({pressed=()=>{}}:any) => {
   // Animación para el número
   const bounceAnim = new Animated.Value(1);
   const notifications = useAppSelector(state => state.datanotifications);

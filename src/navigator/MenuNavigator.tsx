@@ -6,15 +6,17 @@ import { Materias } from '../screens/Materias';
 import { Mensajes } from '../screens/Mensajes';
 import { Pagos } from '../screens/Pagos';
 import { AuthContext } from '../context/AuthContext';
-import { Image, Text, View, TouchableOpacity } from 'react-native';
+import { Image, Linking, Text, TouchableOpacity, View } from 'react-native';
 import { platformTheme, colors } from '../theme/platformTheme';
-import { Avatar, Button } from 'react-native-paper';
+import { Avatar } from 'react-native-paper';
 import { FormatNameAvatar } from '../hooks/useFormats';
 import endeApi from '../api/estudianteAPI';
 import PaperMessages from '../components/PaperMessages';
 import { Actividades } from '../screens/Actividades';
 import { Calificaciones } from '../screens/Calificaciones';
 import { HeaderRight } from '../components/HeaderRight';
+import { useAppDispatch } from '../app/hooks';
+import { addNotifications } from '../features/notifications/dataNotificationsSlice';
 
 
 const Drawer = createDrawerNavigator();
@@ -52,10 +54,6 @@ export default function MenuNavigator() {
         <Drawer.Navigator
           drawerContent={ (props:any) => <ContenidoMenu { ...props }/> }
           screenOptions={{
-            // drawerStyle: {
-            //   backgroundColor: colors.softBlue,
-            //   // width: '60%',
-            // },
             drawerActiveBackgroundColor: colors.primary,
             drawerActiveTintColor: 'white',
             headerRight: () => (
@@ -88,62 +86,62 @@ const ContenidoMenu = (props: DrawerContentComponentProps) => {
   useEffect(() => {
       getMateriasAlumno();
   }, [])
+  const dispatch = useAppDispatch();
+  const closeSession = () => {
+    dispatch(addNotifications([]))
+    logOut();
+  }
 
   return (
-    <DrawerContentScrollView>
-      <TouchableOpacity 
-        style={ platformTheme.avatarContent }
-        onPress={ () => navigation.navigate('Cuenta') }
-      >
-        { (data_alumno?.fot_alu) 
-          ? (
-            <Image 
-                source={{ uri: 'https://plataforma.ahjende.com/uploads/'+data_alumno?.fot_alu}}
-                style={ platformTheme.avatar }
-            />
-          )
-          : (
-            <Avatar.Text style={ platformTheme.avatar } label={FormatNameAvatar(data_alumno?.nom_alu)} />
-          )
-        }
-        <Text style={ platformTheme.avatarName }> { data_alumno?.nom_alu } </Text>
-      </TouchableOpacity>
-      <DrawerItemList {...props} />
-      {
-        (materiasAlumno.length>0) && (
-          materiasAlumno.map(({nom_mat,nom_gru,id_sub_hor}) => {
-            return (
-              <DrawerItem
-                key={nom_mat+'/'+nom_gru}
-                label={nom_mat+'/'+nom_gru}
-                onPress={()=> navigation.navigate('Materias', {id_sub_hor,nom_mat})}
+    <View style={{ flex: 1, justifyContent: 'space-between' }}>
+      <DrawerContentScrollView>
+        <TouchableOpacity 
+          style={ platformTheme.avatarContent }
+          onPress={ () => navigation.navigate('Cuenta') }
+        >
+          { (data_alumno?.fot_alu) 
+            ? (
+              <Image 
+                  source={{ uri: 'https://plataforma.ahjende.com/uploads/'+data_alumno?.fot_alu}}
+                  style={ platformTheme.avatar }
               />
             )
-          })
-        )
-      }
-      <DrawerItem
-        label="Cerrar sesión"
-        onPress={logOut}
-      />
-      {/* <View style={ platformTheme.menuContainer }>
-        <MenuOption texto={'Inicio'} onPress={ () => { navigation.navigate('Inicio') } } />
-        <MenuOption texto={'Pagos'} onPress={ () => { navigation.navigate('Pagos') } } />
-        <MenuOption texto={'Materias'} onPress={ () => { navigation.navigate('Materias') } } />
-        <MenuOption texto={'Mensajes'} onPress={ () => { navigation.navigate('Mensajes') } } />
-      </View> */}
-    </DrawerContentScrollView>
+            : (
+              <Avatar.Text style={ platformTheme.avatar } label={FormatNameAvatar(data_alumno?.nom_alu)} />
+            )
+          }
+          <Text style={ platformTheme.avatarName }> { data_alumno?.nom_alu } </Text>
+        </TouchableOpacity>
+        <DrawerItemList {...props} />
+        {
+          (materiasAlumno.length>0) && (
+            materiasAlumno.map(({nom_mat,nom_gru,id_sub_hor}) => {
+              return (
+                <DrawerItem
+                  key={nom_mat+'/'+nom_gru}
+                  label={nom_mat+'/'+nom_gru}
+                  onPress={()=> navigation.navigate('Materias', {id_sub_hor,nom_mat})}
+                />
+              )
+            })
+          )
+        }
+        <DrawerItem
+          label="Cerrar sesión"
+          onPress={closeSession}
+        />
+      </DrawerContentScrollView>
+      <TouchableOpacity onPress={() => Linking.openURL('https://www.ahjende.com')} activeOpacity={0.8}>
+        <View style={{ alignItems: 'center', paddingVertical: 10 }}>
+          <Image
+            source={require('../assets/ende-icon.png')}
+            style={{ width: 30, height: 30 }}
+          />
+          <Text style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold' }}>
+            www.ahjende.com
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </View>
   )
 }
-
-// const MenuOption = ({ texto, onPress, }:MenuOptions) => {
-//   return (
-//     <TouchableOpacity 
-//       style={ platformTheme.menuBoton }
-//       onPress={ onPress }
-//       activeOpacity={0.1}
-//     >
-//       <Text style={platformTheme.menuTexto}>{ texto }</Text>
-//     </TouchableOpacity>
-//   )
-// }

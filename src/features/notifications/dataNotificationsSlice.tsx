@@ -1,16 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { Notification } from '../../interfaces/appInterfaces';
 
-const initialState: Notification[] = [{
-  id_not: 0,
-  tit_not: '',
-  men_not: '',
-  fec_not: '',
-  id_eje: 0,
-  id_alu_token: 0, 
-  est_not: 'Pendiente',
-  firebase_response: '',
-}]
+const initialState: Notification[] = []
 
 const dataNotificationsState = createSlice({
   name: "datanotification",
