@@ -20,10 +20,8 @@ export const ActividadesPendientes = () => {
   const getActividadesPendientes = async() => {
     setLoadingAct(true);
     const {data} = await endeApi.get(`notificaciones_actividad/${data_alumno?.id_alu}`);
-    // console.log(`notificaciones_actividad/${data_alumno?.id_alu}`);
     if(data.trans){
       setActividadesPendientes(data.data);
-      console.log('Actividades pendientes: ', data.data.tipo ?? 0);
     }
     setLoadingAct(false);
   }

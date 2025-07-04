@@ -37,19 +37,21 @@ export const HeaderRight = () => {
   }
 
   const getNotifications = async() => {
-    const {data} = await getNotificationsService(data_alumno?.id_alu);
+    const data = await getNotificationsService(data_alumno?.id_alu);
     dispatch(addNotifications(data))
   }
 
   return (
     <View style={styles.container}>
-      <View style={{...styles.iconContainer, backgroundColor: showNotifications ? colors.darkBlue : colors.softSilver}}>
+      <View 
+        style={{...styles.iconContainer, backgroundColor: showNotifications ? colors.darkBlue : colors.softSilver}}
+        onTouchEnd={toggleNotifications}
+      >
         <FontAwesome5Icon 
           name={'bell'}
           style={{...styles.icon, color: showNotifications ? colors.softSilver : colors.darkBlue}}
-          onPress={toggleNotifications}
         />
-        <NumberNotification actividadesPendientes={actividadesPendientes} pressed={toggleNotifications}/>
+        <NumberNotification pressed={toggleNotifications}/>
       </View>
       {showNotifications && (
       <View style={{...styles.contentNotifications, width}}>
