@@ -15,7 +15,7 @@ import { Entregable } from '../screens/Entregable';
 import { Examen } from '../screens/Examen';
 import { ExamenRespuesta } from '../screens/ExamenRespuesta';
 import { ChatSala } from '../screens/ChatSala';
-import { JitsiMeetScreen } from '../screens/JitsiMeetScreen';
+// import { JitsiMeetScreen } from '../screens/JitsiMeetScreen';
 
 
 const Stack = createStackNavigator();
@@ -56,7 +56,7 @@ export const Navigator = () => {
               <Stack.Screen name="Examen" component={ Examen } />
               <Stack.Screen name="ExamenRespuesta" component={ ExamenRespuesta } />
               <Stack.Screen name="ChatSala" component={ ChatSala } />
-              <Stack.Screen name="JitsiMeetScreen" component={ JitsiMeetScreen } />
+              {/* <Stack.Screen name="JitsiMeetScreen" component={ JitsiMeetScreen } /> */}
             </>          
           )
       }

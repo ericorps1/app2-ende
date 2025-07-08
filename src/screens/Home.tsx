@@ -9,7 +9,7 @@ import { colors, platformTheme } from '../theme/platformTheme';
 import { ActividadesPendientes } from '../components/ActividadesPendientes';
 import { AvisosEstudiante } from '../components/AvisosEstudiante';
 import { baseUrlSite } from '../hooks/useGlobal';
-import {requestUserPermission,NotificationListener} from '../utils/pushnotification_helper'
+// import {requestUserPermission,NotificationListener} from '../utils/pushnotification_helper'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeviceInfo from 'react-native-device-info';
 import { PagosAnticipadosVencidos } from '../components/PagosAnticipadosVencidos';
@@ -31,7 +31,7 @@ export const Home = () => {
 
     useEffect(() => {
         validarToken();
-        NotificationListener();
+        // NotificationListener();
         getEncuestasAlumno();
         return () => {
             setEncuestasPendientes([]);
@@ -40,7 +40,7 @@ export const Home = () => {
     }, [])
 
     const validarToken = async () => {
-        await requestUserPermission();
+        // await requestUserPermission();
         const token = await AsyncStorage.getItem('fcmtoken');
         const {data} = await cafeApi.get('push_notification/validarToken', {params:{token, usuario: data_alumno?.id_alu}});
         if(data.trans && token!==null){

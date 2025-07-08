@@ -12,21 +12,23 @@
   },
   "dependencies": {
     "@amplitude/react-native": "2.17.3",
-    "@giphy/react-native-sdk": "2.3.0",
-    "@jitsi/react-native-sdk": "11.0.4",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-clipboard/clipboard": "1.14.3",
     "@react-native-community/netinfo": "11.1.0",
     "@react-native-community/slider": "4.4.3",
-    "@react-native-firebase/app": "^22.1.0",
-    "@react-native-firebase/messaging": "^22.1.0",
-    "@react-native-google-signin/google-signin": "10.1.0",
+    "@react-navigation/bottom-tabs": "^6.6.0",
     "@react-navigation/drawer": "^6.6.2",
+    "@react-navigation/elements": "1.3.30",
+    "@react-navigation/material-top-tabs": "6.6.13",
+    "@react-navigation/native": "6.1.17",
+    "@react-navigation/stack": "6.4.0",
     "@reduxjs/toolkit": "^2.6.1",
     "axios": "^1.8.4",
     "intl": "^1.2.5",
     "lodash": "^4.17.21",
-    "react": "*",
+    "moment": "^2.29.4",
+    "moment-duration-format": "^2.2.2",
+    "react": "18.2.0",
     "react-native": "~0.75.0",
     "react-native-animatable": "^1.4.0",
     "react-native-background-timer": "2.4.1",
@@ -44,6 +46,7 @@
     "react-native-linear-gradient": "^2.8.3",
     "react-native-orientation-locker": "1.6.0",
     "react-native-pager-view": "6.4.1",
+    "react-native-paper": "5.10.3",
     "react-native-performance": "5.0.0",
     "react-native-reanimated": "^3.17.3",
     "react-native-render-html": "^6.3.4",
@@ -52,13 +55,14 @@
     "react-native-sound": "0.11.2",
     "react-native-splash-screen": "3.3.0",
     "react-native-svg": "13.13.0",
+    "react-native-svg-transformer": "^1.5.1",
     "react-native-swiper": "^1.6.0",
     "react-native-table-component": "^1.2.2",
     "react-native-vector-icons": "^10.2.0",
     "react-native-video": "6.0.0-alpha.11",
     "react-native-watch-connectivity": "1.1.0",
-    "react-native-webrtc": "124.0.4",
-    "react-native-webview": "13.8.7"
+    "react-native-webview": "13.8.7",
+    "react-redux": "^9.2.0"
   },
   "devDependencies": {
     "@babel/core": "7.25.9",
@@ -80,5 +84,6 @@
   },
   "overrides": {
     "@xmldom/xmldom": "0.8.7"
-  }
+  },
+  "packageManager": "yarn@3.6.4"
 }
