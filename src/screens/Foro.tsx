@@ -16,6 +16,7 @@ import { PaperConfirmElimReplica } from '../components/PaperConfirmElimReplica';
 import { HtmlToJsx } from '../components/HtmlToJsx';
 import { ChatAlumno } from '../components/ChatAlumno';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import { PaperConfirmEliminar } from '../components/PaperConfirmEliminar';
 
 export const Foro = ({route,navigation}:PropsActividad) => {
   const { data_alumno } = useContext( AuthContext );
@@ -87,7 +88,7 @@ export const Foro = ({route,navigation}:PropsActividad) => {
   }
 
   const pressResponse = (newOb:{id_com:number,nomCom:string}) => {
-      setDataReplica(newOb);
+    setDataReplica(newOb);
   }
 
   const guardarReplica = async(id_com:number,replica:string) => {
@@ -201,22 +202,20 @@ export const Foro = ({route,navigation}:PropsActividad) => {
         onDismiss={()=>setMessage('')}
         pressButton={()=>setMessage('')}
       />
-      <PaperConfirmElimComentario
-        com_id={idComElim}
-        visible={idComElim===0 ? false : true}
+      <PaperConfirmEliminar
+        visible={idComElim!==0}
         title='¿Eliminar comentario?'
         text={'¿Seguro que deseas eliminar el comentario con id '+idComElim+'?'}
         evDismiss={()=>setIdComElim(0)}
-        pressDelete={confirmElimComentario}
+        pressDelete={() => confirmElimComentario(idComElim)}
         btnDisabled={loading}
       />
-      <PaperConfirmElimReplica
-        rep_id={idRepElim}
-        visible={idRepElim===0 ? false : true}
+      <PaperConfirmEliminar
+        visible={idRepElim!==0}
         title='¿Eliminar replica?'
         text={'¿Seguro que deseas eliminar la replica con id '+idRepElim+'?'}
         evDismiss={()=>setIdRepElim(0)}
-        pressDelete={confirmElimReplica}
+        pressDelete={()=>confirmElimReplica(idRepElim)}
         btnDisabled={loading}
       />
       <Modal 

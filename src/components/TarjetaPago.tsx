@@ -5,27 +5,24 @@ import { useNavigation } from '@react-navigation/core';
 import { FormatAmount, formatDate } from '../hooks/useFormats';
 import { Pagos } from '../interfaces/appInterfaces';
 import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
+import { Touchable } from './Touchable';
 
 interface PropsDataPagos {
   data_pagos: Pagos;
-  onPressTP?: () => void | null;
 }
 
-export default function TarjetaPago({ data_pagos, onPressTP = () => {} }: PropsDataPagos) {
+export default function TarjetaPago({ data_pagos }: PropsDataPagos) {
   const navigation = useNavigation<any>();
 
-  if (onPressTP.toString() === 'function () {}') {
-    onPressTP = () => navigation.navigate('PagoDetalle', data_pagos);
-  }
+  const onPressTP = () => navigation.navigate('PagoDetalle', data_pagos);
 
   const isPagado = data_pagos.est_pag === 'Pagado';
 
   return (
-    <TouchableOpacity
+    <Touchable
       key={data_pagos.id_pag}
-      style={styles.cardContainer}
+      styleContainer={styles.cardContainer}
       onPress={onPressTP}
-      activeOpacity={0.8}
     >
       <View style={styles.header}>
         <FontAwesome5Icon name="money-bill-wave" size={18} color="white" />
@@ -59,7 +56,7 @@ export default function TarjetaPago({ data_pagos, onPressTP = () => {} }: PropsD
           <Text style={styles.value}>{formatDate(data_pagos.fec_pag)}</Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </Touchable>
   );
 }
 

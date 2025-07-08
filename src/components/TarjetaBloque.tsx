@@ -27,7 +27,7 @@ export const TarjetaBloque = ({ bloque_data, nom_mat }: TarjetaBloqueINT) => {
       onPress={pressTarjetaBloque}
     >
       <LinearGradient
-        colors={['#e0f7fa', colors.primary]}
+        colors={['#fff', '#fff']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientBackground}

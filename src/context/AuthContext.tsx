@@ -3,11 +3,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Usuario, LoginResponse, LoginData } from '../interfaces/appInterfaces';
 import { authReducer, AuthState, DataAlumno } from './authReducer';
 import endeApi from '../api/estudianteAPI';
+import { getSucursalKey } from '../utils/StripePaymentHelper';
 
 type AuthContextProps = {
     errorMessage: string;
     token: string | null;
     data_alumno: DataAlumno | null;
+    stripeAccountId: string;
     status: 'checking' | 'authenticated' | 'not-authenticated';
     signIn: ( loginData: LoginData ) => void;
     logOut: () => void;
@@ -19,6 +21,7 @@ const authInicialState: AuthState = {
     status: 'checking',
     token: null,
     data_alumno: null,
+    stripeAccountId: '', 
     errorMessage: ''
 }
 
@@ -47,11 +50,13 @@ export const AuthProvider = ({ children }: any)=> {
                 return dispatch({ type: 'notAuthenticated' });
             }
             await AsyncStorage.setItem('token', token );
+            const id_pla = isNaN(Number(resp.data?.id_pla8)) ? 0 : Number(resp.data?.id_pla8);
             dispatch({ 
                 type: 'signIn',
                 payload: {
                     token: token,
-                    data_alumno: resp.data
+                    data_alumno: resp.data,
+                    stripeAccountId: getSucursalKey(id_pla)
                 }
             });
         }catch(err) {
@@ -64,11 +69,13 @@ export const AuthProvider = ({ children }: any)=> {
             const headers = {headers:{ 'Content-Type':'multipart/form-data' }};
             const {data} = await endeApi.post<LoginResponse>('/login/authentication/', {username: correo, password }, headers );
             if(data.status){
+                const id_pla = isNaN(Number(data?.data?.data_alumno?.id_pla8)) ? 0 : Number(data.data.data_alumno?.id_pla8);
                 dispatch({ 
                     type: 'signIn',
                     payload: {
                         token: data.data.login_token,
-                        data_alumno: data.data.data_alumno
+                        data_alumno: data.data.data_alumno,
+                        stripeAccountId: getSucursalKey(id_pla)
                     }
                 });
                 await AsyncStorage.setItem('token', data.data.login_token );
