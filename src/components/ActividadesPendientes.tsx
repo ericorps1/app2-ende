@@ -29,40 +29,51 @@ export const ActividadesPendientes = () => {
   const {height} = useWindowDimensions();
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity 
-        style={[
-          styles.containerTitleActPend, 
-          {
-            borderBottomStartRadius: viewContent ? 0 : 10,
-            borderBottomEndRadius: viewContent ? 0 : 10,
-          }
-        ]}
-        activeOpacity={0.9}
-        onPress={()=>setViewContent(!viewContent)}
-      >
-        <Text style={styles.textTitle}>Actividades pendientes</Text>
-      </TouchableOpacity>
-      <View style={[styles.containerActPend, {height: viewContent ? 'auto' : 0, opacity: viewContent ? 1 : 0}]}>
-        {
-          loadingAct ? 
-            <View style={{marginVertical: 20}}>
-              <LoadingScreen text='Cargando actividades pendientes...'/>
-            </View>
-          :
-            actividadesPendientes.length>0 ?
-              actividadesPendientes.map((actividadPendiente:ActividadPendiente)=>
-                <CardActividadPendiente
-                  key={actividadPendiente.id}
-                  actividadPendiente={actividadPendiente}
-                  viewType='normal'
-                />
-              )
-            :
-              <View style={{marginVertical: 20}}>
-                <Text style={{textAlign: 'center', marginHorizontal: 20}}>Actualmente no presenta actividades pendientes</Text>
-              </View>
-        }
+    <View style={ styles.container }>
+      <View style={[platformTheme.shadowBox, { backgroundColor: 'white', borderRadius: 10 }]}>
+        <View>
+          <TouchableOpacity 
+            style={[
+              styles.containerTitleActPend, 
+              {
+                borderBottomStartRadius: viewContent ? 0 : 10,
+                borderBottomEndRadius: viewContent ? 0 : 10,
+              }
+            ]}
+            activeOpacity={0.9}
+            onPress={()=>setViewContent(!viewContent)}
+          >
+            <Text style={styles.textTitle}>Actividades pendientes</Text>
+          </TouchableOpacity>
+          <View style={[
+            styles.containerActPend, 
+            {
+              height: viewContent ? 'auto' : 0,
+              opacity: viewContent ? 1 : 0,
+              borderWidth: viewContent ? 1 : 0,
+            }
+          ]}>
+            {
+              loadingAct ? 
+                <View style={{marginVertical: 20}}>
+                  <LoadingScreen text='Cargando actividades pendientes...'/>
+                </View>
+              :
+                actividadesPendientes.length>0 ?
+                  actividadesPendientes.map((actividadPendiente:ActividadPendiente)=>
+                    <CardActividadPendiente
+                      key={actividadPendiente.id}
+                      actividadPendiente={actividadPendiente}
+                      viewType='normal'
+                    />
+                  )
+                :
+                  <View style={{marginVertical: 20}}>
+                    <Text style={{textAlign: 'center', marginHorizontal: 20}}>Actualmente no presenta actividades pendientes</Text>
+                  </View>
+            }
+          </View>
+        </View>
       </View>
     </View>
   )
@@ -70,8 +81,9 @@ export const ActividadesPendientes = () => {
 
 const styles = StyleSheet.create({
   container: {
-    ...platformTheme.shadowBox,
-    padding: 10,
+    paddingHorizontal: 10,
+    backgroundColor: 'transparent',
+    marginTop: 10,
   },
   containerTitleActPend: {
     overflow: 'hidden',
@@ -88,9 +100,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   containerActPend: {
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderBottomWidth: 1,
     borderColor: colors.primary,
     borderBottomRightRadius: 10,
     borderBottomLeftRadius: 10,

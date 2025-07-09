@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/core';
 import { StackNavigationProp } from '@react-navigation/stack';
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { Card } from 'react-native-paper';
 import { TarjetaBloqueINT } from '../interfaces/appInterfaces';
 import { colors } from '../theme/platformTheme';
@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   card: {
     marginHorizontal: 12,
     marginVertical: 8,
-    backgroundColor: 'transparent', // esto ayuda pero no es suficiente sin los otros ajustes
+    backgroundColor: 'white',
   },
   gradientBackground: {
     borderRadius: 12,

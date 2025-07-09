@@ -176,12 +176,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   section: {
+    ...platformTheme.shadowBox,
+    marginTop: 2,
     marginBottom: 24,
     paddingVertical: 16,
     paddingHorizontal: 12,
     backgroundColor: '#fff',
     borderRadius: 16,
-    elevation: 2
   },
   sectionTitle: {
     fontSize: 18,

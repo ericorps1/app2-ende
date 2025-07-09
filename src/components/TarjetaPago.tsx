@@ -62,15 +62,11 @@ export default function TarjetaPago({ data_pagos }: PropsDataPagos) {
 
 const styles = StyleSheet.create({
   cardContainer: {
+    ...platformTheme.shadowBox,
     backgroundColor: 'white',
     borderRadius: 10,
     margin: 15,
     overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
   },
   header: {
     backgroundColor: colors.primary,

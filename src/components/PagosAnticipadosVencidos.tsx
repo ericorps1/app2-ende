@@ -34,38 +34,49 @@ export const PagosAnticipadosVencidos = () => {
     const {height} = useWindowDimensions();
 
     return (
-      <View style={styles.container}>
-        <TouchableOpacity 
-          style={[
-            styles.containerTitlePayExp,
-            {
-              borderBottomStartRadius: viewContent ? 0 : 10,
-              borderBottomEndRadius: viewContent ? 0 : 10,
-            }
-          ]}
-          activeOpacity={0.9}
-          onPress={()=>setViewContent(!viewContent)}
-        >
-          <Text style={styles.textTitle}>Pagos anticipados y vencidos</Text>
-        </TouchableOpacity>
-        <View style={[styles.containerPayExp, {height: viewContent ? 'auto' : 0, opacity: viewContent ? 1 : 0}]}>
-          {
-            loadingPayExp ? 
-              <View style={{marginVertical: 20}}>
-                <LoadingScreen text='Cargando pagos anticipados / vencidos...'/>
-              </View>
-            :
-              (paysExpired.length>0) ?
-                paysExpired.map(( data_pagos:any )=>{
-                  return (
-                    <PaymentCard key={data_pagos.id_pag} data_pagos={data_pagos} />
-                  )
-                })
-              :
-                <View style={{marginVertical: 20}}>
-                  <Text style={{textAlign: 'center', marginHorizontal: 20}}>Actualmente no posee pagos anticipados ni vencidos</Text>
-                </View>
-          }
+      <View style={ styles.container }>
+        <View style={[platformTheme.shadowBox, { backgroundColor: 'white', borderRadius: 10 }]}>
+          <View>
+            <TouchableOpacity 
+              style={[
+                styles.containerTitlePayExp,
+                {
+                  borderBottomStartRadius: viewContent ? 0 : 10,
+                  borderBottomEndRadius: viewContent ? 0 : 10,
+                }
+              ]}
+              activeOpacity={0.9}
+              onPress={()=>setViewContent(!viewContent)}
+            >
+              <Text style={styles.textTitle}>Pagos anticipados y vencidos</Text>
+            </TouchableOpacity>
+            <View style={[
+              styles.containerPayExp, 
+              {
+                height: viewContent ? 'auto' : 0,
+                opacity: viewContent ? 1 : 0,
+                borderWidth: viewContent ? 1 : 0,
+              }
+            ]}>
+              {
+                loadingPayExp ? 
+                  <View style={{marginVertical: 20}}>
+                    <LoadingScreen text='Cargando pagos anticipados / vencidos...'/>
+                  </View>
+                :
+                  (paysExpired.length>0) ?
+                    paysExpired.map(( data_pagos:any )=>{
+                      return (
+                        <PaymentCard key={data_pagos.id_pag} data_pagos={data_pagos} />
+                      )
+                    })
+                  :
+                    <View style={{marginVertical: 20}}>
+                      <Text style={{textAlign: 'center', marginHorizontal: 20}}>Actualmente no posee pagos anticipados ni vencidos</Text>
+                    </View>
+              }
+            </View>
+          </View>
         </View>
       </View>
     )
@@ -73,8 +84,9 @@ export const PagosAnticipadosVencidos = () => {
 
 const styles = StyleSheet.create({
     container: {
-        ...platformTheme.shadowBox,
-        padding: 10,
+      paddingHorizontal: 10,
+      backgroundColor: 'transparent',
+      marginTop: 10,
     },
     containerTitlePayExp: {
         overflow: 'hidden',
@@ -91,9 +103,6 @@ const styles = StyleSheet.create({
         backgroundColor: colors.primary,
     },
     containerPayExp: {
-        borderLeftWidth: 1,
-        borderRightWidth: 1,
-        borderBottomWidth: 1,
         borderColor: colors.primary,
         borderBottomRightRadius: 10,
         borderBottomLeftRadius: 10,
