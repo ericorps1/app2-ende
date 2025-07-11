@@ -3,8 +3,8 @@
   "version": "0.4.1",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
+    "android": "npx react-native run-android",
+    "ios": "npx react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
     "update-deps": "node node_modules/@jitsi/react-native-sdk/update_dependencies.js",
