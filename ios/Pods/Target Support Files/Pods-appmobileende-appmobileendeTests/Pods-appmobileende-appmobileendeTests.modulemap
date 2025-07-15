@@ -1,0 +1,6 @@
+module Pods_appmobileende_appmobileendeTests {
+  umbrella header "Pods-appmobileende-appmobileendeTests-umbrella.h"
+
+  export *
+  module * { export * }
+}
