@@ -1,6 +1,0 @@
-module AnalyticsConnector {
-  umbrella header "AnalyticsConnector-umbrella.h"
-
-  export *
-  module * { export * }
-}

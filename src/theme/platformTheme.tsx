@@ -28,6 +28,20 @@ export const statusColors = {
   "Vencido": colors.error,
 };
 
+export const statusColorsDoc = {
+  "Entregado": colors.info,
+  "Aprobado": colors.success,
+  "Validado": colors.success,
+  "Pendiente": colors.error,
+};
+
+export const statusIconDoc = {
+  "Entregado": 'check-circle',
+  "Aprobado": 'check-circle',
+  "Validado": 'check-circle',
+  "Pendiente": 'exclamation-triangle',
+}
+
 export const platformTheme = StyleSheet.create({
   paymentCard: {
       flex: 1,
