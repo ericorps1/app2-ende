@@ -164,7 +164,6 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
         onDismiss={() => setAlerts({'type': '', 'message': ''})}
         pressButton={() => setAlerts({'type': '', 'message': ''})}
       />
-      <Text>{JSON.stringify(documentation, null, 2)}</Text>
     </SafeAreaView>
   );
 };
