@@ -315,3 +315,27 @@ export interface Notification{
 }
 
 export type StatusNotificationType = 'Pendiente' | 'Enviada' | 'Recibida' | 'Leida';
+
+export interface IntDocumentationCard {
+    id_doc_alu_ram:  string;
+    est_doc_alu_ram: 'Pendiente' | 'Validado' | 'Entregado' | 'Aprobado';
+    fec_doc_alu_ram: string | null;
+    tip_doc_alu_ram: string;
+    arc_doc_alu_ram: string | null;
+    id_doc_ram1: number;
+    id_alu_ram11: number;
+    id_doc_ram: number;
+    nom_doc_ram: string;
+    est_doc_ram: 'Activo' | 'Inactivo';
+    id_ram6: number;
+    fec_doc_ram: string | null;
+}
+
+export interface PropsDocumentationDetails {
+  route: {
+    params: {
+      documentation: IntDocumentationCard
+    }
+  },
+  navigation: any
+}

@@ -17,6 +17,7 @@ import { Calificaciones } from '../screens/Calificaciones';
 import { HeaderRight } from '../components/HeaderRight';
 import { useAppDispatch } from '../app/hooks';
 import { addNotifications } from '../features/notifications/dataNotificationsSlice';
+import { Documentacion } from '../screens/Documentacion';
 
 
 const Drawer = createDrawerNavigator();
@@ -66,6 +67,7 @@ export default function MenuNavigator() {
           <Drawer.Screen name="Mensajes" component={Mensajes} />
           <Drawer.Screen name="Actividades" component={Actividades} />
           <Drawer.Screen name="Calificaciones" component={Calificaciones} />
+          <Drawer.Screen name="Documentacion" component={Documentacion} />
           <Drawer.Screen name="Cuenta" component={Cuenta} options={{drawerItemStyle:{display: 'none'}}}/>
           <Drawer.Screen name="Materias" component={Materias} options={{drawerItemStyle:{display: 'none'}}}/>
         </Drawer.Navigator>
