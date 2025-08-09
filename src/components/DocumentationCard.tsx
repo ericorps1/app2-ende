@@ -28,14 +28,14 @@ const DocumentationCard = ({ data_doc, onPressEvnt = true }: PropsDocumentationC
         borderLeftColor: statusColorsDoc[data_doc.est_doc_alu_ram]
     }}>
       <View style={styles.row}>
-        <View style={[styles.col, styles.colStart]}>
+        <View style={[styles.col, styles.colStart, { flex: 1 }]}>
           <Text style={[styles.type,{ color: colors.silver }]}>{data_doc.nom_doc_ram}</Text>
           <FontAwesome5Icon name={'file-upload'}  size={50} style={styles.icon} />
         </View>
         <View style={[styles.col, styles.colCenter]}>
           <Text style={[styles.status, { color: statusColorsDoc[data_doc.est_doc_alu_ram] }]}>{data_doc.est_doc_alu_ram}</Text>
           <FontAwesome5Icon name={statusIconDoc[data_doc.est_doc_alu_ram]} size={50} color={statusColorsDoc[data_doc.est_doc_alu_ram]} />
-          <Text style={[styles.date, { color: colors.mediumSilver }]}>{data_doc.fec_doc_alu_ram ? formatDate(data_doc.fec_doc_alu_ram) : 'Fecha no disponible'}</Text>
+          <Text style={[styles.date, { color: colors.mediumSilver }]}>{data_doc.fec_doc_alu_ram ? formatDate(data_doc.fec_doc_alu_ram) : ''}</Text>
         </View>
       </View>
     </Touchable>

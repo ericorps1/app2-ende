@@ -14,6 +14,7 @@ import { baseUrlFiles } from '../hooks/useGlobal';
 import { colors, platformTheme } from '../theme/platformTheme';
 import PaperMessages from './PaperMessages';
 import { LoadingScreen } from '../screens/LoadingScreen';
+import endeApi from '../api/estudianteAPI';
 
 const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) => {
   const params = route.params;
@@ -21,7 +22,8 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
   const initialStateObFile = { fileCopyUri: null, name: "", size: 0, type: "", uri: "" };
   const [obFile, setObFile] = useState<FilePick>(initialStateObFile);
   const [uploading, setUploading] = useState(false);
-  const [alerts, setAlerts] = useState({'type': '', 'message': ''});
+  const [deleting, setDeleting] = useState(false);
+  const [alerts, setAlerts] = useState({'type': '', 'title': '', 'message': '', });
   const [documentation, setDocumentation] = useState(params.documentation)
 
   const handleError = (err: unknown) => {
@@ -38,12 +40,12 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
       const file:any = await DocumentPicker.pickSingle();
       const [fileName, fileSize, fileType] = [file.name, file.size, file.type];
       if(fileSize > 5242880) { // 5MB
-        setAlerts({ 'type': 'error', 'message': 'El archivo no debe superar los 5MB.' });
+        setAlerts({ 'type': 'error', 'title': 'Error', 'message': 'El archivo no debe superar los 5MB.' });
         return
       }
       const tmpName = fileName.split('.');
       if (!['pdf', 'jpeg', 'jpg', 'png'].includes(tmpName[tmpName.length - 1].toLowerCase())) {
-        setAlerts({ 'type': 'error', 'message': 'Formato de archivo no válido. Debe ser pdf, jpeg, jpg o png.' });
+        setAlerts({ 'type': 'error', 'title': 'Error', 'message': 'Formato de archivo no válido. Debe ser pdf, jpeg, jpg o png.' });
         return
       }
       setObFile(file);
@@ -59,7 +61,7 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
       setUploading(true);
       const serverFileName = nombreGuionesMinus(obFile.name);
       if (!serverFileName) {
-        setAlerts({ 'type': 'error', 'message': 'El nombre del archivo no es válido.' });
+        setAlerts({ 'type': 'error', 'title': 'Error', 'message': 'El nombre del archivo no es válido.' });
         setUploading(false);
         return;
       }
@@ -71,7 +73,7 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
       setUploading(false);
       if (resp.trans === true) {
         setObFile(initialStateObFile);
-        setAlerts({ 'type': 'success', 'message': 'Archivo subido exitosamente.' });
+        setAlerts({ 'type': 'success', 'title': 'Éxito', 'message': 'Archivo subido exitosamente.' });
         const dataUpdated = resp.dataUpdated;
         setDocumentation({
           ...documentation,
@@ -81,7 +83,7 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
       setUploading(false);
     } catch (error:any) {
       setUploading(false);
-      setAlerts({ 'type': 'error', 'message': 'Error al subir el archivo' });
+      setAlerts({ 'type': 'error', 'title': 'Error', 'message': 'Error al subir el archivo' });
       console.log('Error al subir el archivo', error);
     }
   }
@@ -90,8 +92,42 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
     fnDownloadFile(baseUrlFiles + documentation.arc_doc_alu_ram, documentation.arc_doc_alu_ram ?? 'Archivo sin nombre');
   }
 
-  if (uploading) {
-    return <LoadingScreen text='Subiendo archivo...' />;
+  const confirmDeleteFile = () => {
+    setAlerts({
+      'type': 'confirmDelete',
+      'title': 'Confirmar eliminación',
+      'message': '¿Estás seguro de que deseas eliminar este archivo?',
+    });
+  }
+
+  // Función para eliminar el archivo
+
+  const deleteFileFunc = async () => {
+    try {
+      setDeleting(true);
+      const {data} = await endeApi.delete('/documento_alu_ram/' + documentation.id_doc_alu_ram);
+      if(data.trans === true) {
+        const newDoc = documentation;
+        newDoc.arc_doc_alu_ram = null;
+        if(documentation.est_doc_alu_ram!=='Aprobado') {
+          newDoc.est_doc_alu_ram = 'Pendiente';
+        }
+        setDocumentation(newDoc);
+        setObFile(initialStateObFile);
+        setAlerts({ 'type': 'success', 'title': 'Éxito', 'message': 'Archivo eliminado exitosamente.' });
+      } else {
+        setAlerts({ 'type': 'error', 'title': 'Error', 'message': data.msg || 'Error al eliminar el archivo.' });
+      }
+    } catch (error:any) {
+      console.log('Error al eliminar el archivo:', error);
+      setAlerts({ 'type': 'error', 'title': 'Error', 'message': error.message });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  if (uploading || deleting) {
+    return <LoadingScreen text={`${uploading ? 'Subiendo' : 'Eliminando'} archivo...`} />;
   }
 
   return (
@@ -136,33 +172,48 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
           </View>
         )
         :
-        documentation.est_doc_alu_ram === 'Entregado' ? (
-          <View style={styles.uploadContainer}>
-            <Text style={styles.validFormatsText}>
-              {documentation.arc_doc_alu_ram ?? 'Archivo sin nombre'}
-            </Text>
+        (
+          documentation.est_doc_alu_ram === 'Entregado' || 
+          (documentation.est_doc_alu_ram === 'Aprobado' && documentation.arc_doc_alu_ram && documentation.arc_doc_alu_ram!=='') )
+            ? (
+              <View style={styles.uploadContainer}>
+                <Text style={styles.validFormatsText}>
+                  {documentation.arc_doc_alu_ram ?? 'Archivo sin nombre'}
+                </Text>
 
-            <View style={styles.iconWrapper}>
-              <FontAwesome5Icon name="cloud-download-alt" size={72} color="#6B7280" />
-            </View>
-
-            <TouchableOpacity style={styles.selectFileButton} onPress={downloadFileFunc}>
-              <Text style={styles.selectFileButtonText}>Descargar</Text>
-            </TouchableOpacity>
-          </View>
-        ) : null
+                <View style={styles.iconWrapper}>
+                  <FontAwesome5Icon name="cloud-download-alt" size={72} color="#6B7280" />
+                </View>
+                <View style={platformTheme.fila}>
+                  <TouchableOpacity style={styles.selectFileButton} onPress={downloadFileFunc}>
+                    <Text style={styles.selectFileButtonText}>Descargar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.deleteFileButton} onPress={confirmDeleteFile}>
+                    <Text style={styles.selectFileButtonText}>Eliminar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : null
       }
       <PaperMessages
         visible={alerts.type !== ''}
-        title={alerts.type === 'error' ? 'Error' : 'Éxito'}
+        title={alerts.title}
         message={alerts.message}
-        buttonText='Aceptar'
+        buttonText={alerts.type === 'confirmDelete' ? 'Confirmar' : 'Aceptar'}
         dismissable={true}
         styleButton={alerts.type === 'error' ? platformTheme.btnDanger : platformTheme.btnSuccess}
         colorTitle={alerts.type === 'error' ? colors.error : colors.success}
         colorBody={colors.darkSilver}
-        onDismiss={() => setAlerts({'type': '', 'message': ''})}
-        pressButton={() => setAlerts({'type': '', 'message': ''})}
+        onDismiss={() => setAlerts({'type': '', 'title': '', 'message': ''})}
+        pressButton={() => {
+          if (alerts.type === 'confirmDelete') {
+            deleteFileFunc();
+          }else {
+            setAlerts({'type': '', 'title': '', 'message': ''});
+          }
+        }}
+        btnTxtCancel={alerts.type === 'confirmDelete' ? 'Cancelar' : ''}
+        evtBtnCancel={() => setAlerts({'type': '', 'title': '', 'message': ''})}
       />
     </SafeAreaView>
   );
@@ -212,6 +263,15 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 12,
+    marginRight: 10,
+  },
+
+  deleteFileButton: {
+    flexDirection: 'row',
+    backgroundColor: colors.error,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
   },
 
   cancelUpload: {
@@ -224,6 +284,12 @@ const styles = StyleSheet.create({
   },
 
   selectFileButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+
+  deleteFileButtonText: {
     color: '#ffffff',
     fontWeight: '600',
     fontSize: 16,
