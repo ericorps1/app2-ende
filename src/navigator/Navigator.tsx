@@ -18,6 +18,7 @@ import { ChatSala } from '../screens/ChatSala';
 import { JitsiMeetScreen } from '../screens/JitsiMeetScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { NotificationDetailScreen } from '../screens/NotificationDetailScreen';
+import DocumentationDetails from '../components/DocumentationDetails';
 
 
 const Stack = createStackNavigator();
@@ -61,6 +62,7 @@ export const Navigator = () => {
               <Stack.Screen name="JitsiMeetScreen" component={ JitsiMeetScreen } />
               <Stack.Screen name="Notificaciones" component={ NotificationsScreen } />
               <Stack.Screen name="DetalleNotificacion" component={ NotificationDetailScreen } />
+              <Stack.Screen name="DocumentationDetails" component={ DocumentationDetails } />
             </>          
           )
       }

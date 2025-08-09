@@ -1,1 +1,0 @@
-../../../../../node_modules/@jitsi/react-native-sdk/ios/src/callkit/JMCallKitProxy.h

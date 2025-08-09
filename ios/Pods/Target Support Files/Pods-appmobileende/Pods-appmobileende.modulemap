@@ -1,6 +1,0 @@
-module Pods_appmobileende {
-  umbrella header "Pods-appmobileende-umbrella.h"
-
-  export *
-  module * { export * }
-}
