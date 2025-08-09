@@ -2,12 +2,7 @@ import React from 'react';
 
 // Import React native Components
 import {
-  Text,
-  View,
-  Image,
-  StyleSheet,
   Platform,
-  TouchableOpacity,
   PermissionsAndroid,
 } from 'react-native';
 

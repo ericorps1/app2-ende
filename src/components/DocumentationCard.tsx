@@ -35,7 +35,7 @@ const DocumentationCard = ({ data_doc, onPressEvnt = true }: PropsDocumentationC
         <View style={[styles.col, styles.colCenter]}>
           <Text style={[styles.status, { color: statusColorsDoc[data_doc.est_doc_alu_ram] }]}>{data_doc.est_doc_alu_ram}</Text>
           <FontAwesome5Icon name={statusIconDoc[data_doc.est_doc_alu_ram]} size={50} color={statusColorsDoc[data_doc.est_doc_alu_ram]} />
-          <Text style={[styles.date, { color: colors.mediumSilver }]}>{data_doc.fec_doc_alu_ram ? formatDate(data_doc.fec_doc_alu_ram) : 'Fecha no disponible'}</Text>
+          <Text style={[styles.date, { color: colors.mediumSilver }]}>{data_doc.fec_doc_alu_ram ? formatDate(data_doc.fec_doc_alu_ram) : ''}</Text>
         </View>
       </View>
     </Touchable>
