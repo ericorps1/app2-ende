@@ -1,9 +1,6 @@
 import React, {useContext, useState, useEffect } from 'react'
-import { Text, StyleSheet, ScrollView, RefreshControl, SafeAreaView, Linking } from 'react-native';
+import { Text, StyleSheet, ScrollView, SafeAreaView, Linking } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
-import { WhiteLogo } from '../components/WhiteLogo';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import cafeApi from '../api/estudianteAPI';
 import PaperMessages from '../components/PaperMessages';
 import { colors, platformTheme } from '../theme/platformTheme';
 import { ActividadesPendientes } from '../components/ActividadesPendientes';
@@ -19,17 +16,12 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { addNotifications } from '../features/notifications/dataNotificationsSlice';
 import { useNavigation } from "@react-navigation/core";
 import { updateStatusNotificationService } from '../services/PushNotificationsService';
-import { LoadingScreen } from './LoadingScreen';
-// import { set } from '@jitsi/react-native-sdk/react/features/base/redux/functions';
 
 export const Home = () => {
   const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
   const { data_alumno, token, logOut } = useContext( AuthContext );
-  const [ setRefreshing] = useState(false);
   const [encuestasPendientes, setEncuestasPendientes] = useState([])
-  const [setTokenOtroUsuario] = useState(false)
-  const notifications = useAppSelector(state => state.datanotifications);
 
   useEffect(() => {
     validarToken();
@@ -54,10 +46,23 @@ export const Home = () => {
     //     navigation.navigate('DetalleNotificacion', { notification })
     //   }
     // });
+    // 🔄 Manejo de refresh de token
+    // const unsubscribe3 = getMessaging().onTokenRefresh(async (newToken) => {
+    //   console.log('Nuevo token FCM:', newToken);
+    //   try {
+    //     // Actualizar token en AsyncStorage
+    //     await AsyncStorage.setItem('fcmtoken', newToken);
+    //     // Enviar token actualizado a tu backend
+    //     await vincularUsuario();
+    //   } catch (error) {
+    //     console.log('Error actualizando token FCM:', error);
+    //   }
+    // });
     return () => {
       setEncuestasPendientes([]);
       // unsubscribe();
       // unsubscribe2();
+      // unsubscribe3();
     }
   }, [])
   const updateNotifications = async () => {
@@ -72,7 +77,7 @@ export const Home = () => {
   const validarToken = async () => {
       // await requestUserPermission();
       const token = await AsyncStorage.getItem('fcmtoken');
-      const {data} = await cafeApi.get('push_notification/validarToken', {params:{token, usuario: data_alumno?.id_alu}});
+      const {data} = await endeApi.get('push_notification/validarToken', {params:{token, usuario: data_alumno?.id_alu}});
       if(data.trans && token!==null){
           if(!data.miUsuario){//Si no ha sido asignado a otro usuario y no ha sido asignado a mi usuario lo asigno a mi usuario
               await vincularUsuario();
@@ -81,7 +86,7 @@ export const Home = () => {
   }
 
   const getEncuestasAlumno = async () => {
-      const {data} = await cafeApi.get(`encuestas/encuestasPendientes/${data_alumno?.id_alu}/${data_alumno?.id_cad1}/${data_alumno?.id_pla8}`);
+      const {data} = await endeApi.get(`encuestas/encuestasPendientes/${data_alumno?.id_alu}/${data_alumno?.id_cad1}/${data_alumno?.id_pla8}`);
       if(data.trans){
           setEncuestasPendientes(data.data)
       }
@@ -101,7 +106,7 @@ export const Home = () => {
                   systemVersion: DeviceInfo.getSystemVersion(),
                   uniqueId: DeviceInfo.getUniqueId(),
               };
-              await cafeApi.post('/push_notification/vincularUsuarioToken', {token, usuario: data_alumno?.id_alu, deviceInfo: JSON.stringify(deviceInfo)}, headers);//Se quita el token a cualquier usuario que ya lo tenga asignado.
+              await endeApi.post('/push_notification/vincularUsuarioToken', {token, usuario: data_alumno?.id_alu, deviceInfo: JSON.stringify(deviceInfo)}, headers);//Se quita el token a cualquier usuario que ya lo tenga asignado.
           }
           // console.log('Guardar token en la bd');
       }
