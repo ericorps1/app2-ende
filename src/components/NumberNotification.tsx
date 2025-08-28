@@ -10,7 +10,6 @@ export const NumberNotification = ({pressed=()=>{}}:any) => {
     startBounceLoop();
   }, [notifications]);
   const startBounceLoop = () => {
-    console.log('corrio');
     Animated.loop(
       Animated.sequence([
         Animated.timing(bounceAnim, {
