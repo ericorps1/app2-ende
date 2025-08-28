@@ -13,6 +13,7 @@ import { FormatNameAvatar } from '../hooks/useFormats';
 import endeApi from '../api/estudianteAPI';
 import PaperMessages from '../components/PaperMessages';
 import { Actividades } from '../screens/Actividades';
+import { Horario } from '../screens/Horario';
 import { Calificaciones } from '../screens/Calificaciones';
 import { HeaderRight } from '../components/HeaderRight';
 import { useAppDispatch } from '../app/hooks';
@@ -66,8 +67,9 @@ export default function MenuNavigator() {
           <Drawer.Screen name="Pagos" component={Pagos} />
           <Drawer.Screen name="Mensajes" component={Mensajes} />
           <Drawer.Screen name="Actividades" component={Actividades} />
+          <Drawer.Screen name="Horario" component={Horario} />
           <Drawer.Screen name="Calificaciones" component={Calificaciones} />
-          <Drawer.Screen name="Documentacion" component={Documentacion} />
+          <Drawer.Screen name="Documentación" component={Documentacion} />
           <Drawer.Screen name="Cuenta" component={Cuenta} options={{drawerItemStyle:{display: 'none'}}}/>
           <Drawer.Screen name="Materias" component={Materias} options={{drawerItemStyle:{display: 'none'}}}/>
         </Drawer.Navigator>
