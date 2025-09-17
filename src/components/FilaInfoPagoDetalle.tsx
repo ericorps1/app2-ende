@@ -7,8 +7,9 @@ interface Props {
   colorValor?: string;
   tamanoValor?: number;
   flex?: number;
-  iconName?: string; // Ícono opcional
-  iconColor?: string; // Color opcional
+  iconName?: string;
+  iconColor?: string;
+  style?: object;
 }
 
 export const FilaInfoPagoDetalle = ({ 
@@ -17,9 +18,10 @@ export const FilaInfoPagoDetalle = ({
   colorValor = 'black', 
   tamanoValor = 18, 
   flex = 10,
+  style,
 }: Props) => {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <Text style={{ flex: flex, fontSize: 18 }}>{texto}</Text>
       <Text style={{ flex: 14, fontSize: tamanoValor, fontWeight: 'bold', color: colorValor, textAlign: 'right' }}>
         {valor}

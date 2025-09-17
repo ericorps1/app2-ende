@@ -26,53 +26,70 @@ const Drawer = createDrawerNavigator();
 
 export default function MenuNavigator() {
   const { data_alumno, logOut } = useContext( AuthContext );
-  const [pagosVencidos, setPagosVencidos] = useState(false);
+  const [modalInactiveUser, setmodalInactiveUser] = useState(data_alumno?.est_alu && data_alumno?.est_alu !== 'Activo');
+  // const [pagosVencidos, setPagosVencidos] = useState(false);
   
-  const getPagosVencidos = async () => {
-    const { data } = await endeApi.get('/pagos_vencidos/'+data_alumno?.id_alu_ram);
-    if(data.trans===true){
-        if(data.data.length>0){//si hay pagos vencidos se setea a true para mostrar el modal
-           setPagosVencidos(true);
-        }
-    }
-  }
+  // const getPagosVencidos = async () => {
+  //   const { data } = await endeApi.get('/pagos_vencidos/'+data_alumno?.id_alu_ram);
+  //   if(data.trans===true){
+  //       if(data.data.length>0){//si hay pagos vencidos se setea a true para mostrar el modal
+  //          setPagosVencidos(true);
+  //       }
+  //   }
+  // }
 
-  useEffect(() => {
-      getPagosVencidos();
-  }, [])
+  // useEffect(() => {
+  //     getPagosVencidos();
+  // }, [])
+  const handleAcceptInactiveUser = () => {
+    setmodalInactiveUser(false);
+    logOut();
+  }
     return (
-      (pagosVencidos) ?
-        <PaperMessages
-          visible={true}
-          title='Pagos vencidos'
-          message='Actualmente presenta pagos vencidos, por favor, póngase al día para poder seguir utilizando la aplicación.'
-          buttonText='ACEPTAR'
-          dismissable={false}
-          colorTitle={colors.danger}
-          colorBody={colors.darkBlue}
-          pressButton = { () => {setPagosVencidos(false)} }
-        />
+      // (pagosVencidos) ?
+      //   <PaperMessages
+      //     visible={true}
+      //     title='Pagos vencidos'
+      //     message='Actualmente presenta pagos vencidos, por favor, póngase al día para poder seguir utilizando la aplicación.'
+      //     buttonText='ACEPTAR'
+      //     dismissable={false}
+      //     colorTitle={colors.danger}
+      //     colorBody={colors.darkBlue}
+      //     pressButton = { () => {setPagosVencidos(false)} }
+      //   />
+      (modalInactiveUser)
+        ?
+          <PaperMessages
+            visible={modalInactiveUser}
+            title='Usuario inactivo'
+            message={`Para continuar, agradeceríamos que te comunicaras al ${data_alumno?.tel_pla} a la brevedad, con la finalidad de resolver el problema. Gracias`}
+            buttonText='ACEPTAR'
+            dismissable={false}
+            colorTitle={colors.danger}
+            colorBody={colors.darkBlue}
+            pressButton = { handleAcceptInactiveUser }
+          />
         :
-        <Drawer.Navigator
-          drawerContent={ (props:any) => <ContenidoMenu { ...props }/> }
-          screenOptions={{
-            drawerActiveBackgroundColor: colors.primary,
-            drawerActiveTintColor: 'white',
-            headerRight: () => (
-              <HeaderRight/>
-            ),
-          }}
-        >
-          <Drawer.Screen name="Inicio" component={Home} />
-          <Drawer.Screen name="Pagos" component={Pagos} />
-          <Drawer.Screen name="Mensajes" component={Mensajes} />
-          <Drawer.Screen name="Actividades" component={Actividades} />
-          <Drawer.Screen name="Horario" component={Horario} />
-          <Drawer.Screen name="Calificaciones" component={Calificaciones} />
-          <Drawer.Screen name="Documentación" component={Documentacion} />
-          <Drawer.Screen name="Cuenta" component={Cuenta} options={{drawerItemStyle:{display: 'none'}}}/>
-          <Drawer.Screen name="Materias" component={Materias} options={{drawerItemStyle:{display: 'none'}}}/>
-        </Drawer.Navigator>
+          <Drawer.Navigator
+            drawerContent={ (props:any) => <ContenidoMenu { ...props }/> }
+            screenOptions={{
+              drawerActiveBackgroundColor: colors.primary,
+              drawerActiveTintColor: 'white',
+              headerRight: () => (
+                <HeaderRight/>
+              ),
+            }}
+          >
+            <Drawer.Screen name="Inicio" component={Home} />
+            <Drawer.Screen name="Pagos" component={Pagos} />
+            <Drawer.Screen name="Mensajes" component={Mensajes} />
+            <Drawer.Screen name="Actividades" component={Actividades} />
+            <Drawer.Screen name="Horario" component={Horario} />
+            <Drawer.Screen name="Calificaciones" component={Calificaciones} />
+            <Drawer.Screen name="Documentación" component={Documentacion} />
+            <Drawer.Screen name="Cuenta" component={Cuenta} options={{drawerItemStyle:{display: 'none'}}}/>
+            <Drawer.Screen name="Materias" component={Materias} options={{drawerItemStyle:{display: 'none'}}}/>
+          </Drawer.Navigator>
     );
 }
 

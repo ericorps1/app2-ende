@@ -17,6 +17,7 @@ import { ChatAlumno } from '../components/ChatAlumno';
 import { Touchable } from '../components/Touchable';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/core';
+import { VideoConferenciaBtn } from '../components/VideoConferenciaBtn';
 
 
 interface BloqueDetalleProps {
@@ -116,17 +117,7 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
     <SafeAreaView style={ styles.container }>
       <BackButtonNavigation onPressBack={() => navigation.pop()} title={nom_blo+' - '+des_blo}/>
       <ScrollView  style={{marginBottom: 50}}>
-        <View style={styles.containerVideoConference}>
-          <Touchable 
-            onPress={onPressVideoConference}
-            styleContainer={{
-              ...styles.floatingIcon,
-              backgroundColor: colors.primary
-            }}
-          >
-            <Icon name="videocam-outline" size={50} color="#fff" />
-          </Touchable>
-        </View>
+        <VideoConferenciaBtn onPressVideoConference={onPressVideoConference} />
         <View style={ styles.bodyBloDetalle }>
           {
             conBlo!=='' && 
@@ -192,16 +183,24 @@ const styles = StyleSheet.create({
     },
     containerVideoConference: {
       padding: 20,
-      position: 'relative', 
+      position: 'relative',
+    },
+    titleVideoConference: {
+      position: 'absolute',
+      top: 0,
+      right: -15,
+      fontSize: 15,
+      fontWeight: 'bold',
+      color: colors.darkBlue
     },
     floatingIcon: {
       position: 'absolute',
-      top: -15,
+      top: 0,
       right: -15,
       borderRadius: 40,
       padding: 10,
-      elevation: 10,  // Sombra en Android
-      shadowColor: '#000',  // Sombra en iOS
+      elevation: 10,
+      shadowColor: '#000',
       shadowOpacity: 0.3,
       shadowRadius: 5,
       shadowOffset: { width: 0, height: 2 },

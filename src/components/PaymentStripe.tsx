@@ -148,7 +148,7 @@ export const PaymentStripe = ({data_pagos, onPaySuccess}:PropsPaymentStripe) => 
   return (
     <View style={styles.containerButton}>
       <Button
-        style={[platformTheme.btn, styles.btn]}
+        style={[platformTheme.btnPrimary, styles.btn]}
         onPress={initializePaymentSheet}
         disabled={paying}
         loading={paying}
@@ -166,7 +166,4 @@ const styles = StyleSheet.create({
     marginTop: 10,
     width: '100%'
   },
-  btn: {
-    backgroundColor: colors.dark,
-  }
 })

@@ -1,5 +1,5 @@
 import React, {useContext, useState, useEffect} from 'react'
-import { View, ScrollView, Image, StyleSheet } from 'react-native';
+import { View, ScrollView, Image, StyleSheet, Dimensions } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 import { Portal, TextInput, Modal, Text, Button, Provider, Avatar, Divider, DefaultTheme } from 'react-native-paper';
 import { platformTheme, colors } from '../theme/platformTheme';
@@ -14,6 +14,9 @@ import { GradientBackground } from '../components/GradientBackground';
 import { ModalMessages } from '../components/ModalMessages';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { requestCameraPermission } from '../hooks/usePermisions';
+import RenderPdf from '../components/RenderUrlPdf';
+
+const { width } = Dimensions.get('window');
 
 export const Cuenta = () => {
     const { data_alumno, checkToken } = useContext( AuthContext );
@@ -29,6 +32,7 @@ export const Cuenta = () => {
     const [loadingActuCont, setLoadingActuCont] = useState(false)
     const [objImg, setObjImg] = useState<ImagePickerResponse>()
     const [visible, setVisible] = useState(false);
+    const [scrollEnabled, setScrollEnabled] = useState(true);
 
     const getDataProfile = async () => {
         try { 
@@ -57,7 +61,6 @@ export const Cuenta = () => {
         getDataProfile();
     }, [])
 
-    
     const updateInfo = async () => {
         const valTel = valFormInput(infoAlumno.tel_alu, 'Teléfono', 1, 10, true);
         if(valTel!==true){
@@ -228,12 +231,18 @@ export const Cuenta = () => {
         }
         setLoadingActuCont(false);
     }
+
+    const source = {
+      uri: "https://plataforma.ahjende.com/solicitud_inscripcion.php?id_alu_ram=31277",
+      cache: true,
+    };
+
     return (
         (loadingAccount) 
         ? <LoadingScreen/>
         : <Provider theme={DefaultTheme}>
             <Portal>
-                <ScrollView>
+                <ScrollView showsVerticalScrollIndicator={false} scrollEnabled={scrollEnabled}>
                     <GradientBackground primaryColor={'#000000'} secondaryColor={'#FFFFFF'}>
                         <View style={ styles.viewAvatar }>
                             { (data_alumno?.fot_alu || newProfilePic!=='') 
@@ -256,13 +265,13 @@ export const Cuenta = () => {
                                                 icon={() => <Icon name="camera" size={20} color="white" />}
                                                 textColor='white'
                                                 onPress={() => getPhoto('photo')}
-                                                style={ [platformTheme.btnInfo, platformTheme.btn] }
+                                                style={ [platformTheme.btnPrimary, platformTheme.btn] }
                                             >CAMARA</Button>
                                             <Button
                                                 icon="image"
                                                 textColor='white'
                                                 onPress={() => getPhoto('img')}
-                                                style={ [platformTheme.btnSuccess, platformTheme.btn] }
+                                                style={ [platformTheme.btnSoftBlue, platformTheme.btn] }
                                             >GALERIA</Button>
                                         </>
                                     ) : (
@@ -271,7 +280,7 @@ export const Cuenta = () => {
                                                 icon="pencil"
                                                 textColor='white'
                                                 onPress={ () => uploadImg() }
-                                                style={ [platformTheme.btnSuccess, platformTheme.btn, styles.botonActualizar] }
+                                                style={ [platformTheme.btnPrimary, platformTheme.btn, styles.botonActualizar] }
                                                 disabled={uploading}
                                                 loading={ uploading }
                                             >{ !uploading ? 'ACTUALIZAR' : 'SUBIENDO...' }</Button>
@@ -289,6 +298,7 @@ export const Cuenta = () => {
                         </View>
                     </GradientBackground>
                     <Divider/>
+                    
                     <View style={ styles.formContainer }>
                         <View style={{ flex:1 }}>
                             <Text style={ styles.title }> Información personal </Text>
@@ -298,7 +308,6 @@ export const Cuenta = () => {
                             mode="outlined"
                             label="Teléfono"
                             placeholder="Ingrese su número de teléfono"
-                            // right={<TextInput.Affix text="/100" />}
                             activeOutlineColor={colors.primary}
                             value={ infoAlumno?.tel_alu }
                             style={ styles.inputStyle }
@@ -379,13 +388,21 @@ export const Cuenta = () => {
                                 icon="lock"
                                 mode="contained"
                                 onPress={ () => setModalContrasena(true) }
-                                style={ [platformTheme.btnSuccess, platformTheme.btn] }
+                                style={ [platformTheme.btnSoftBlue, platformTheme.btn] }
                             >
                                 CONTRASEÑA
                             </Button>
                         </View>
                     </View>
+
+                    <RenderPdf
+                      title = "Solicitud de Inscripción"
+                      patterScrollEnabled={setScrollEnabled}
+                      pdfUrl={`https://plataforma.ahjende.com/solicitud_inscripcion.php?id_alu_ram=${data_alumno?.id_alu_ram}`}
+                      patterStyle={{ marginHorizontal: 16, marginVertical: 20 }}
+                    />
                 </ScrollView>
+                
                 <Modal visible={modalContrasena} onDismiss={()=>setModalContrasena(false)} contentContainerStyle={platformTheme.modalContainer}>
                     <View>
                         <Text style={ { ...styles.title, fontWeight: '600' } }>CAMBIAR CONTRASEÑA</Text>
@@ -471,10 +488,9 @@ const styles = StyleSheet.create({
     inputStyle: {
         marginBottom: 5,
         height: 40,
-        
     },
     botonActualizar: {
-        backgroundColor: colors.info,
+        backgroundColor: colors.primary,
     },
     buttonContainer: {
         alignItems: 'center',
@@ -488,5 +504,10 @@ const styles = StyleSheet.create({
         backgroundColor: 'black',
         opacity: 0.2,
         marginVertical: 5
+    },
+    pdf: {
+      flex: 1,
+      width: Dimensions.get('window').width,
+      height: Dimensions.get('window').height,
     },
 });
