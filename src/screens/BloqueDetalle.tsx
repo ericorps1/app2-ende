@@ -86,6 +86,7 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
   }
 
   const viewDetailActividad = (actividad:ActividadData) => {
+    console.log('actividad', actividad);
     if(actividad.estatus_fecha!=='Vigente'){
       setViewAlertVencida(true)
       return
@@ -105,9 +106,9 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
   if(viewAlertVencida) return (
     <PaperMessages
       dismissable
-      title='Actividad vencida'
+      title='Actividad no disponible'
       visible={viewAlertVencida}
-      message='No realizaste esta actividad en tiempo y forma, comunícate con tu profesor...'
+      message='Esta actividad se encuentra vencida o aún no se encuentra disponible.'
       buttonText='Aceptar'
       onDismiss = {() => setViewAlertVencida(false)}
       pressButton = {() => setViewAlertVencida(false)}
