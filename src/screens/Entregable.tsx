@@ -203,7 +203,7 @@ export const Entregable = ({route,navigation}:PropsActividad) => {
                         icon="camera"
                         textColor='white'
                         onPress={() => getPhoto('photo')}
-                        style={ [platformTheme.btnInfo, platformTheme.btn, {flex: 1}] }
+                        style={ [platformTheme.btnSoftBlue, platformTheme.btn, {flex: 1}] }
                       >CAMARA</Button>
                       <Button
                         loading={loading}
@@ -211,7 +211,7 @@ export const Entregable = ({route,navigation}:PropsActividad) => {
                         icon="image"
                         textColor='white'
                         onPress={() => getPhoto('img')}
-                        style={ [platformTheme.btnDarkBlue, platformTheme.btn, {flex: 1}] }
+                        style={ [platformTheme.btnSuccess, platformTheme.btn, {flex: 1}] }
                       >GALERIA</Button>
                     </View>
                     <Button
@@ -220,7 +220,7 @@ export const Entregable = ({route,navigation}:PropsActividad) => {
                         icon="file"
                         textColor='white'
                         onPress={loadFile}
-                        style={ [platformTheme.btnSuccess, platformTheme.btn] }
+                        style={ [platformTheme.btnPrimary, platformTheme.btn] }
                     >SELECCIONAR ARCHIVO</Button>
                   </View>
               }

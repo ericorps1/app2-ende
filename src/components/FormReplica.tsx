@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
       },
       buttonGuardarReplica: {
         ...platformTheme.btn,
-        ...platformTheme.btnDarkBlue,
+        ...platformTheme.btnPrimary,
         padding: 10,
         borderRadius: 10,
       },

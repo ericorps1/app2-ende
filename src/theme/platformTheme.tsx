@@ -1,9 +1,9 @@
 import { StyleSheet } from "react-native";
 
 export const colors = {
-    success: '#47C9A2',
-    primary: '#0399BB',
-    info: '#3ea8c1',
+    success: '#17a2b8',//tonalidad media
+    primary: '#138496',//tonalidad oscura
+    info: '#17a2b8',//tonalidad media
     error: '#F56E5B',
     danger: '#E53D35',
     warning: '#FFBB33',
@@ -11,12 +11,12 @@ export const colors = {
     darkSilver: '#2B2B2B',
     silver: '#606464',
     mediumSilver: '#777',
-    softBlue: '#87b6c1',
+    softBlue: '#3bb4c7',// tonalidad mas clara
     softSilver: '#E8E8E8',
     softGreen: '#CEFFE6',
     green: '#69BB79',
     dark: '#2A2A2A',
-    blue: '#3ea8c1',
+    blue: '#17a2b8',//tonalidad media
     yellow: '#ffc107',
     chatGreen: '#dcf8c6',
     white: '#FFFFFF',
@@ -138,6 +138,9 @@ export const platformTheme = StyleSheet.create({
   btnSilver: {
       backgroundColor: colors.silver
   },
+  btnSoftBlue: {
+      backgroundColor: colors.softBlue
+  },
   modalContainer: {
       backgroundColor: 'white',
       padding: 20,
@@ -158,7 +161,7 @@ export const platformTheme = StyleSheet.create({
       marginBottom: 20
   },
   btnDownload: {
-      backgroundColor: colors.darkBlue,
+      backgroundColor: colors.primary,
       padding: 5,
       borderRadius: 10,
   },

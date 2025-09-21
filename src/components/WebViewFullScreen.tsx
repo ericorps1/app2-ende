@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
         paddingVertical: 20,
     },
     btnDownload: {
-        backgroundColor: colors.darkBlue,
+        backgroundColor: colors.primary,
         padding: 5,
         borderRadius: 10,
     },

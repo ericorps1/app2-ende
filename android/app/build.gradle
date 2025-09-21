@@ -3,6 +3,10 @@ apply plugin: "com.facebook.react"
 apply plugin: 'com.google.gms.google-services'
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
+project.ext.react = [
+    enableHermes: true,  // 👈 aquí activas Hermes
+]
+
 /**
  * This is the configuration block to customize your React Native Android app.
  * By default you don't need to apply any configuration, just uncomment the lines you need.
@@ -111,11 +115,18 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
     }
+    packagingOptions {
+      pickFirst 'lib/x86/libc++_shared.so'
+      pickFirst 'lib/x86_64/libc++_shared.so'
+      pickFirst 'lib/arm64-v8a/libc++_shared.so'
+      pickFirst 'lib/armeabi-v7a/libc++_shared.so'
+  }
 }
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
+    implementation("com.facebook.react:hermes-android")
     implementation platform('com.google.firebase:firebase-bom:33.13.0')
 
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}")
@@ -124,9 +135,4 @@ dependencies {
     }
 
     debugImplementation("com.facebook.flipper:flipper-fresco-plugin:${FLIPPER_VERSION}")
-    if (hermesEnabled.toBoolean()) {
-        implementation("com.facebook.react:hermes-android")
-    } else {
-        implementation jscFlavor
-    }
 }

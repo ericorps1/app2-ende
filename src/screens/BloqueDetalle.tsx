@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, SafeAreaView, Alert } from 'react-n
 import { ActividadData, BloqueDataInfo, RecursoTeoricoData, tiposActividades } from '../interfaces/appInterfaces';
 import { colors } from '../theme/platformTheme';
 import { RecursoTeorico } from '../components/RecursoTeorico';
-import cafeApi from '../api/estudianteAPI';
+import endeApi from '../api/estudianteAPI';
 import { LoadingScreen } from './LoadingScreen';
 import { useWindowDimensions } from 'react-native';
 import RenderHtml from 'react-native-render-html';
@@ -17,6 +17,7 @@ import { ChatAlumno } from '../components/ChatAlumno';
 import { Touchable } from '../components/Touchable';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/core';
+import { VideoConferenciaBtn } from '../components/VideoConferenciaBtn';
 
 
 interface BloqueDetalleProps {
@@ -58,17 +59,17 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
   }
 
   const getRecursosTeoricos = async () => {
-    const {data} = await cafeApi.get('/recursos_teoricos/'+id_blo);
+    const {data} = await endeApi.get('/recursos_teoricos/'+id_blo);
     setRecursosTeoricos(data.data);
   }
 
   const getActividades = async () => {
-    const {data} = await cafeApi.get('/actividades/',{ params:{ id_sub_hor, id_blo, id_alu_ram: data_alumno?.id_alu_ram } });
+    const {data} = await endeApi.get('/actividades/',{ params:{ id_sub_hor, id_blo, id_alu_ram: data_alumno?.id_alu_ram } });
     setActividades(data.data);
   }
 
   const getConBlo = async () => {
-    const {data} = await cafeApi.get('/bloque/'+id_blo,{ params:{ cols: 'con_blo' } });
+    const {data} = await endeApi.get('/bloque/'+id_blo,{ params:{ cols: 'con_blo' } });
     if(data.trans){
       setConBlo(data.data.length>0 ? data.data[0].con_blo : '');
     }
@@ -85,6 +86,11 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
   }
 
   const viewDetailActividad = (actividad:ActividadData) => {
+    console.log('actividad', actividad);
+    if(actividad.estatus_fecha!=='Vigente'){
+      setViewAlertVencida(true)
+      return
+    }
     const tipo = actividad.tipo
     switch (tipo) {
       case 'Foro' : navigation.navigate('Foro', { data_actividad: actividad });
@@ -100,12 +106,13 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
   if(viewAlertVencida) return (
     <PaperMessages
       dismissable
-      title='Actividad vencida :('
+      title='Actividad no disponible'
       visible={viewAlertVencida}
-      message='No realizaste esta actividad en tiempo y forma, comunícate con tu profesor...'
+      message='Esta actividad se encuentra vencida o aún no se encuentra disponible.'
       buttonText='Aceptar'
       onDismiss = {() => setViewAlertVencida(false)}
       pressButton = {() => setViewAlertVencida(false)}
+      colorTitle={colors.error}
     />
   )
   const onPressVideoConference = () => {
@@ -116,17 +123,7 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
     <SafeAreaView style={ styles.container }>
       <BackButtonNavigation onPressBack={() => navigation.pop()} title={nom_blo+' - '+des_blo}/>
       <ScrollView  style={{marginBottom: 50}}>
-        <View style={styles.containerVideoConference}>
-          <Touchable 
-            onPress={onPressVideoConference}
-            styleContainer={{
-              ...styles.floatingIcon,
-              backgroundColor: colors.primary
-            }}
-          >
-            <Icon name="videocam-outline" size={50} color="#fff" />
-          </Touchable>
-        </View>
+        <VideoConferenciaBtn onPressVideoConference={onPressVideoConference} />
         <View style={ styles.bodyBloDetalle }>
           {
             conBlo!=='' && 
@@ -192,16 +189,24 @@ const styles = StyleSheet.create({
     },
     containerVideoConference: {
       padding: 20,
-      position: 'relative', 
+      position: 'relative',
+    },
+    titleVideoConference: {
+      position: 'absolute',
+      top: 0,
+      right: -15,
+      fontSize: 15,
+      fontWeight: 'bold',
+      color: colors.darkBlue
     },
     floatingIcon: {
       position: 'absolute',
-      top: -15,
+      top: 0,
       right: -15,
       borderRadius: 40,
       padding: 10,
-      elevation: 10,  // Sombra en Android
-      shadowColor: '#000',  // Sombra en iOS
+      elevation: 10,
+      shadowColor: '#000',
       shadowOpacity: 0.3,
       shadowRadius: 5,
       shadowOffset: { width: 0, height: 2 },

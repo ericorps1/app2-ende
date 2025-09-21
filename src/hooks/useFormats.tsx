@@ -3,7 +3,8 @@ import { Text } from 'react-native';
 import { diasSemana, Meses, ShortMonthsUpper } from "./useGlobal";
 
 interface PropsFormatAmt{
-    amount: string
+    amount: string,
+    style?: object
 }
 
 const formatDate = (date:string, separator='-') => {
@@ -48,14 +49,14 @@ const formatDateHour = (date:string, separatorDate='-', separatorHour=':') => {
   return `${formattedDay}${separatorDate}${formattedMonth}${separatorDate}${formattedYear} ${formattedTime}`;
 }
 
-const FormatAmount = ({ amount }: PropsFormatAmt) => {
+const FormatAmount = ({ amount, style }: PropsFormatAmt) => {
   const numericAmount = Number(amount) || 0;
 
   const formatted = numericAmount
     .toFixed(0) // redondea sin decimales
     .replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // puntos cada 3 dígitos
 
-  return <Text>$ {formatted}</Text>;
+  return <Text style={style}>$ {formatted}</Text>;
 };
 
 
