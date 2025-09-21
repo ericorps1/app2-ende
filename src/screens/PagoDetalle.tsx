@@ -123,11 +123,13 @@ export default function PagoDetalle({ route, navigation }: PropsPagoDetalle) {
           </View>
         </View>
       </Animatable.View>
-      <RenderPdf
-        title="Ticket de pago"
-        patterScrollEnabled={setScrollEnabled}
-        pdfUrl={`https://plataforma.ahjende.com/ticket_pago.php?id_pag=${data_pagos.id_pag}`}
-      />
+      { payStatus === 'Pagado' && (
+        <RenderPdf
+          title="Ticket de pago"
+          patterScrollEnabled={setScrollEnabled}
+          pdfUrl={`https://plataforma.ahjende.com/ticket_pago.php?id_pag=${data_pagos.id_pag}`}
+        />
+      )}
     </ScrollView>
   )
 }

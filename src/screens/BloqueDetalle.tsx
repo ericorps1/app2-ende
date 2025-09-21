@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, SafeAreaView, Alert } from 'react-n
 import { ActividadData, BloqueDataInfo, RecursoTeoricoData, tiposActividades } from '../interfaces/appInterfaces';
 import { colors } from '../theme/platformTheme';
 import { RecursoTeorico } from '../components/RecursoTeorico';
-import cafeApi from '../api/estudianteAPI';
+import endeApi from '../api/estudianteAPI';
 import { LoadingScreen } from './LoadingScreen';
 import { useWindowDimensions } from 'react-native';
 import RenderHtml from 'react-native-render-html';
@@ -59,17 +59,17 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
   }
 
   const getRecursosTeoricos = async () => {
-    const {data} = await cafeApi.get('/recursos_teoricos/'+id_blo);
+    const {data} = await endeApi.get('/recursos_teoricos/'+id_blo);
     setRecursosTeoricos(data.data);
   }
 
   const getActividades = async () => {
-    const {data} = await cafeApi.get('/actividades/',{ params:{ id_sub_hor, id_blo, id_alu_ram: data_alumno?.id_alu_ram } });
+    const {data} = await endeApi.get('/actividades/',{ params:{ id_sub_hor, id_blo, id_alu_ram: data_alumno?.id_alu_ram } });
     setActividades(data.data);
   }
 
   const getConBlo = async () => {
-    const {data} = await cafeApi.get('/bloque/'+id_blo,{ params:{ cols: 'con_blo' } });
+    const {data} = await endeApi.get('/bloque/'+id_blo,{ params:{ cols: 'con_blo' } });
     if(data.trans){
       setConBlo(data.data.length>0 ? data.data[0].con_blo : '');
     }
@@ -86,6 +86,10 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
   }
 
   const viewDetailActividad = (actividad:ActividadData) => {
+    if(actividad.estatus_fecha!=='Vigente'){
+      setViewAlertVencida(true)
+      return
+    }
     const tipo = actividad.tipo
     switch (tipo) {
       case 'Foro' : navigation.navigate('Foro', { data_actividad: actividad });
@@ -101,12 +105,13 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
   if(viewAlertVencida) return (
     <PaperMessages
       dismissable
-      title='Actividad vencida :('
+      title='Actividad vencida'
       visible={viewAlertVencida}
       message='No realizaste esta actividad en tiempo y forma, comunícate con tu profesor...'
       buttonText='Aceptar'
       onDismiss = {() => setViewAlertVencida(false)}
       pressButton = {() => setViewAlertVencida(false)}
+      colorTitle={colors.error}
     />
   )
   const onPressVideoConference = () => {
