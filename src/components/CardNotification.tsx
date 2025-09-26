@@ -21,7 +21,7 @@ export const CardNotification = ({notification}:CardNotificationProps) => {
       </View>
       <View style={styles.contaierInfoActividad}>
         <Text style={styles.titleActividad}>{ notification.tit_not }</Text>
-        <Text>{notification.men_not.length > 90 ? `${notification.men_not.substring(0, 90)}...` : notification.men_not}</Text>
+        <Text style={styles.messageText}>{notification.men_not.length > 90 ? `${notification.men_not.substring(0, 90)}...` : notification.men_not}</Text>
       </View>
     </TouchableOpacity>
   )
@@ -41,9 +41,13 @@ const styles = StyleSheet.create({
   },
   titleActividad: {
     fontSize: 16,
-    color: colors.darkBlue,
+    color: '#000000', // NEGRO - SIEMPRE SE VE
     textTransform: 'uppercase',
     fontWeight: 'bold',
+  },
+  messageText: {
+    fontSize: 14,
+    color: '#333333', // GRIS OSCURO - SIEMPRE SE VE
   },
   descActividad: {
     fontSize: 14,

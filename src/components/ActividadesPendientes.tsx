@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { View, Text, ScrollView, StyleSheet, TextInput, useWindowDimensions, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import endeApi from '../api/estudianteAPI';
 import { AuthContext } from '../context/AuthContext';
 import { ActividadPendiente } from '../interfaces/appInterfaces';
@@ -11,7 +11,8 @@ export const ActividadesPendientes = () => {
   const [loadingAct, setLoadingAct] = useState(false);
   const [actividadesPendientes, setActividadesPendientes] = useState([]);
   const { data_alumno } = useContext( AuthContext );
-  const [viewContent, setViewContent] = useState(false)
+  const [viewContent, setViewContent] = useState(true)
+  
   useEffect(() => {
     getActividadesPendientes();
     return () => {}
@@ -26,8 +27,6 @@ export const ActividadesPendientes = () => {
     setLoadingAct(false);
   }
 
-  const {height} = useWindowDimensions();
-
   return (
     <View style={styles.container}>
       <TouchableOpacity 
@@ -39,10 +38,19 @@ export const ActividadesPendientes = () => {
           }
         ]}
         activeOpacity={0.9}
-        onPress={()=>setViewContent(!viewContent)}
+        onPress={() => setViewContent(!viewContent)}
       >
         <Text style={styles.textTitle}>Actividades pendientes</Text>
+        
+        {actividadesPendientes.length > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>
+              {actividadesPendientes.length}
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
+      
       <View style={[styles.containerActPend, {height: viewContent ? 'auto' : 0, opacity: viewContent ? 1 : 0}]}>
         {
           loadingAct ? 
@@ -50,8 +58,8 @@ export const ActividadesPendientes = () => {
               <LoadingScreen text='Cargando actividades pendientes...'/>
             </View>
           :
-            actividadesPendientes.length>0 ?
-              actividadesPendientes.map((actividadPendiente:ActividadPendiente)=>
+            actividadesPendientes.length > 0 ?
+              actividadesPendientes.map((actividadPendiente: ActividadPendiente) =>
                 <CardActividadPendiente
                   key={actividadPendiente.id}
                   actividadPendiente={actividadPendiente}
@@ -74,18 +82,34 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   containerTitleActPend: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     overflow: 'hidden',
     borderTopRightRadius: 10,
     borderTopLeftRadius: 10,
-    height: 50
+    height: 50,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 10,
   },
   textTitle: {
-    flex: 1,
     fontSize: 20,
     fontWeight: 'bold',
-    padding: 10,
     color: 'white',
-    backgroundColor: colors.primary,
+    flex: 1,
+  },
+  badge: {
+    backgroundColor: '#ef4444',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
   },
   containerActPend: {
     borderLeftWidth: 1,
