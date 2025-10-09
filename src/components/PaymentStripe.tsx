@@ -132,7 +132,6 @@ export const PaymentStripe = ({data_pagos, onPaySuccess}:PropsPaymentStripe) => 
   };
 
   const paymentsRefresh = async() => {
-    console.log('actualizando pagos');
     try { 
       const {data} = await endeApi.get('/pagos', { params: { 'id_alu_ram': data_alumno!.id_alu_ram } });
       if(data.data.length>0){

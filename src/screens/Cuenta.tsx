@@ -146,7 +146,6 @@ export const Cuenta = () => {
         }else{
             result = await launchImageLibrary({mediaType: 'photo', maxWidth: 500, maxHeight: 500});
         }
-        console.log('result',result);
         if(result.assets){
             setObjImg(result);
             setNewProfilePic(result.assets[0].uri);

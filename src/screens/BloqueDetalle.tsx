@@ -86,7 +86,6 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
   }
 
   const viewDetailActividad = (actividad:ActividadData) => {
-    console.log('actividad', actividad);
     if(actividad.estatus_fecha!=='Vigente'){
       setViewAlertVencida(true)
       return

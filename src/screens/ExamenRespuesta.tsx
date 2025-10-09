@@ -64,8 +64,6 @@ export const ExamenRespuesta = ({route,navigation}:PropsActividad) => {
       // await getPreguntasRespuestasExamen();
       
       const respPre = respuestas.filter((respuesta:obRespuesta) => id_pre===respuesta.id_pre );
-      // console.log("resps==>>",resps);
-      // console.log(resp);return;
       let TMPResp = respuestas;
       respPre.map((resp:obRespuesta)=>{
         const indexRes = respuestas.findIndex((x:obRespuesta) => resp.id_pre===x.id_pre && resp.id_res===x.id_res );
@@ -80,7 +78,6 @@ export const ExamenRespuesta = ({route,navigation}:PropsActividad) => {
       setRespuestas(TMPResp);
     }else{
       setMessageAlert('Error registrando la respuesta.');
-      console.log('Error registrando la respuesta.', data);
     }
     setLoadingResp(false);
   }

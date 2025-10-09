@@ -21,7 +21,6 @@ export const Documentacion = () => {
 
   const getDocumentacion = async() => {
       setLoadingDoc(true);
-      console.log('data_alumno?.id_alu_ram', data_alumno?.id_alu_ram);
       const {data} = await endeApi.get('/documento_alu_ram', { params: { 'id_alu_ram': data_alumno?.id_alu_ram } });
       if(data.data.length>0){
         setDocumentacion(data.data);

@@ -35,10 +35,6 @@ export const Home = () => {
     });
     const unsubscribe2 = getMessaging().onNotificationOpenedApp(async remoteMessage => {//evento cuando se oprime en la notificación recibida en el dispositivo
       await updateNotifications();
-      console.log(
-        'Se abrio la app desde la notificación:',
-        remoteMessage,
-      );
       const notification = typeof remoteMessage?.data?.notification === 'string' 
         ? JSON.parse(remoteMessage?.data?.notification) 
         : null;
@@ -49,7 +45,6 @@ export const Home = () => {
 
     // 🔄 Manejo de refresh de token
     const unsubscribe3 = getMessaging().onTokenRefresh(async (newToken) => {
-      console.log('Nuevo token FCM:', newToken);
       try {
         // Actualizar token en AsyncStorage
         await AsyncStorage.setItem('fcmtoken', newToken);
