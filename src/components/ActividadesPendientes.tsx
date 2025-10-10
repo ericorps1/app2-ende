@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import endeApi from '../api/estudianteAPI';
 import { AuthContext } from '../context/AuthContext';
@@ -6,6 +6,7 @@ import { ActividadPendiente } from '../interfaces/appInterfaces';
 import { colors, platformTheme } from '../theme/platformTheme';
 import { CardActividadPendiente } from './CardActividadPendiente';
 import { LoadingScreen } from '../screens/LoadingScreen';
+import { useFocusEffect } from '@react-navigation/native';
 
 export const ActividadesPendientes = () => {
   const [loadingAct, setLoadingAct] = useState(false);
@@ -13,10 +14,13 @@ export const ActividadesPendientes = () => {
   const { data_alumno } = useContext( AuthContext );
   const [viewContent, setViewContent] = useState(true)
   
-  useEffect(() => {
-    getActividadesPendientes();
-    return () => {}
-  }, [])
+  useFocusEffect(
+    useCallback(() => {
+      getActividadesPendientes();
+      
+      return () => {};
+    }, []) // Dependencias vacías si no necesitas recargar por cambios de estado
+  );
   
   const getActividadesPendientes = async() => {
     setLoadingAct(true);

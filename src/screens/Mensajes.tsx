@@ -39,25 +39,45 @@ export const Mensajes = () => {
         }
     }, [])
     
+    useEffect(() => {
+        if (allSalas.length > 0) {
+            aplicarFiltro(searchBarValue);
+        }
+    }, [allSalas]);
+    
     const getSalasUsuario = async () => {
         const {data} = await cafeApi.get(`/sala/salasxAlumno/${data_alumno?.id_alu}/${data_alumno?.id_ram3}`);
         if(data.trans){
             setAllSalas(data.data);
-            setSalas(data.data);
         }
     }
 
-    const buscarSalas = (value:string) => {
-        setSearchBarValue(value);
-        const dataFilter = allSalas.filter((sala:listSala)=>sala.desc_sala.toLowerCase().includes(value.toLowerCase()));
+    // Función auxiliar para aplicar el filtro
+    const aplicarFiltro = (value: string) => {
+        if (!value || value.trim() === '') {
+            // Si no hay búsqueda, mostrar todas las salas
+            setSalas(allSalas);
+            return;
+        }
+
+        const dataFilter = allSalas.filter(
+            (sala: listSala) => 
+                sala.desc_sala.toLowerCase().includes(value.toLowerCase()) ||
+                sala.nom_sal.toLowerCase().includes(value.toLowerCase()) ||
+                sala.last_men_men.toLowerCase().includes(value.toLowerCase())
+        );
         setSalas(dataFilter);
+    }
+
+    const buscarSalas = (value: string) => {
+        setSearchBarValue(value);
+        aplicarFiltro(value);
     }
 
     const pressSala = (id_sal:number, des_sal:string) => {
         navigation.navigate('ChatSala', {id_sal,des_sal})
-        // console.log('presionando la sala con id '+id_sal, des_sal);
-        // getSalasUsuario();
     }
+
     return (
         <View style={{flex: 1}}>
             <View style={styles.containerInfoUserSala}>
@@ -98,7 +118,9 @@ export const Mensajes = () => {
                         />
                     )
                 :
-                    <Text style={styles.textNoSala}>No se encontró ninguna sala.</Text>
+                    <Text style={styles.textNoSala}>
+                        {searchBarValue ? 'No se encontraron salas con ese criterio.' : 'No tienes salas disponibles.'}
+                    </Text>
             }
             </ScrollView>
         </View>
@@ -149,6 +171,8 @@ const styles = StyleSheet.create({
     textNoSala: {
         fontWeight: 'bold',
         fontSize: 20,
-        textAlign: 'center'
+        textAlign: 'center',
+        marginTop: 20,
+        color: colors.darkBlue,
     }
 });

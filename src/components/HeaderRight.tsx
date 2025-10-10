@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useState } from 'react'
 import { Animated, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
 import { colors } from '../theme/platformTheme';
@@ -10,6 +10,7 @@ import { addNotifications } from '../features/notifications/dataNotificationsSli
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { getNotificationsService } from '../services/PushNotificationsService';
 import { ScrollView } from 'react-native-gesture-handler';
+import { useFocusEffect } from '@react-navigation/core';
 
 export const HeaderRight = () => {
   const dispatch = useAppDispatch();
@@ -22,8 +23,13 @@ export const HeaderRight = () => {
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications);
   }
+  useFocusEffect(
+    useCallback(() => {
+      getActividadesPendientes();
+      return () => {};
+    }, []) // Dependencias vacías si no necesitas recargar por cambios de estado
+  );
   useEffect(() => {
-    getActividadesPendientes();
     getNotifications();
     return () => {}
   }, [])

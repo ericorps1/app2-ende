@@ -42,7 +42,6 @@ export const PaymentStripe = ({data_pagos, onPaySuccess}:PropsPaymentStripe) => 
         cuenta_stripe: stripeAccountId
       }
       const { data } = await stripeApi.post('/crear-payment-intent', payIntentData);
-      console.log('respuesta peticion stripe ', data);
       if (data.success) {
         const dataPayment = {
           merchantDisplayName: `Pago de ${data_pagos.con_pag}`,
@@ -58,7 +57,6 @@ export const PaymentStripe = ({data_pagos, onPaySuccess}:PropsPaymentStripe) => 
           locale: 'es',
         }
         clientSecret.current = data.clientSecret;
-        console.log('dataPayment', dataPayment);
         await payment(dataPayment);
       } else {
         setPaying(false);
@@ -88,7 +86,6 @@ export const PaymentStripe = ({data_pagos, onPaySuccess}:PropsPaymentStripe) => 
       console.error('❌ Error al presentar el PaymentSheet:', result.error);
       setPaying(false);
     } else {
-      console.log('✅ Pago completado con éxito:', result);
       abonarPago();
     }
   };
@@ -96,14 +93,6 @@ export const PaymentStripe = ({data_pagos, onPaySuccess}:PropsPaymentStripe) => 
   const abonarPago = async () => {
     try {
       const headers = {headers:{ 'Content-Type':'multipart/form-data' }};
-      console.log('data enviada', {
-        id_pag: data_pagos.id_pag,
-        mon_pag: data_pagos.mon_pag,
-        tip_abo_pag: 'Depósito',
-        mon_abo_pag: data_pagos.mon_pag,
-        tip_pag: data_pagos.tip_pag,
-        str_abo_pag: clientSecret.current,
-      })
       const response = await endeApi.post('/pagos/abonar', {
         id_pag: data_pagos.id_pag,
         mon_pag: data_pagos.mon_pag,
@@ -113,7 +102,6 @@ export const PaymentStripe = ({data_pagos, onPaySuccess}:PropsPaymentStripe) => 
         str_abo_pag: clientSecret.current,
       }, headers);
       if (response.data.trans) {
-        console.log('Pago abonado exitosamente:', response.data);
         await paymentsRefresh();
         await onPaySuccess?.();
       } else {
