@@ -10,6 +10,7 @@ import { tiposActividades } from '../interfaces/appInterfaces';
 import { Avatar, Card, IconButton } from 'react-native-paper';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { formatDate } from '../hooks/useFormats';
+import { useNavigation } from '@react-navigation/core';
 
 interface ObjListAct{
     tableHead: [string,string,string,string,string,string,string,string,string,string,string,string];
@@ -20,6 +21,8 @@ interface ObjListAct{
 interface ListadoActividades {
     actividad: string;
     bloque: string;
+    des_blo: string;
+    id_sub_hor: number;
     calificacion: null|number;
     fecha: null|string;
     fin: string;
@@ -78,6 +81,19 @@ export const Actividades = () => {
         aprovechamiento: Number((puntosObtenidos/puntos)*100)
       });
     }
+  }
+
+  const navigation = useNavigation<any>();
+
+  const handleActividadPress = (actividad:ListadoActividades) => {
+    const nom_mat = actividad.materia;
+    const bloque_data = {
+      id_blo: actividad.id_blo,
+      nom_blo: actividad.bloque,
+      des_blo: actividad.des_blo,
+      id_sub_hor: actividad.id_sub_hor
+    };
+    navigation.navigate('BloqueDetalle', {bloque_data, nom_mat})
   }
 
   if(loading){
@@ -141,7 +157,7 @@ export const Actividades = () => {
                         const [fecha,hora] = actividad.fecha !== null ? actividad.fecha.split(' ') : ['',''];
                         let rowData = [
                           index+1,
-                          actividad.actividad,
+                          <Text onPress={() => handleActividadPress(actividad)}>{actividad.actividad}</Text>,
                           actividad.materia,
                           actividad.bloque,
                           formatDate(actividad.inicio,'/'),
