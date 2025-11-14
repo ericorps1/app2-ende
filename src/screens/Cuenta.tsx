@@ -1,5 +1,5 @@
 import React, {useContext, useState, useEffect} from 'react'
-import { View, ScrollView, Image, StyleSheet, Dimensions } from 'react-native';
+import { View, ScrollView, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 import { Portal, TextInput, Modal, Text, Button, Provider, Avatar, Divider, DefaultTheme } from 'react-native-paper';
 import { platformTheme, colors } from '../theme/platformTheme';
@@ -15,6 +15,7 @@ import { ModalMessages } from '../components/ModalMessages';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { requestCameraPermission } from '../hooks/usePermisions';
 import RenderPdf from '../components/RenderUrlPdf';
+import { AddDomiciliation } from '../components/AddDomiciliation';
 
 const { width } = Dimensions.get('window');
 
@@ -33,6 +34,14 @@ export const Cuenta = () => {
     const [objImg, setObjImg] = useState<ImagePickerResponse>()
     const [visible, setVisible] = useState(false);
     const [scrollEnabled, setScrollEnabled] = useState(true);
+    
+    const [domiciliation, setDomiciliation] = useState({
+        isSaved: false,
+        card_no: '',
+        exp_month: '',
+        exp_year: '',
+        brand: ''
+    });
 
     const getDataProfile = async () => {
         try { 
@@ -57,8 +66,34 @@ export const Cuenta = () => {
         }
     }
 
+    const getDomiciliation = async() => {
+        try {
+            const {data} = await cafeApi.get('/domiciliacion/' + data_alumno?.id_alu_ram || '');
+            if(data.data){
+                setDomiciliation({
+                    isSaved: true,
+                    card_no: data.data.last_4,
+                    exp_month: data.data.exp_month,
+                    exp_year: data.data.exp_year,
+                    brand: data.data.brand
+                });
+            } else {
+                setDomiciliation({
+                    isSaved: false,
+                    card_no: '',
+                    exp_month: '',
+                    exp_year: '',
+                    brand: ''
+                });
+            }
+        } catch (error:any) {
+            console.log('getDomiciliation', error);
+        }
+    };
+
     useEffect(() => {
         getDataProfile();
+        getDomiciliation();
     }, [])
 
     const updateInfo = async () => {
@@ -232,234 +267,254 @@ export const Cuenta = () => {
         setLoadingActuCont(false);
     }
 
-    const source = {
-      uri: "https://plataforma.ahjende.com/solicitud_inscripcion.php?id_alu_ram=31277",
-      cache: true,
-    };
-
     return (
         (loadingAccount) 
         ? <LoadingScreen/>
         : <Provider theme={DefaultTheme}>
             <Portal>
-                <ScrollView showsVerticalScrollIndicator={false} scrollEnabled={scrollEnabled}>
-                    <GradientBackground primaryColor={'#000000'} secondaryColor={'#FFFFFF'}>
-                        <View style={ styles.viewAvatar }>
-                            { (data_alumno?.fot_alu || newProfilePic!=='') 
-                                ? (
-                                    <Image 
-                                        source={{ uri: (newProfilePic==='') ? 'https://plataforma.ahjende.com/uploads/'+data_alumno?.fot_alu : newProfilePic}}
-                                        style={ platformTheme.avatar }
-                                    />
-                                )
-                                : (
-                                    <Avatar.Text style={ platformTheme.avatar } label={FormatNameAvatar(data_alumno?.nom_alu)} />
-                                )
-                            }
-                            <Text style={ platformTheme.avatarName }> { data_alumno?.nom_alu } </Text>
-                            <View style={ [styles.buttonList, platformTheme.fila] }>
-                                {   (newProfilePic==='')
-                                ?   (
-                                        <>
-                                            <Button 
-                                                icon={() => <Icon name="camera" size={20} color="white" />}
-                                                textColor='white'
-                                                onPress={() => getPhoto('photo')}
-                                                style={ [platformTheme.btnPrimary, platformTheme.btn] }
-                                            >CAMARA</Button>
-                                            <Button
-                                                icon="image"
-                                                textColor='white'
-                                                onPress={() => getPhoto('img')}
-                                                style={ [platformTheme.btnSoftBlue, platformTheme.btn] }
-                                            >GALERIA</Button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Button 
-                                                icon="pencil"
-                                                textColor='white'
-                                                onPress={ () => uploadImg() }
-                                                style={ [platformTheme.btnPrimary, platformTheme.btn, styles.botonActualizar] }
-                                                disabled={uploading}
-                                                loading={ uploading }
-                                            >{ !uploading ? 'ACTUALIZAR' : 'SUBIENDO...' }</Button>
-                                            <Button 
-                                                icon="cancel"
-                                                textColor='white'
-                                                onPress={ () => setNewProfilePic('') } 
-                                                style={ [platformTheme.btnDanger, platformTheme.btn] }
-                                                disabled={uploading}
-                                            >Cancelar</Button>
-                                        </>
+                <ScrollView 
+                    showsVerticalScrollIndicator={false} 
+                    scrollEnabled={scrollEnabled}
+                    style={styles.container}
+                >
+                    {/* HEADER MINIMALISTA */}
+                    <View style={styles.header}>
+                        <View style={styles.avatarSection}>
+                            <TouchableOpacity onPress={() => getPhoto('img')}>
+                                { (data_alumno?.fot_alu || newProfilePic!=='') 
+                                    ? (
+                                        <Image 
+                                            source={{ uri: (newProfilePic==='') ? 'https://plataforma.ahjende.com/uploads/'+data_alumno?.fot_alu : newProfilePic}}
+                                            style={ styles.avatar }
+                                        />
+                                    )
+                                    : (
+                                        <View style={styles.avatar}>
+                                            <Text style={styles.avatarText}>{FormatNameAvatar(data_alumno?.nom_alu)}</Text>
+                                        </View>
                                     )
                                 }
+                                <View style={styles.cameraIconBadge}>
+                                    <Icon name="camera" size={16} color="#FFF" />
+                                </View>
+                            </TouchableOpacity>
+                            <View style={styles.userInfo}>
+                                <Text style={styles.userName}>{data_alumno?.nom_alu}</Text>
+                                <Text style={styles.userSubtitle}>{data_alumno?.estatus_general}</Text>
                             </View>
                         </View>
-                    </GradientBackground>
-                    <Divider/>
-                    
-                    <View style={ styles.formContainer }>
-                        <View style={{ flex:1 }}>
-                            <Text style={ styles.title }> Información personal </Text>
-                        </View>
-                        <TextInput
-                            keyboardType='phone-pad'
-                            mode="outlined"
-                            label="Teléfono"
-                            placeholder="Ingrese su número de teléfono"
-                            activeOutlineColor={colors.primary}
-                            value={ infoAlumno?.tel_alu }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoAlumno({...infoAlumno, tel_alu: value}) }
-                        />
-                        <Divider style={styles.divider}/>
-                        <TextInput
-                            mode="outlined"
-                            label="Dirección"
-                            placeholder="Ingrese su dirección"
-                            activeOutlineColor={colors.primary}
-                            value={ infoAlumno?.dir_alu }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoAlumno({...infoAlumno, dir_alu: value}) }
-                        />
-                        <Divider style={styles.divider}/>
-                        <TextInput
-                            mode="outlined"
-                            label="Colonia"
-                            placeholder="Ingrese la colonia"
-                            activeOutlineColor={colors.primary}
-                            value={ infoAlumno?.col_alu }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoAlumno({...infoAlumno, col_alu: value}) }
-                        />
-                        <Divider style={styles.divider}/>
-                        <TextInput
-                            mode="outlined"
-                            label="Delegación"
-                            placeholder="Ingrese su delegación"
-                            activeOutlineColor={colors.primary}
-                            value={ infoAlumno?.del_alu }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoAlumno({...infoAlumno, del_alu: value}) }
-                        />
-                        <Divider style={styles.divider}/>
-                        <TextInput
-                            mode="outlined"
-                            label="Entidad"
-                            placeholder="Ingrese su entidad"
-                            activeOutlineColor={colors.primary}
-                            value={ infoAlumno?.ent_alu }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoAlumno({...infoAlumno, ent_alu: value}) }
-                        />
-                        <Divider style={styles.divider}/>
-                        <TextInput
-                            mode="outlined"
-                            label="Correo electrónico"
-                            placeholder="Ingrese su correo electrónico personal"
-                            activeOutlineColor={colors.primary}
-                            value={ infoAlumno?.cor1_alu }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoAlumno({...infoAlumno, cor1_alu: value}) }
-                        />
-                        <Divider style={styles.divider}/>
-                        <TextInput
-                            mode="outlined"
-                            label="CURP"
-                            placeholder="Ingrese su CURP"
-                            activeOutlineColor={colors.primary}
-                            value={ infoAlumno?.cur_alu }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoAlumno({...infoAlumno, cur_alu: value}) }
-                        />
-                        <View style={ [styles.buttonList, platformTheme.fila, {alignSelf:'center', marginTop: 10}] }>
-                            <Button 
-                                icon="pencil"
-                                mode="contained"
-                                onPress={ updateInfo }
-                                disabled={ loadingForm }
-                                loading={ loadingForm }
-                                style={ [styles.botonActualizar, platformTheme.btn] }
-                            >
-                                ACTUALIZAR
-                            </Button>
-                            <Button 
-                                icon="lock"
-                                mode="contained"
-                                onPress={ () => setModalContrasena(true) }
-                                style={ [platformTheme.btnSoftBlue, platformTheme.btn] }
-                            >
-                                CONTRASEÑA
-                            </Button>
-                        </View>
+                        
+                        {newProfilePic !== '' && (
+                            <View style={styles.photoActions}>
+                                <TouchableOpacity 
+                                    style={styles.photoActionButton}
+                                    onPress={uploadImg}
+                                    disabled={uploading}
+                                >
+                                    <Icon name="check" size={20} color="#000" />
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    style={[styles.photoActionButton, styles.cancelButton]}
+                                    onPress={() => setNewProfilePic('')}
+                                    disabled={uploading}
+                                >
+                                    <Icon name="close" size={20} color="#000" />
+                                </TouchableOpacity>
+                            </View>
+                        )}
                     </View>
 
+                    {/* INFORMACIÓN PERSONAL */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Información personal</Text>
+                        
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Teléfono</Text>
+                            <TextInput
+                                keyboardType='phone-pad'
+                                mode="flat"
+                                placeholder="Ingresa tu número"
+                                underlineColor="transparent"
+                                activeUnderlineColor="transparent"
+                                value={infoAlumno?.tel_alu}
+                                style={styles.input}
+                                onChangeText={(value) => setInfoAlumno({...infoAlumno, tel_alu: value})}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Dirección</Text>
+                            <TextInput
+                                mode="flat"
+                                placeholder="Calle y número"
+                                underlineColor="transparent"
+                                activeUnderlineColor="transparent"
+                                value={infoAlumno?.dir_alu}
+                                style={styles.input}
+                                onChangeText={(value) => setInfoAlumno({...infoAlumno, dir_alu: value})}
+                            />
+                        </View>
+
+                        <View style={styles.inputRow}>
+                            <View style={[styles.inputContainer, styles.inputHalf]}>
+                                <Text style={styles.label}>Colonia</Text>
+                                <TextInput
+                                    mode="flat"
+                                    placeholder="Colonia"
+                                    underlineColor="transparent"
+                                    activeUnderlineColor="transparent"
+                                    value={infoAlumno?.col_alu}
+                                    style={styles.input}
+                                    onChangeText={(value) => setInfoAlumno({...infoAlumno, col_alu: value})}
+                                />
+                            </View>
+                            <View style={[styles.inputContainer, styles.inputHalf]}>
+                                <Text style={styles.label}>Delegación</Text>
+                                <TextInput
+                                    mode="flat"
+                                    placeholder="Delegación"
+                                    underlineColor="transparent"
+                                    activeUnderlineColor="transparent"
+                                    value={infoAlumno?.del_alu}
+                                    style={styles.input}
+                                    onChangeText={(value) => setInfoAlumno({...infoAlumno, del_alu: value})}
+                                />
+                            </View>
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Entidad</Text>
+                            <TextInput
+                                mode="flat"
+                                placeholder="Estado"
+                                underlineColor="transparent"
+                                activeUnderlineColor="transparent"
+                                value={infoAlumno?.ent_alu}
+                                style={styles.input}
+                                onChangeText={(value) => setInfoAlumno({...infoAlumno, ent_alu: value})}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>Correo electrónico</Text>
+                            <TextInput
+                                mode="flat"
+                                placeholder="correo@ejemplo.com"
+                                keyboardType="email-address"
+                                underlineColor="transparent"
+                                activeUnderlineColor="transparent"
+                                value={infoAlumno?.cor1_alu}
+                                style={styles.input}
+                                onChangeText={(value) => setInfoAlumno({...infoAlumno, cor1_alu: value})}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={styles.label}>CURP</Text>
+                            <TextInput
+                                mode="flat"
+                                placeholder="18 caracteres"
+                                underlineColor="transparent"
+                                activeUnderlineColor="transparent"
+                                value={infoAlumno?.cur_alu}
+                                style={styles.input}
+                                onChangeText={(value) => setInfoAlumno({...infoAlumno, cur_alu: value})}
+                            />
+                        </View>
+
+                        <TouchableOpacity 
+                            style={styles.primaryButton}
+                            onPress={updateInfo}
+                            disabled={loadingForm}
+                        >
+                            <Text style={styles.primaryButtonText}>
+                                {loadingForm ? 'Guardando...' : 'Guardar cambios'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* SEGURIDAD */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Seguridad</Text>
+                        <TouchableOpacity 
+                            style={styles.menuItem}
+                            onPress={() => setModalContrasena(true)}
+                        >
+                            <View style={styles.menuItemIcon}>
+                                <Icon name="lock-outline" size={24} color="#000" />
+                            </View>
+                            <View style={styles.menuItemContent}>
+                                <Text style={styles.menuItemTitle}>Contraseña</Text>
+                                <Text style={styles.menuItemSubtitle}>Cambiar contraseña de acceso</Text>
+                            </View>
+                            <Icon name="chevron-right" size={24} color="#999" />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* DOMICILIACIÓN */}
+                    <AddDomiciliation
+                        domiciliation={domiciliation}
+                        updateDomiciliation={getDomiciliation}
+                    />
+
+                    {/* PDF */}
                     <RenderPdf
-                      title = "Solicitud de Inscripción"
-                      patterScrollEnabled={setScrollEnabled}
-                      pdfUrl={`https://plataforma.ahjende.com/solicitud_inscripcion.php?id_alu_ram=${data_alumno?.id_alu_ram}`}
-                      patterStyle={{ marginHorizontal: 16, marginVertical: 20 }}
+                        title="Solicitud de Inscripción"
+                        patterScrollEnabled={setScrollEnabled}
+                        pdfUrl={`https://plataforma.ahjende.com/solicitud_inscripcion.php?id_alu_ram=${data_alumno?.id_alu_ram}`}
+                        patterStyle={{ marginHorizontal: 16, marginVertical: 20 }}
                     />
                 </ScrollView>
                 
-                <Modal visible={modalContrasena} onDismiss={()=>setModalContrasena(false)} contentContainerStyle={platformTheme.modalContainer}>
-                    <View>
-                        <Text style={ { ...styles.title, fontWeight: '600' } }>CAMBIAR CONTRASEÑA</Text>
-                    </View>
-                    <View>
-                        <TextInput
-                            secureTextEntry={true}
-                            mode="outlined"
-                            label="Contraseña anterior"
-                            placeholder="Ingrese la contraseña actual de su cuenta"
-                            activeOutlineColor={colors.primary}
-                            value={ infoContra.ante_con }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoContra({...infoContra, ante_con: value}) }
-                        />
-                    </View>
-                    <View>
-                        <TextInput
-                            secureTextEntry={true}
-                            mode="outlined"
-                            label="Nueva contraseña"
-                            placeholder="Ingrese la nueva contraseña"
-                            activeOutlineColor={colors.primary}
-                            value={ infoContra.nuev_con }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoContra({...infoContra, nuev_con: value}) }
-                        />
-                    </View>
-                    <View>
-                        <TextInput
-                            secureTextEntry={true}
-                            mode="outlined"
-                            label="Confirmar contraseña"
-                            placeholder="Vuelva a ingresar la nueva contraseña"
-                            activeOutlineColor={colors.primary}
-                            value={ infoContra.conf_con }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoContra({...infoContra, conf_con: value}) }
-                        />
-                    </View>
-                    <View style={ [styles.buttonContainer, platformTheme.fila, {marginTop: 10, alignSelf:'center'}] }>
-                        <Button 
-                            icon='pencil'
-                            onPress={ cambiarContrasena }
-                            style={ [styles.botonCerrar, platformTheme.btn] }
-                            textColor='white'
-                            disabled={loadingActuCont}
-                            loading={loadingActuCont}
-                        >ACTUALIZAR</Button>
-                        <Button 
-                            icon='cancel'
-                            onPress={ () => setModalContrasena(false) }
-                            style={ [styles.botonCerrar, platformTheme.btn, platformTheme.btnDanger] }
-                            textColor='white'
-                            disabled={loadingActuCont}
-                        >CANCELAR</Button>
-                    </View>
+                {/* MODAL CONTRASEÑA */}
+                <Modal visible={modalContrasena} onDismiss={()=>setModalContrasena(false)} contentContainerStyle={styles.modal}>
+                    <Text style={styles.modalTitle}>Cambiar contraseña</Text>
+                    <TextInput
+                        secureTextEntry={true}
+                        mode="flat"
+                        label="Contraseña actual"
+                        underlineColor="transparent"
+                        activeUnderlineColor="transparent"
+                        value={infoContra.ante_con}
+                        style={styles.modalInput}
+                        onChangeText={(value) => setInfoContra({...infoContra, ante_con: value})}
+                    />
+                    <TextInput
+                        secureTextEntry={true}
+                        mode="flat"
+                        label="Nueva contraseña"
+                        underlineColor="transparent"
+                        activeUnderlineColor="transparent"
+                        value={infoContra.nuev_con}
+                        style={styles.modalInput}
+                        onChangeText={(value) => setInfoContra({...infoContra, nuev_con: value})}
+                    />
+                    <TextInput
+                        secureTextEntry={true}
+                        mode="flat"
+                        label="Confirmar contraseña"
+                        underlineColor="transparent"
+                        activeUnderlineColor="transparent"
+                        value={infoContra.conf_con}
+                        style={styles.modalInput}
+                        onChangeText={(value) => setInfoContra({...infoContra, conf_con: value})}
+                    />
+                    <TouchableOpacity 
+                        style={styles.primaryButton}
+                        onPress={cambiarContrasena}
+                        disabled={loadingActuCont}
+                    >
+                        <Text style={styles.primaryButtonText}>
+                            {loadingActuCont ? 'Actualizando...' : 'Actualizar contraseña'}
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={styles.secondaryButton}
+                        onPress={() => setModalContrasena(false)}
+                        disabled={loadingActuCont}
+                    >
+                        <Text style={styles.secondaryButtonText}>Cancelar</Text>
+                    </TouchableOpacity>
                 </Modal>
                 <ModalMessages visible={visible} typeMsgModal={typeMsgModal} modalText={modalText} onDismiss={()=>setVisible(false)}/>
             </Portal>
@@ -468,46 +523,194 @@ export const Cuenta = () => {
 }
 
 const styles = StyleSheet.create({
-    viewAvatar: {
-        ...platformTheme.avatarContent,
-        marginBottom: 20,
+    container: {
+        flex: 1,
+        backgroundColor: '#FFFFFF',
     },
-    formContainer: {
-        marginHorizontal: 20,
-        marginVertical: 20,
+    header: {
+        backgroundColor: '#FFFFFF',
+        paddingTop: 60,
+        paddingHorizontal: 20,
+        paddingBottom: 24,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
     },
-    buttonList: {
-        alignItems: 'center'
-    },
-    title: {
-        color: colors.darkBlue,
-        fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 10,
-    },
-    inputStyle: {
-        marginBottom: 5,
-        height: 40,
-    },
-    botonActualizar: {
-        backgroundColor: colors.primary,
-    },
-    buttonContainer: {
+    avatarSection: {
+        flexDirection: 'row',
         alignItems: 'center',
     },
-    botonCerrar: {
-        backgroundColor: colors.info,
-        color: 'white'
+    avatar: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: '#000',
+        justifyContent: 'center',
+        alignItems: 'center',
+        position: 'relative',
     },
-    divider: {
-        height: 1,
-        backgroundColor: 'black',
-        opacity: 0.2,
-        marginVertical: 5
+    avatarText: {
+        color: '#FFF',
+        fontSize: 28,
+        fontWeight: '600',
     },
-    pdf: {
-      flex: 1,
-      width: Dimensions.get('window').width,
-      height: Dimensions.get('window').height,
+    cameraIconBadge: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        backgroundColor: '#000',
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 3,
+        borderColor: '#FFF',
+    },
+    userInfo: {
+        marginLeft: 16,
+        flex: 1,
+    },
+    userName: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#000',
+        marginBottom: 4,
+    },
+    userSubtitle: {
+        fontSize: 14,
+        color: '#666',
+    },
+    photoActions: {
+        flexDirection: 'row',
+        marginTop: 16,
+        gap: 12,
+    },
+    photoActionButton: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#F0F0F0',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    cancelButton: {
+        backgroundColor: '#FFF',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+    section: {
+        paddingHorizontal: 20,
+        paddingVertical: 24,
+    },
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#000',
+        marginBottom: 20,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    inputContainer: {
+        marginBottom: 20,
+    },
+    inputRow: {
+        flexDirection: 'row',
+        gap: 12,
+        marginBottom: 20,
+    },
+    inputHalf: {
+        flex: 1,
+        marginBottom: 0,
+    },
+    label: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#666',
+        marginBottom: 8,
+        textTransform: 'uppercase',
+        letterSpacing: 0.3,
+    },
+    input: {
+        backgroundColor: '#F5F5F5',
+        borderRadius: 8,
+        fontSize: 16,
+        height: 52,
+        paddingHorizontal: 16,
+    },
+    primaryButton: {
+        backgroundColor: '#000',
+        height: 52,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    primaryButtonText: {
+        color: '#FFF',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    secondaryButton: {
+        backgroundColor: '#FFF',
+        height: 52,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 12,
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+    secondaryButtonText: {
+        color: '#000',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+    },
+    menuItemIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#F5F5F5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    menuItemContent: {
+        flex: 1,
+    },
+    menuItemTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#000',
+        marginBottom: 2,
+    },
+    menuItemSubtitle: {
+        fontSize: 13,
+        color: '#666',
+    },
+    modal: {
+        backgroundColor: '#FFF',
+        marginHorizontal: 20,
+        borderRadius: 16,
+        padding: 24,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#000',
+        marginBottom: 24,
+    },
+    modalInput: {
+        backgroundColor: '#F5F5F5',
+        borderRadius: 8,
+        marginBottom: 16,
+        height: 52,
+        paddingHorizontal: 16,
     },
 });
