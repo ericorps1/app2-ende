@@ -136,7 +136,7 @@ export const PaymentStripe = ({data_pagos, onPaySuccess}:PropsPaymentStripe) => 
   return (
     <View style={styles.containerButton}>
       <Button
-        style={[platformTheme.btnPrimary, styles.btn]}
+        style={[platformTheme.btnPrimary, platformTheme.btn]}
         onPress={initializePaymentSheet}
         disabled={paying}
         loading={paying}

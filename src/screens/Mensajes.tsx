@@ -6,7 +6,8 @@ import { FotoPerfil } from '../components/FotoPerfil';
 import { AuthContext } from '../context/AuthContext';
 import { colors, platformTheme } from '../theme/platformTheme';
 import cafeApi from '../api/estudianteAPI';
-import { useNavigation } from '@react-navigation/core';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
 
 interface listSala {
     id_sal: number;
@@ -24,7 +25,12 @@ export const Mensajes = () => {
     const [allSalas, setAllSalas] = useState([]);
     const [salas, setSalas] = useState([]);
     const [searchBarValue, setSearchBarValue] = useState('');
-    const navigation = useNavigation();
+    type RootStackParamList = {
+        ChatSala: { id_sal: number; des_sal: string };
+        // add other routes here if needed
+    };
+    const navigation = useNavigation<StackNavigationProp<RootStackParamList, 'ChatSala'>>();
+    // const navigation = useNavigation();
 
     useEffect(() => {
         getSalasUsuario();
@@ -54,19 +60,29 @@ export const Mensajes = () => {
 
     // Función auxiliar para aplicar el filtro
     const aplicarFiltro = (value: string) => {
-        if (!value || value.trim() === '') {
-            // Si no hay búsqueda, mostrar todas las salas
-            setSalas(allSalas);
-            return;
-        }
+      if (!value || value.trim() === '') {
+        // Si no hay búsqueda, mostrar todas las salas
+        setSalas(allSalas);
+        return;
+      }
 
-        const dataFilter = allSalas.filter(
-            (sala: listSala) => 
-                sala.desc_sala.toLowerCase().includes(value.toLowerCase()) ||
-                sala.nom_sal.toLowerCase().includes(value.toLowerCase()) ||
-                sala.last_men_men.toLowerCase().includes(value.toLowerCase())
-        );
-        setSalas(dataFilter);
+      const searchLower = value.toLowerCase();
+      
+      const dataFilter = allSalas.filter((sala: listSala) => {
+        // Validate each property before calling toLowerCase
+        const descSala = sala.desc_sala?.toLowerCase() || '';
+        const nomSal = sala.nom_sal?.toLowerCase() || '';
+        const lastMenMen = sala.last_men_men?.toLowerCase() || '';
+        const lastNomUsu = sala.last_nom_usu?.toLowerCase() || '';
+
+        // Search in all properties (as LIKE of SQL)
+        return descSala.includes(searchLower) ||
+          nomSal.includes(searchLower) ||
+          lastMenMen.includes(searchLower) ||
+          lastNomUsu.includes(searchLower);
+      });
+      
+      setSalas(dataFilter);
     }
 
     const buscarSalas = (value: string) => {
