@@ -17,21 +17,50 @@ interface PropsPaperMessages {
     pressButton?: () => void;
     btnTxtCancel?: string;
     styleBtnCancel?: any;
-    evtBtnCancel?: () => void
+    evtBtnCancel?: () => void;
+    loading?: boolean;
 }
 
-const PaperMessages = ({visible, title, message, buttonText, dismissable, styleButton=platformTheme.btnSuccess, colorTitle=colors.darkBlue, colorBody=colors.darkSilver, onDismiss=() => {return false}, pressButton=() => {return false}, btnTxtCancel='', styleBtnCancel=platformTheme.btnDanger, evtBtnCancel=()=>{return false}}:PropsPaperMessages) => {
+const PaperMessages = ({
+  visible,
+  title,
+  message,
+  buttonText,
+  dismissable,
+  styleButton=platformTheme.btnSuccess,
+  colorTitle=colors.darkBlue,
+  colorBody=colors.darkSilver,
+  onDismiss=() => {return false},
+  pressButton=() => {return false},
+  btnTxtCancel='',
+  styleBtnCancel=platformTheme.btnDanger,
+  evtBtnCancel=()=>{return false},
+  loading=false
+}:PropsPaperMessages) => {
   return (
     <View>
       <Portal>
-        <Dialog visible={visible} dismissable={dismissable} onDismiss={onDismiss}>
+        <Dialog visible={visible} dismissable={dismissable && !loading} onDismiss={onDismiss}>
           <Dialog.Title style={{color: colorTitle }}>{ title }</Dialog.Title>
           <Dialog.Content>
             <Paragraph style={{color: colorBody }}>{ message }</Paragraph>
           </Dialog.Content>
           <Dialog.Actions>
-            {btnTxtCancel!=='' && <Button textColor='white' style={ [{marginRight: 5},styleBtnCancel] } onPress={evtBtnCancel}> { btnTxtCancel } </Button>}
-            <Button textColor='white' style={ styleButton } onPress={pressButton}> { buttonText } </Button>
+            {btnTxtCancel!=='' &&
+              <Button
+                textColor='white'
+                style={ [{marginRight: 5},styleBtnCancel] }
+                onPress={evtBtnCancel}
+                loading={loading}
+                disabled={loading}
+              > { btnTxtCancel } </Button>}
+            <Button
+              textColor='white'
+              style={ styleButton }
+              onPress={pressButton}
+              loading={loading}
+              disabled={loading}
+            > { buttonText } </Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>
