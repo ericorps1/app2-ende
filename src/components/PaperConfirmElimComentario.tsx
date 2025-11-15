@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { StyleSheet } from 'react-native';
-import { Paragraph, Dialog, Portal, Provider, Button } from 'react-native-paper';
-import { colors } from '../theme/platformTheme';
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { Dialog, Portal, Provider } from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface PropsPaperConfirmElimComentario {
     com_id: number;
@@ -13,26 +13,59 @@ interface PropsPaperConfirmElimComentario {
     btnDisabled: boolean;
 }
 
-export const PaperConfirmElimComentario = ({com_id,visible,title,text,evDismiss,pressDelete,btnDisabled}:PropsPaperConfirmElimComentario) => {
+export const PaperConfirmElimComentario = ({
+    com_id,
+    visible,
+    title,
+    text,
+    evDismiss,
+    pressDelete,
+    btnDisabled
+}: PropsPaperConfirmElimComentario) => {
     return (
         <Provider>
             <Portal>
-                <Dialog visible={visible} onDismiss={evDismiss}>
-                    {/* <Dialog.Icon icon="alert" /> */}
-                    <Dialog.Title style={styles.title}>{ title }</Dialog.Title>
+                <Dialog visible={visible} onDismiss={evDismiss} style={styles.dialog}>
+                    {/* ÍCONO DE ALERTA */}
+                    <View style={styles.iconContainer}>
+                        <Icon name="alert-circle-outline" size={48} color="#FF3B30" />
+                    </View>
+
+                    {/* TÍTULO */}
+                    <Dialog.Title style={styles.title}>{title}</Dialog.Title>
+                    
+                    {/* CONTENIDO */}
                     <Dialog.Content>
-                        <Paragraph>{ text }</Paragraph>
+                        <Text style={styles.text}>{text}</Text>
                     </Dialog.Content>
-                    <Button 
-                        style={styles.btnAceptar}
-                        icon="delete"
-                        mode="outlined"
-                        onPress={()=>pressDelete(com_id)}
-                        color={colors.darkBlue}
-                        loading={btnDisabled}
-                    >
-                        ELIMINAR
-                    </Button>
+
+                    {/* ACCIONES */}
+                    <View style={styles.actions}>
+                        <TouchableOpacity 
+                            style={[styles.cancelButton, btnDisabled && styles.buttonDisabled]}
+                            onPress={evDismiss}
+                            disabled={btnDisabled}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={styles.cancelButtonText}>Cancelar</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            style={[styles.deleteButton, btnDisabled && styles.buttonDisabled]}
+                            onPress={() => pressDelete(com_id)}
+                            disabled={btnDisabled}
+                            activeOpacity={0.7}
+                        >
+                            {btnDisabled ? (
+                                <Text style={styles.deleteButtonText}>Eliminando...</Text>
+                            ) : (
+                                <>
+                                    <Icon name="delete-outline" size={18} color="#FFF" />
+                                    <Text style={styles.deleteButtonText}>Eliminar</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    </View>
                 </Dialog>
             </Portal>
         </Provider>
@@ -40,11 +73,62 @@ export const PaperConfirmElimComentario = ({com_id,visible,title,text,evDismiss,
 };
 
 const styles = StyleSheet.create({
-  title: {
-    textAlign: 'center',
-  },
-  btnAceptar: {
-    margin: 10,
-    borderWidth: 1,
-  }
-})
+    dialog: {
+        borderRadius: 16,
+        backgroundColor: '#FFF',
+    },
+    iconContainer: {
+        alignItems: 'center',
+        marginTop: 16,
+        marginBottom: 8,
+    },
+    title: {
+        textAlign: 'center',
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#000',
+    },
+    text: {
+        textAlign: 'center',
+        fontSize: 14,
+        color: '#666',
+        lineHeight: 20,
+    },
+    actions: {
+        flexDirection: 'row',
+        gap: 10,
+        padding: 16,
+        paddingTop: 20,
+    },
+    cancelButton: {
+        flex: 1,
+        backgroundColor: '#F5F5F5',
+        borderRadius: 10,
+        paddingVertical: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    cancelButtonText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#000',
+    },
+    deleteButton: {
+        flex: 1,
+        backgroundColor: '#000',
+        borderRadius: 10,
+        paddingVertical: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+    },
+    buttonDisabled: {
+        opacity: 0.6,
+    },
+    deleteButtonText: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#FFF',
+    },
+});

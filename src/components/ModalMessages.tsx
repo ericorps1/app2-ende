@@ -1,8 +1,7 @@
-import React, { useState } from 'react'
-import { StyleSheet, Text, View } from 'react-native';
-import { Button, Modal } from 'react-native-paper';
+import React from 'react'
+import { StyleSheet, Text, View, Modal, TouchableOpacity } from 'react-native';
 import { TypesMsgModalType } from '../interfaces/appInterfaces';
-import { colors } from '../theme/platformTheme';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface Props{
     visible: boolean;
@@ -11,48 +10,112 @@ interface Props{
     onDismiss: () => void;
 }
 
+export const ModalMessages = ({ visible, typeMsgModal, modalText, onDismiss}: Props) => {
+  
+  const getIconAndColor = () => {
+    switch(typeMsgModal) {
+      case 'success':
+        return { icon: 'check-circle', color: '#34C759', title: 'Éxito' };
+      case 'error':
+        return { icon: 'alert-circle', color: '#FF3B30', title: 'Error' };
+      case 'danger':
+        return { icon: 'alert', color: '#FF9500', title: 'Advertencia' };
+      case 'info':
+        return { icon: 'information', color: '#1976D2', title: 'Información' };
+      default:
+        return { icon: 'information', color: '#1976D2', title: 'Información' };
+    }
+  };
 
-export const ModalMessages = ({ visible, typeMsgModal, modalText, onDismiss}:Props) => {
+  const config = getIconAndColor();
+
   return (
-    <Modal visible={visible} onDismiss={onDismiss} contentContainerStyle={styles.modalContainer}>
-        {(typeMsgModal==='info') && <Text style={ { ...styles.modalContainerTitle, color: colors.info } }>¡INFORMACIÓN!</Text>}
-        {(typeMsgModal==='success') && <Text style={ { ...styles.modalContainerTitle, color: colors.success } }>¡EXITO!</Text>}
-        {(typeMsgModal==='danger') && <Text style={ { ...styles.modalContainerTitle, color: colors.danger } }>¡ADVERTENCIA!</Text>}
-        {(typeMsgModal==='error') && <Text style={ { ...styles.modalContainerTitle, color: colors.error } }>¡ERROR!</Text>}
-        <Text style={ styles.modalContainerText }>{ modalText }</Text>
-        <View style={ { alignItems: 'center' } }>
-            <Button 
-                onPress={ onDismiss }
-                style={ styles.botonCerrar }
-                textColor='white'
-            >Aceptar</Button>
+    <Modal
+      transparent
+      visible={visible}
+      animationType="fade"
+      onRequestClose={onDismiss}
+    >
+      <View style={styles.overlay}>
+        <View style={styles.container}>
+          {/* ÍCONO */}
+          <View style={[styles.iconContainer, { backgroundColor: config.color + '20' }]}>
+            <Icon name={config.icon} size={48} color={config.color} />
+          </View>
+
+          {/* TÍTULO */}
+          <Text style={[styles.title, { color: config.color }]}>{config.title}</Text>
+
+          {/* MENSAJE */}
+          <Text style={styles.message}>{modalText}</Text>
+
+          {/* BOTÓN */}
+          <TouchableOpacity
+            style={styles.button}
+            onPress={onDismiss}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.buttonText}>Aceptar</Text>
+          </TouchableOpacity>
         </View>
+      </View>
     </Modal>
   )
 }
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    backgroundColor: 'white',
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
-    marginHorizontal: '5%',
-    borderRadius: 5,
   },
-  modalContainerTitle: {
-    fontSize: 25,
-    fontWeight: '800',
-    marginBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.softSilver,
-    paddingBottom: 10,
+  container: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  modalContainerText: {
-    fontSize: 16,
-    color: colors.darkBlue,
-    marginBottom: 20
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  botonCerrar: {
-    backgroundColor: colors.primary,
-    color: 'white'
-  }
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  message: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  button: {
+    backgroundColor: '#000',
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFF',
+  },
 });

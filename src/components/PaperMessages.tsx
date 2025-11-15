@@ -35,7 +35,7 @@ const PaperMessages = ({
 }: PropsPaperMessages) => {
   
   const getIconByType = () => {
-    if (title.toLowerCase().includes('error')) return { name: 'alert-circle', color: '#E53935' };
+    if (title.toLowerCase().includes('error')) return { name: 'alert-circle', color: '#FF3B30' };
     if (title.toLowerCase().includes('éxito') || title.toLowerCase().includes('exito')) return { name: 'check-circle', color: '#34C759' };
     if (title.toLowerCase().includes('confirmar')) return { name: 'help-circle', color: '#FF9500' };
     return { name: 'information', color: '#1976D2' };

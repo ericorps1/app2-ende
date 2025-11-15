@@ -1,33 +1,29 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { View, Text, ScrollView, SafeAreaView, StyleSheet, useWindowDimensions, TextInput, Button, TouchableOpacity } from 'react-native';
-import { BackButtonNavigation } from '../components/BackButtonNavigation';
-import { ActividadData, Comentarios, TypesMsgModalType, ReplicasForo, PropsActividad } from '../interfaces/appInterfaces';
-import RenderHtml from 'react-native-render-html';
-import { colors, platformTheme } from '../theme/platformTheme';
+import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, RefreshControl } from 'react-native';
+import { ActividadData, Comentarios, ReplicasForo, PropsActividad } from '../interfaces/appInterfaces';
+import { colors } from '../theme/platformTheme';
 import { ForoComentario } from '../components/ForoComentario';
 import cafeApi from '../api/estudianteAPI';
 import { formatDateComentarios } from '../hooks/useFormats';
 import { AuthContext } from '../context/AuthContext';
 import PaperMessages from '../components/PaperMessages';
-import { PaperConfirmElimComentario } from '../components/PaperConfirmElimComentario';
 import { Modal } from 'react-native-paper';
 import { FormReplica } from '../components/FormReplica';
-import { PaperConfirmElimReplica } from '../components/PaperConfirmElimReplica';
 import { HtmlToJsx } from '../components/HtmlToJsx';
 import { ChatAlumno } from '../components/ChatAlumno';
-import Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { PaperConfirmEliminar } from '../components/PaperConfirmEliminar';
 
 export const Foro = ({route,navigation}:PropsActividad) => {
   const { data_alumno } = useContext( AuthContext );
   const {identificador,titulo,descripcion,identificador_copia} = route.params.data_actividad;
-  const { width } = useWindowDimensions();
   const [comentarios, setComentarios] = useState([])
   const [replicas, setReplicas] = useState<ReplicasForo|any>([])
   const [miComentario, setMiComentario] = useState('')
   const [message, setMessage] = useState('')
   const [titleMessage, setTitleMessage] = useState('Exito')
   const [loading, setLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const [idComElim, setIdComElim] = useState(0)
   const [idRepElim, setIdRepElim] = useState(0)
   const initialDataRep = {id_com: 0, nomCom: ''};
@@ -37,6 +33,12 @@ export const Foro = ({route,navigation}:PropsActividad) => {
   useEffect(() => {
     getComentarios();
   }, [])
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await getComentarios();
+    setRefreshing(false);
+  };
   
   const getComentarios = async () => {
     const {data} = await cafeApi.get('foro_comentarios', {params: { id_for_cop: identificador_copia }});
@@ -127,70 +129,120 @@ export const Foro = ({route,navigation}:PropsActividad) => {
     }
     setLoading(false);
   }
+
   return (
-    <SafeAreaView style={ styles.container }>
-      <BackButtonNavigation onPressBack={() => navigation.pop()} title={titulo}/>
-      <ScrollView style={{marginBottom: 60}}>
-        <View style={ styles.bodyBloDetalle }>
-          <View style={styles.foroPreguntaContainer}>
-            <View style={styles.foroPreguntaHeader}>
-              <Icon name="question-circle" size={18} color="#333" />
-              <Text style={styles.foroPreguntaTitle}>Pregunta</Text>
+    <View style={styles.container}>
+      {/* HEADER */}
+      <View style={styles.header}>
+        <TouchableOpacity 
+          onPress={() => navigation.pop()} 
+          style={styles.backButton}
+          activeOpacity={0.7}
+        >
+          <Icon name="arrow-left" size={24} color="#000" />
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle} numberOfLines={1}>{titulo}</Text>
+          <Text style={styles.headerSubtitle}>Foro de discusión</Text>
+        </View>
+      </View>
+
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#000"
+            colors={['#000']}
+          />
+        }
+      >
+        {/* PREGUNTA DEL FORO */}
+        <View style={styles.questionCard}>
+          <View style={styles.questionHeader}>
+            <View style={styles.questionIconContainer}>
+              <Icon name="forum" size={20} color="#666" />
             </View>
-            <View style={styles.foroPreguntaContent}>
-              <HtmlToJsx strHtml={descripcion} />
-            </View>
+            <Text style={styles.questionTitle}>Pregunta del foro</Text>
           </View>
-          <View style={ styles.containerMiComentario }>
-            <Text style={ styles.titleMiComentario }>Mi Comentario:</Text>
-            <TextInput
-              value={miComentario}
-              multiline
-              numberOfLines={6}
-              editable
-              onChangeText={text => setMiComentario(text)}
-              style={styles.inputMiComentario}
-              placeholder='Realice una descripción breve a cerca de su comentario...'
-            />
-            <View style={{alignItems: 'center'}}>
-              <TouchableOpacity
-                style={styles.buttonGuardarMiComentario}
-                onPress={guardarComentario}
-                disabled={loading}
-              >
-                <Text style={styles.textBtnGuardarMiComentario}>Guardar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={styles.foroRespuestas}>
-            <Text style={ styles.title }>Comentarios: {comentarios.length}</Text>
-            {
-              comentarios.length>0 &&
-                comentarios.map(({id_com,nom_alu,app_alu,apm_alu,com_com,fot_alu,fec_com,id_alu}:Comentarios)=>{
-                  const elimCom = data_alumno?.id_alu===id_alu;
-                  return (
-                    <ForoComentario 
-                      key={id_com}
-                      id_com={id_com}
-                      nombre={nom_alu+' '+app_alu+' '+apm_alu}
-                      comentario={com_com}
-                      foto={ fot_alu }
-                      fecha={formatDateComentarios(fec_com.replace(' ', 'T'))}
-                      replicas={replicas.filter((ob:{id_com:number})=>ob.id_com===id_com)}
-                      onPressResp={pressResponse}
-                      eliminar={elimCom}
-                      eliminarComentario={elimCom ? () => setIdComElim(id_com) : () => false}
-                      funcEliminarReplica={setIdRepElim}
-                    />
-                  )
-                })
-            }
+          <View style={styles.questionContent}>
+            <HtmlToJsx strHtml={descripcion} />
           </View>
         </View>
+
+        {/* MI COMENTARIO */}
+        <View style={styles.myCommentCard}>
+          <View style={styles.myCommentHeader}>
+            <Icon name="pencil" size={18} color="#666" />
+            <Text style={styles.myCommentTitle}>Tu comentario</Text>
+          </View>
+          <TextInput
+            value={miComentario}
+            multiline
+            numberOfLines={5}
+            editable
+            onChangeText={text => setMiComentario(text)}
+            style={styles.commentInput}
+            placeholder='Escribe tu comentario aquí (mínimo 15 caracteres)...'
+            placeholderTextColor="#999"
+          />
+          <TouchableOpacity
+            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+            onPress={guardarComentario}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            <Icon name="send" size={16} color="#FFF" style={styles.submitIcon} />
+            <Text style={styles.submitButtonText}>
+              {loading ? 'Enviando...' : 'Publicar comentario'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* COMENTARIOS */}
+        <View style={styles.commentsSection}>
+          <View style={styles.commentsSectionHeader}>
+            <Icon name="comment-multiple" size={18} color="#000" />
+            <Text style={styles.commentsSectionTitle}>
+              Comentarios ({comentarios.length})
+            </Text>
+          </View>
+
+          {comentarios.length > 0 ? (
+            comentarios.map(({id_com,nom_alu,app_alu,apm_alu,com_com,fot_alu,fec_com,id_alu}:Comentarios)=>{
+              const elimCom = data_alumno?.id_alu===id_alu;
+              return (
+                <ForoComentario 
+                  key={id_com}
+                  id_com={id_com}
+                  nombre={nom_alu+' '+app_alu+' '+apm_alu}
+                  comentario={com_com}
+                  foto={fot_alu}
+                  fecha={formatDateComentarios(fec_com.replace(' ', 'T'))}
+                  replicas={replicas.filter((ob:{id_com:number})=>ob.id_com===id_com)}
+                  onPressResp={pressResponse}
+                  eliminar={elimCom}
+                  eliminarComentario={elimCom ? () => setIdComElim(id_com) : () => false}
+                  funcEliminarReplica={setIdRepElim}
+                />
+              )
+            })
+          ) : (
+            <View style={styles.emptyState}>
+              <Icon name="comment-outline" size={48} color="#E0E0E0" />
+              <Text style={styles.emptyStateText}>Aún no hay comentarios</Text>
+              <Text style={styles.emptyStateSubtext}>Sé el primero en comentar</Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
-      <View style={{paddingLeft: 20}}>
-        <ChatAlumno/>
-      </View>
+
+      <ChatAlumno/>
+
+      {/* MODALS Y ALERTS */}
       <PaperMessages 
         visible={message==='' ? false : true}
         title={titleMessage}
@@ -202,6 +254,7 @@ export const Foro = ({route,navigation}:PropsActividad) => {
         onDismiss={()=>setMessage('')}
         pressButton={()=>setMessage('')}
       />
+      
       <PaperConfirmEliminar
         visible={idComElim!==0}
         title='¿Eliminar comentario?'
@@ -210,6 +263,7 @@ export const Foro = ({route,navigation}:PropsActividad) => {
         pressDelete={() => confirmElimComentario(idComElim)}
         btnDisabled={loading}
       />
+      
       <PaperConfirmEliminar
         visible={idRepElim!==0}
         title='¿Eliminar replica?'
@@ -218,6 +272,7 @@ export const Foro = ({route,navigation}:PropsActividad) => {
         pressDelete={()=>confirmElimReplica(idRepElim)}
         btnDisabled={loading}
       />
+      
       <Modal 
         visible={dataReplica.id_com!==0}
         onDismiss={()=>setDataReplica(initialDataRep)}
@@ -230,88 +285,178 @@ export const Foro = ({route,navigation}:PropsActividad) => {
           />
         }
       />
-    </SafeAreaView>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 10,
     flex: 1,
-    paddingLeft: 20,
+    backgroundColor: '#F5F5F5',
   },
-  bodyBloDetalle: { 
-    flex: 1,
-    justifyContent: 'flex-start',
-    marginBottom: 20,
-  },
-  foroPreguntaContainer: {
-    ...platformTheme.floating,
-    backgroundColor: '#f0f2f5',
-    padding: 16,
-    marginRight: 16,
-    marginVertical: 12,
-    borderRadius: 12,
-  },
-  foroPreguntaHeader: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10
+    backgroundColor: '#FFF',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
-  foroPreguntaTitle: {
-    marginLeft: 8,
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#333'
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
-  foroPreguntaContent: {
-    paddingLeft: 4
+  headerContent: {
+    flex: 1,
   },
-  containerMiComentario: {
-    ...platformTheme.floating,
-    backgroundColor: '#f0f2f5',
-    marginRight: 20,
-    marginTop: 10,
-    borderRadius: 10,
-    paddingBottom: 20
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 2,
   },
-  titleMiComentario: {
-    color: colors.darkBlue,
-    fontSize: 20,
-    fontWeight: 'bold',
-    padding: 10,
+  headerSubtitle: {
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '500',
   },
-  inputMiComentario: {
-    padding: 10,
-    textAlignVertical: 'top',
-    borderRadius: 10,
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingBottom: 100,
+  },
+  questionCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 3,
     borderWidth: 1,
-    marginHorizontal: 10,
-    marginBottom: 10,
-    borderColor: colors.darkBlue,
+    borderColor: '#F0F0F0',
   },
-  buttonGuardarMiComentario: {
-    ...platformTheme.btn,
-    ...platformTheme.btnPrimary,
-    padding: 10,
-    borderRadius: 10,
+  questionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  textBtnGuardarMiComentario: {
-    color: 'white',
+  questionIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  questionTitle: {
     fontSize: 16,
+    fontWeight: '700',
+    color: '#000',
   },
-  foroRespuestas: {
-    ...platformTheme.floating,
-    backgroundColor: colors.softBlue,
-    paddingVertical: 20,
-    paddingHorizontal: 10,
-    marginRight: 20,
+  questionContent: {
+    paddingLeft: 4,
+  },
+  myCommentCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  myCommentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  myCommentTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#000',
+    marginLeft: 8,
+  },
+  commentInput: {
+    backgroundColor: '#FAFAFA',
     borderRadius: 10,
-    marginTop: 20
+    padding: 12,
+    fontSize: 14,
+    color: '#000',
+    textAlignVertical: 'top',
+    minHeight: 100,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
-  title: {
-    fontSize: 25,
-    color: colors.darkBlue,
-    fontWeight: 'bold'
-  }
-})
+  submitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#000',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  submitIcon: {
+    marginRight: 8,
+  },
+  submitButtonText: {
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  commentsSection: {
+    marginBottom: 16,
+  },
+  commentsSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  commentsSectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#000',
+    marginLeft: 8,
+  },
+  emptyState: {
+    backgroundColor: '#FFF',
+    borderRadius: 14,
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  emptyStateText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#999',
+    marginTop: 12,
+  },
+  emptyStateSubtext: {
+    fontSize: 13,
+    color: '#BBB',
+    marginTop: 4,
+  },
+});
