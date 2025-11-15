@@ -1,11 +1,9 @@
 import React, {useState,useRef,useEffect,useContext} from 'react'
-import { View, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
-import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
-import { colors, platformTheme } from '../theme/platformTheme';
+import { View, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, RefreshControl } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { isImage } from '../hooks/useValidations';
 import ImageModal from 'react-native-image-modal';
 import { fnDownloadFile } from '../hooks/useDownloads';
-import { Button } from 'react-native-paper';
 import cafeApi from '../api/estudianteAPI';
 import { AuthContext } from '../context/AuthContext';
 import { formatDateHour } from '../hooks/useFormats';
@@ -32,16 +30,19 @@ interface respMsg {
     est_men_dest: 'Entregado' | 'Visto';
 }
 
-export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=300,placeHolderInputTxt='Escribe al profesor...'}:MensajesChatAlumnoProps) => {
+export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=300,placeHolderInputTxt='Escribe un mensaje...'}:MensajesChatAlumnoProps) => {
   const [mensajes, setMensajes] = useState([]);
   const [enviando, setEnviando] = useState(false);
   const [msgChat, setMsgChat] = useState('');
   const [idSala, setIdSala] = useState(id_sal);
   const [loadingMsgs, setLoadingMsgs] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const { data_alumno } = useContext( AuthContext );
+  
   let titleDate = '';
   let viewTitleDate = false;
+
   useEffect(() => {
     loadMessages();
     const intervalMsgs = setInterval(()=>{
@@ -53,21 +54,26 @@ export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=3
     }
   }, [idSala])
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadMessages();
+    setRefreshing(false);
+  };
+
   const loadMessages = async() => {
       const {data} = await cafeApi.get('mensaje',{params:{id_sal: idSala, usu_visto: data_alumno?.id_alu, tip_usu_visto: 'Alumno'}});
-      // console.log('cargando mensajes');
       if(data.trans){
         setMensajes(data.data);
       }
       setLoadingMsgs(false);
   }
+
   const validarMensaje = async() => {
     if(msgChat.trim()!==""){
-      // console.log({men_men: msgChat,arc_men:'',est_men:'Pendiente',tip_men: 'Alumno', use_men: data_alumno?.id_alu, id_sal: idSala});return;
       setEnviando(true);
-      if(idSala!==0){//si ya existe una sala
+      if(idSala!==0){
         await enviarMensaje(idSala);
-      }else{//si no existe la sala, primero se crea y luego se guarda el mensaje
+      }else{
         const headers = {headers:{ 'Content-Type':'multipart/form-data' }};
         const {data} = await cafeApi.post('sala/salaEstudianteProfesor',{use_alu: data_alumno?.id_alu, use_pro: id_pro}, headers);
         if(data.trans){
@@ -90,194 +96,379 @@ export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=3
   }
 
   return (
-    <View style={styles.containerMsgChatAlumno}>
+    <View style={styles.container}>
       <ScrollView 
         style={[styles.chatHistory, {height: heightChatHistory as number || undefined}]}
+        contentContainerStyle={styles.chatContent}
         ref={scrollViewRef}
         onContentSizeChange={() => scrollViewRef.current && scrollViewRef.current.scrollToEnd({ animated: true })}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#000"
+            colors={['#000']}
+          />
+        }
       >
         {welcomeMsg}
-        {
-          loadingMsgs ? 
-            <LoadingScreen text='CARGANDO MENSAJES...'/>
-          :
-            mensajes.length>0 && 
-              mensajes.map((mensaje:respMsg)=>{
-                const msgAlumn = data_alumno?.id_alu===mensaje.use_men ? true : false;
-                const isImg = isImage(mensaje.arc_men);
-                const fecHorMen = formatDateHour(mensaje.hor_men, '/');
-                const [fecha,hora,amPm] = fecHorMen.split(' ');
-                const [hor,min,seg] = hora.split(':');
-                // console.log(mensaje);
-                if(titleDate!==fecha){
-                  titleDate=fecha;
-                  viewTitleDate = true;
-                }else{
-                  viewTitleDate = false;
-                }
-                return <View key={mensaje.id_men} style={[styles.containerMsg,{alignItems: msgAlumn ? 'flex-end' : 'flex-start'}]}>
-                    {
-                      viewTitleDate && <Text style={styles.titleDate}>
-                        {fecha}
-                      </Text>
-                    }
-                    {
-                      mensaje.men_men ?
-                        <View
-                          style={{
-                            padding: 10,
-                            backgroundColor: msgAlumn ? colors.chatGreen : colors.softSilver,
-                            borderRadius: 10,
-                          }}
-                        >
-                          <View style={platformTheme.fila}>
-                            <Text style={styles.txtTipUsuMsg}>{mensaje.tip_men}</Text>
-                            <Text style={styles.txtUsuMsg}>{mensaje.nom_usu_men}</Text>
-                          </View>
-                          <Text style={{color: 'black',fontSize: 16}}>{mensaje.men_men}</Text>
-                          <Text style={{color: colors.darkBlue,alignSelf: 'flex-end'}}>
-                            {`${hor}:${min} ${amPm} `}
-                            {msgAlumn && <FontAwesome5Icon style={{fontSize: 14, fontWeight: 'bold', color: mensaje.est_men_dest==='Entregado' ? colors.darkSilver : colors.success}} name='check-circle'/>}
-                          </Text>
-                        </View>
-                      :
-                        mensaje.arc_men && 
-                          <View style={styles.containerMsgFile}>
-                              <View style={[platformTheme.fila, {marginBottom: 10}]}>
-                                <Text style={styles.txtTipUsuMsg}>{mensaje.tip_men}</Text>
-                                <Text style={styles.txtUsuMsg}>{mensaje.nom_usu_men}</Text>
-                              </View>
-                              {
-                                isImg && <ImageModal
-                                  resizeMode="contain"
-                                  imageBackgroundColor='#000'
-                                  style={{
-                                    width: 250,
-                                    height: 250,
-                                  }}
-                                  source={{
-                                    uri: 'https://plataforma.ahjende.com/archivos/'+mensaje.arc_men,
-                                  }}
-                                />
-                              }
-                                <Button
-                                  icon="arrow-down"
-                                  textColor='black'
-                                  onPress={()=>fnDownloadFile('https://plataforma.ahjende.com/archivos/'+mensaje.arc_men,mensaje.arc_men ?? '')}
-                                  style={ {alignContent:'flex-start', alignItems: 'flex-start'} }
-                                >
-                                  {mensaje.arc_men}
-                                </Button>
-                                <Text style={{color: colors.darkBlue,alignSelf: 'flex-end'}}>
-                                  {`${hor}:${min} ${amPm}`}
-                                  {msgAlumn}
-                                  {msgAlumn && <FontAwesome5Icon style={{fontSize: 14, fontWeight: 'bold', color: mensaje.est_men_dest==='Entregado' ? colors.darkSilver : colors.success}} name='check-circle'/>}
-                                </Text>
-                          </View>
-                    }
+        
+        {loadingMsgs ? (
+          <LoadingScreen text='Cargando mensajes...'/>
+        ) : mensajes.length > 0 ? (
+          mensajes.map((mensaje:respMsg)=>{
+            const msgAlumn = data_alumno?.id_alu===mensaje.use_men;
+            const isImg = isImage(mensaje.arc_men);
+            const fecHorMen = formatDateHour(mensaje.hor_men, '/');
+            const [fecha,hora,amPm] = fecHorMen.split(' ');
+            const [hor,min,seg] = hora.split(':');
+            
+            if(titleDate!==fecha){
+              titleDate=fecha;
+              viewTitleDate = true;
+            }else{
+              viewTitleDate = false;
+            }
+
+            return (
+              <View key={mensaje.id_men} style={[styles.messageContainer, msgAlumn && styles.messageContainerRight]}>
+                {viewTitleDate && (
+                  <View style={styles.dateDivider}>
+                    <View style={styles.dateLine} />
+                    <Text style={styles.dateText}>{fecha}</Text>
+                    <View style={styles.dateLine} />
                   </View>
-                })
-        }
+                )}
+                
+                {mensaje.men_men ? (
+                  <View style={[styles.messageBubble, msgAlumn ? styles.messageBubbleSent : styles.messageBubbleReceived]}>
+                    <View style={styles.messageHeader}>
+                      <View style={[styles.typeBadge, msgAlumn ? styles.typeBadgeSent : styles.typeBadgeReceived]}>
+                        <Text style={[styles.typeText, msgAlumn && styles.typeTextSent]}>{mensaje.tip_men}</Text>
+                      </View>
+                      <Text style={[styles.userName, msgAlumn && styles.userNameSent]}>{mensaje.nom_usu_men}</Text>
+                    </View>
+                    
+                    <Text style={[styles.messageText, msgAlumn && styles.messageTextSent]}>
+                      {mensaje.men_men}
+                    </Text>
+                    
+                    <View style={styles.messageFooter}>
+                      <Text style={[styles.timeText, msgAlumn && styles.timeTextSent]}>
+                        {`${hor}:${min} ${amPm}`}
+                      </Text>
+                      {msgAlumn && (
+                        <Icon 
+                          name={mensaje.est_men_dest === 'Visto' ? 'check-all' : 'check'} 
+                          size={14} 
+                          color={mensaje.est_men_dest === 'Visto' ? '#34C759' : '#999'} 
+                          style={styles.checkIcon}
+                        />
+                      )}
+                    </View>
+                  </View>
+                ) : mensaje.arc_men && (
+                  <View style={[styles.fileBubble, msgAlumn ? styles.fileBubbleSent : styles.fileBubbleReceived]}>
+                    <View style={styles.messageHeader}>
+                      <View style={[styles.typeBadge, msgAlumn ? styles.typeBadgeSent : styles.typeBadgeReceived]}>
+                        <Text style={[styles.typeText, msgAlumn && styles.typeTextSent]}>{mensaje.tip_men}</Text>
+                      </View>
+                      <Text style={[styles.userName, msgAlumn && styles.userNameSent]}>{mensaje.nom_usu_men}</Text>
+                    </View>
+                    
+                    {isImg && (
+                      <ImageModal
+                        resizeMode="contain"
+                        imageBackgroundColor='#000'
+                        style={styles.messageImage}
+                        source={{ uri: 'https://plataforma.ahjende.com/archivos/'+mensaje.arc_men }}
+                      />
+                    )}
+                    
+                    <TouchableOpacity 
+                      style={styles.downloadButton}
+                      onPress={()=>fnDownloadFile('https://plataforma.ahjende.com/archivos/'+mensaje.arc_men,mensaje.arc_men ?? '')}
+                      activeOpacity={0.7}
+                    >
+                      <Icon name="download" size={18} color="#666" />
+                      <Text style={styles.downloadText} numberOfLines={1}>{mensaje.arc_men}</Text>
+                    </TouchableOpacity>
+                    
+                    <View style={styles.messageFooter}>
+                      <Text style={[styles.timeText, msgAlumn && styles.timeTextSent]}>
+                        {`${hor}:${min} ${amPm}`}
+                      </Text>
+                      {msgAlumn && (
+                        <Icon 
+                          name={mensaje.est_men_dest === 'Visto' ? 'check-all' : 'check'} 
+                          size={14} 
+                          color={mensaje.est_men_dest === 'Visto' ? '#34C759' : '#999'} 
+                          style={styles.checkIcon}
+                        />
+                      )}
+                    </View>
+                  </View>
+                )}
+              </View>
+            )
+          })
+        ) : (
+          <View style={styles.emptyState}>
+            <Icon name="message-outline" size={64} color="#E0E0E0" />
+            <Text style={styles.emptyStateText}>No hay mensajes</Text>
+            <Text style={styles.emptyStateSubtext}>Inicia la conversación</Text>
+          </View>
+        )}
       </ScrollView>
-      <View style={styles.containerTxtInputChat}>
+
+      {/* INPUT DE MENSAJE */}
+      <View style={styles.inputContainer}>
         <View style={styles.inputWrapper}>
           <TextInput
             multiline
             numberOfLines={2}
-            editable
+            editable={!enviando}
             onChangeText={text => setMsgChat(text)}
-            style={styles.inputTxtInputChat}
+            style={styles.textInput}
             placeholder={placeHolderInputTxt}
+            placeholderTextColor="#999"
             value={msgChat}
           />
         </View>
-        {enviando ? (
-          <Text style={styles.iconSendMsg}>...</Text>
-        ) : (
-          <FontAwesome5Icon
-            name="arrow-right"
-            style={styles.iconSendMsg}
-            onPress={validarMensaje}
-          />
-        )}
+        
+        <TouchableOpacity 
+          style={[styles.sendButton, enviando && styles.sendButtonDisabled]}
+          onPress={validarMensaje}
+          disabled={enviando || msgChat.trim() === ''}
+          activeOpacity={0.7}
+        >
+          {enviando ? (
+            <Icon name="loading" size={22} color="#FFF" />
+          ) : (
+            <Icon name="send" size={22} color="#FFF" />
+          )}
+        </TouchableOpacity>
       </View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-    containerMsgChatAlumno: {
-        flex: 1,
-        marginHorizontal: 10
-    },
-    chatHistory: {
-        marginVertical: 10,
-    },
-    containerMsg: {
-        marginBottom: 5,
-    },
-    containerMsgFile: {
-        padding: 10,
-        backgroundColor: colors.softSilver,
-        borderRadius: 5,
-    },
-    containerTxtInputChat: {
-      flexDirection: 'row',
-      padding: 8,
-      alignItems: 'flex-end',
-      backgroundColor: 'white',
-      borderTopWidth: 1,
-      borderColor: '#ddd',
-    },
-    inputWrapper: {
-      flex: 1,
-      backgroundColor: 'white',
-      borderRadius: 20,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      shadowColor: '#000',
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-      elevation: 2,
-      marginRight: 8,
-    },
-    inputTxtInputChat: {
-      fontSize: 16,
-      maxHeight: 100,
-      color: '#333',
-    },
-    iconSendMsg: {
-      backgroundColor: colors.success,
-      color: 'white',
-      fontSize: 20,
-      padding: 12,
-      borderRadius: 50,
-      overflow: 'hidden',
-      shadowColor: '#000',
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-      elevation: 4,
-      alignSelf: 'center',
-      textAlign: 'center',
-    },
-    txtTipUsuMsg: {
-        backgroundColor: colors.yellow,
-        paddingHorizontal: 5,
-        borderRadius: 10
-    },
-    txtUsuMsg: {
-        color: colors.darkBlue,
-        fontWeight: 'bold',
-        marginLeft: 5,
-        fontSize: 16
-    },
-    titleDate: {
-        alignSelf: 'center',
-        backgroundColor: colors.darkBlue,
-        padding: 5,
-        marginVertical: 10,
-        color: 'white',
-        borderRadius: 10,
-        fontWeight: 'bold'
-    }
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  chatHistory: {
+    flex: 1,
+  },
+  chatContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  messageContainer: {
+    marginBottom: 12,
+    alignItems: 'flex-start',
+  },
+  messageContainerRight: {
+    alignItems: 'flex-end',
+  },
+  dateDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginVertical: 16,
+    width: '100%',
+  },
+  dateLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E0E0E0',
+  },
+  dateText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+    paddingHorizontal: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  messageBubble: {
+    maxWidth: '75%',
+    padding: 12,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  messageBubbleReceived: {
+    backgroundColor: '#FFF',
+    borderBottomLeftRadius: 4,
+  },
+  messageBubbleSent: {
+    backgroundColor: '#000',
+    borderBottomRightRadius: 4,
+  },
+  messageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  typeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    marginRight: 6,
+  },
+  typeBadgeReceived: {
+    backgroundColor: '#F5F5F5',
+  },
+  typeBadgeSent: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  typeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#666',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  typeTextSent: {
+    color: '#FFF',
+  },
+  userName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+  },
+  userNameSent: {
+    color: 'rgba(255,255,255,0.8)',
+  },
+  messageText: {
+    fontSize: 15,
+    color: '#000',
+    lineHeight: 20,
+    marginBottom: 4,
+    fontFamily: 'NotoColorEmoji',
+  },
+  messageTextSent: {
+    color: '#FFF',
+    fontFamily: 'NotoColorEmoji',
+  },
+  messageFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginTop: 2,
+  },
+  timeText: {
+    fontSize: 11,
+    color: '#999',
+    fontWeight: '500',
+  },
+  timeTextSent: {
+    color: 'rgba(255,255,255,0.7)',
+  },
+  checkIcon: {
+    marginLeft: 4,
+  },
+  fileBubble: {
+    maxWidth: '75%',
+    padding: 12,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  fileBubbleReceived: {
+    backgroundColor: '#FFF',
+    borderBottomLeftRadius: 4,
+  },
+  fileBubbleSent: {
+    backgroundColor: '#000',
+    borderBottomRightRadius: 4,
+  },
+  messageImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 8,
+    marginVertical: 8,
+  },
+  downloadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    padding: 10,
+    borderRadius: 8,
+    marginVertical: 6,
+    gap: 8,
+  },
+  downloadText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '500',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 16,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 8,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    gap: 10,
+  },
+  inputWrapper: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  textInput: {
+    fontSize: 15,
+    color: '#000',
+    maxHeight: 100,
+    paddingVertical: 0,
+    fontFamily: 'NotoColorEmoji',
+  },
+  sendButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sendButtonDisabled: {
+    backgroundColor: '#999',
+  },
 });

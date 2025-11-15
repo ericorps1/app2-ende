@@ -457,3 +457,13 @@ export const platformTheme = StyleSheet.create({
     elevation: 5
   }
 });
+
+// 🎨 CONFIGURACIÓN GLOBAL DE FUENTES (EMOJIS)
+export const fontConfig = {
+  default: {
+    regular: {
+      fontFamily: 'NotoColorEmoji',
+      fontWeight: 'normal' as const,
+    },
+  },
+};

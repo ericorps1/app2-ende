@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { ActividadData } from '../interfaces/appInterfaces'
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { colors, platformTheme } from '../theme/platformTheme';
-import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { formatDateActividades } from '../hooks/useFormats';
 import { useIsFocused } from '@react-navigation/core';
 import cafeApi from '../api/estudianteAPI';
@@ -13,8 +12,6 @@ interface ActividadProps {
   onPress: () => void;
 }
 
-// Componente
-// COMPONENTE
 export const Actividad = ({ actividad, onPress }: ActividadProps) => {
   const [calAct, setCalAct] = useState({ pun_cal_act: 0, fec_cal_act: '', int_cal_act: 0 });
   const isFocused = useIsFocused();
@@ -30,130 +27,225 @@ export const Actividad = ({ actividad, onPress }: ActividadProps) => {
     }
   };
 
-  let iconName = 'file';
+  let iconName = 'file-document-outline';
+  
   switch (actividad.tipo) {
-    case 'Entregable': iconName = 'file'; break;
-    case 'Examen': iconName = 'diagnoses'; break;
-    case 'Foro': iconName = 'comment'; break;
+    case 'Entregable': 
+      iconName = 'file-document-outline';
+      break;
+    case 'Examen': 
+      iconName = 'clipboard-text-outline';
+      break;
+    case 'Foro': 
+      iconName = 'forum-outline';
+      break;
   }
 
-  let colorStatus = colors.success;
+  let colorStatus = '#34C759';
   let statusAct = 'Calificada';
+  let statusIcon = 'check-circle';
+  
   if (!calAct.fec_cal_act) {
     if (actividad.estatus_fecha === 'Vencida') {
-      colorStatus = colors.error;
+      colorStatus = '#FF3B30';
       statusAct = 'Vencida';
+      statusIcon = 'alert-circle';
     } else {
-      colorStatus = colors.warning;
+      colorStatus = '#FF9500';
       statusAct = 'Pendiente';
+      statusIcon = 'clock-outline';
     }
   }
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
-      <View style={styles.row}>
-        <View style={styles.iconWrapper}>
-          <FontAwesome5Icon name={iconName} style={styles.icon} />
+    <TouchableOpacity 
+      style={styles.container} 
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      {/* HEADER CON ÍCONO Y STATUS */}
+      <View style={styles.header}>
+        <View style={styles.iconContainer}>
+          <Icon name={iconName} size={24} color="#666" />
+        </View>
+        
+        <View style={styles.headerContent}>
+          <View style={styles.typeBadge}>
+            <Text style={styles.typeText}>{actividad.tipo}</Text>
+          </View>
         </View>
 
-        <View style={styles.detailsWrapper}>
-          <Text style={styles.title}>{actividad.titulo}</Text>
-          <Text style={styles.tipo}>{actividad.tipo}</Text>
-
-          <View style={styles.puntosContainer}>
-            <Text style={styles.textLabel}>Puntos totales: <Text style={styles.textValue}>{actividad.puntaje}</Text></Text>
-            <Text style={styles.textLabel}>Puntos ontenidos: <Text style={styles.textValue}>{calAct.pun_cal_act || 'Sin calificación'}</Text></Text>
-          </View>
-
-          <Text style={styles.fechas}>
-            {formatDateActividades(actividad.inicio)} - {formatDateActividades(actividad.fin)}
-          </Text>
+        <View style={[styles.statusBadge, { backgroundColor: colorStatus }]}>
+          <Icon name={statusIcon} size={13} color="#FFF" />
         </View>
       </View>
 
-      <View style={styles.statusWrapper}>
-        <Text style={{ ...styles.statusText, backgroundColor: colorStatus }}>
-          {statusAct}
-        </Text>
+      {/* TÍTULO */}
+      <Text style={styles.title} numberOfLines={2}>{actividad.titulo}</Text>
+
+      {/* PUNTOS */}
+      <View style={styles.pointsSection}>
+        <View style={styles.pointCard}>
+          <Icon name="star-outline" size={14} color="#666" />
+          <View style={styles.pointInfo}>
+            <Text style={styles.pointLabel}>Puntos totales</Text>
+            <Text style={styles.pointValue}>{actividad.puntaje}</Text>
+          </View>
+        </View>
+
+        <View style={styles.pointCard}>
+          <Icon name="star" size={14} color="#666" />
+          <View style={styles.pointInfo}>
+            <Text style={styles.pointLabel}>Puntos obtenidos</Text>
+            <Text style={styles.pointValue}>
+              {calAct.pun_cal_act || 'Sin calificar'}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* FECHAS */}
+      <View style={styles.datesSection}>
+        <View style={styles.dateRow}>
+          <Icon name="calendar-start" size={13} color="#999" />
+          <Text style={styles.dateText}>{formatDateActividades(actividad.inicio)}</Text>
+        </View>
+        <View style={styles.dateRow}>
+          <Icon name="calendar-end" size={13} color="#999" />
+          <Text style={styles.dateText}>{formatDateActividades(actividad.fin)}</Text>
+        </View>
+      </View>
+
+      {/* BOTTOM BAR */}
+      <View style={styles.bottomBar}>
+        <View style={[styles.statusLabel, { backgroundColor: colorStatus + '15' }]}>
+          <Text style={[styles.statusText, { color: colorStatus }]}>{statusAct}</Text>
+        </View>
+        <Icon name="chevron-right" size={18} color="#D0D0D0" />
       </View>
     </TouchableOpacity>
   );
 };
 
-// ESTILOS
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    marginTop: 12,
-    marginRight: 10,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#eee',
+    backgroundColor: '#FFF',
+    borderRadius: 14,
+    marginVertical: 6,
+    padding: 14,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
-  row: {
+  header: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 10,
   },
-  iconWrapper: {
-    width: 70,
-    height: 70,
-    borderRadius: 40,
-    backgroundColor: '#f5f5f5',
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginRight: 10,
   },
-  icon: {
-    fontSize: 30,
-    color: colors.primary,
-  },
-  detailsWrapper: {
+  headerContent: {
     flex: 1,
   },
+  typeBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 7,
+  },
+  typeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#666',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  statusBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   title: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#222',
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 12,
+    lineHeight: 20,
   },
-  tipo: {
-    fontSize: 13,
-    color: '#888',
-    marginTop: 2,
-    marginBottom: 6,
+  pointsSection: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
   },
-  puntosContainer: {
-    marginBottom: 6,
+  pointCard: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FAFAFA',
+    padding: 10,
+    borderRadius: 9,
+    gap: 8,
   },
-  textLabel: {
-    fontSize: 13,
-    color: '#555',
+  pointInfo: {
+    flex: 1,
   },
-  textValue: {
-    fontWeight: '600',
-    color: '#111',
+  pointLabel: {
+    fontSize: 10,
+    color: '#666',
+    marginBottom: 2,
+    fontWeight: '500',
   },
-  fechas: {
-    fontSize: 12,
-    color: '#777',
-    marginTop: 2,
+  pointValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#000',
   },
-  statusWrapper: {
-    marginTop: 10,
-    alignItems: 'flex-end',
+  datesSection: {
+    gap: 6,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#F0F0F0',
+    marginBottom: 10,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dateText: {
+    fontSize: 11,
+    color: '#666',
+    fontWeight: '500',
+  },
+  bottomBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  statusLabel: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 7,
   },
   statusText: {
-    color: '#fff',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    fontWeight: 'bold',
-    fontSize: 12,
-    overflow: 'hidden',
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
 });
