@@ -296,33 +296,39 @@ export const Cuenta = () => {
                         />
                     }
                 >
-                    {/* HEADER */}
-                    <View style={styles.header}>
-                        <View style={styles.avatarSection}>
+                    {/* HERO HEADER */}
+                    <View style={styles.heroSection}>
+                        <View style={styles.heroContent}>
                             <TouchableOpacity onPress={() => getPhoto('img')} activeOpacity={0.8}>
                                 { (data_alumno?.fot_alu || newProfilePic!=='') 
                                     ? (
                                         <Image 
                                             source={{ uri: (newProfilePic==='') ? 'https://plataforma.ahjende.com/uploads/'+data_alumno?.fot_alu : newProfilePic}}
-                                            style={styles.avatar}
+                                            style={styles.heroAvatar}
                                         />
                                     )
                                     : (
-                                        <View style={styles.avatar}>
-                                            <Text style={styles.avatarText}>{FormatNameAvatar(data_alumno?.nom_alu)}</Text>
+                                        <View style={styles.heroAvatar}>
+                                            <Text style={styles.heroAvatarText}>{FormatNameAvatar(data_alumno?.nom_alu)}</Text>
                                         </View>
                                     )
                                 }
                                 <View style={styles.cameraIconBadge}>
-                                    <Icon name="camera" size={14} color="#FFF" />
+                                    <Icon name="camera" size={16} color="#FFF" />
                                 </View>
                             </TouchableOpacity>
-                            <View style={styles.userInfo}>
-                                <Text style={styles.userName}>{data_alumno?.nom_alu}</Text>
-                                <View style={styles.statusBadge}>
-                                    <View style={styles.statusDot} />
-                                    <Text style={styles.userSubtitle}>{data_alumno?.estatus_general}</Text>
-                                </View>
+                            
+                            <Text style={styles.heroName}>{data_alumno?.nom_alu}</Text>
+                            
+                            <View style={styles.statusBadge}>
+                                <View style={styles.statusDot} />
+                                <Text style={styles.statusText}>{data_alumno?.estatus_general}</Text>
+                            </View>
+
+                            {/* PLANTEL */}
+                            <View style={styles.plantelBadge}>
+                                <Icon name="map-marker-outline" size={14} color="#666" />
+                                <Text style={styles.plantelText}>{data_alumno?.nom_pla}</Text>
                             </View>
                         </View>
                         
@@ -560,59 +566,67 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F5F5F5',
     },
-    header: {
+    heroSection: {
         backgroundColor: '#FFF',
         paddingTop: 60,
-        paddingHorizontal: 20,
-        paddingBottom: 20,
+        paddingBottom: 32,
+        alignItems: 'center',
         borderBottomWidth: 1,
         borderBottomColor: '#F0F0F0',
     },
-    avatarSection: {
-        flexDirection: 'row',
+    heroContent: {
         alignItems: 'center',
+        width: '100%',
     },
-    avatar: {
-        width: 72,
-        height: 72,
-        borderRadius: 36,
+    heroAvatar: {
+        width: 90,
+        height: 90,
+        borderRadius: 45,
         backgroundColor: '#000',
         justifyContent: 'center',
         alignItems: 'center',
-        position: 'relative',
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
     },
-    avatarText: {
+    heroAvatarText: {
         color: '#FFF',
-        fontSize: 26,
+        fontSize: 32,
         fontWeight: '700',
     },
     cameraIconBadge: {
         position: 'absolute',
-        bottom: 0,
-        right: 0,
+        bottom: 16,
+        right: -2,
         backgroundColor: '#000',
-        width: 24,
-        height: 24,
-        borderRadius: 12,
+        width: 30,
+        height: 30,
+        borderRadius: 15,
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 2,
+        borderWidth: 3,
         borderColor: '#FFF',
     },
-    userInfo: {
-        marginLeft: 16,
-        flex: 1,
-    },
-    userName: {
-        fontSize: 20,
+    heroName: {
+        fontSize: 24,
         fontWeight: '700',
         color: '#000',
-        marginBottom: 6,
+        marginBottom: 8,
+        textAlign: 'center',
+        paddingHorizontal: 20,
     },
     statusBadge: {
         flexDirection: 'row',
         alignItems: 'center',
+        backgroundColor: '#F5F5F5',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 12,
         gap: 6,
+        marginBottom: 12,
     },
     statusDot: {
         width: 6,
@@ -620,15 +634,27 @@ const styles = StyleSheet.create({
         borderRadius: 3,
         backgroundColor: '#34C759',
     },
-    userSubtitle: {
+    statusText: {
+        fontSize: 13,
+        color: '#666',
+        fontWeight: '600',
+    },
+    plantelBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    plantelText: {
         fontSize: 13,
         color: '#666',
         fontWeight: '500',
     },
     photoActions: {
         flexDirection: 'row',
-        marginTop: 16,
+        marginTop: 20,
+        paddingHorizontal: 20,
         gap: 8,
+        width: '100%',
     },
     photoActionButton: {
         flex: 1,
