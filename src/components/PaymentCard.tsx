@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { FormatAmount, formatDate } from '../hooks/useFormats';
-import { colors, statusColors } from '../theme/platformTheme';
+import { statusColors } from '../theme/platformTheme';
 import { useNavigation } from '@react-navigation/core';
-import { Touchable } from './Touchable';
 
 interface PropsPaymentCard {
   data_pagos: {
@@ -16,73 +15,122 @@ interface PropsPaymentCard {
     con_pag: string;
     mon_ori_pag: string;
     mon_pag: string;
-  },
+  };
 }
 
 const PaymentCard = ({ data_pagos }: PropsPaymentCard) => {
   const navigation = useNavigation<any>();
 
-  const onPressTP = () => navigation.navigate('PagoDetalle', data_pagos)
+  const getStatusIcon = () => {
+    switch (data_pagos.est_pag) {
+      case 'Pagado':
+        return { name: 'check-circle', color: '#4CAF50' };
+      case 'Vencido':
+        return { name: 'alert-circle', color: '#F44336' };
+      default:
+        return { name: 'clock-outline', color: '#FF9800' };
+    }
+  };
+
+  const statusIcon = getStatusIcon();
+  const amount = data_pagos.est_pag === 'Pagado' ? data_pagos.mon_ori_pag : data_pagos.mon_pag;
+
   return (
-    <Touchable 
-      onPress={onPressTP}
-      styleContainer={{
-        ...styles.card,
-        borderLeftColor: statusColors[data_pagos.est_pag]
-    }}>
-      <View style={styles.row}>
-        <Text style={[styles.type,{ color: colors.silver }]}>{data_pagos.con_pag}</Text>
-        <Text style={[styles.status, { color: statusColors[data_pagos.est_pag] }]}>{data_pagos.est_pag}</Text>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate('PagoDetalle', data_pagos)}
+      activeOpacity={0.7}
+    >
+      {/* HEADER */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <View style={[styles.statusDot, { backgroundColor: statusIcon.color }]} />
+          <Text style={styles.concept} numberOfLines={1}>
+            {data_pagos.con_pag}
+          </Text>
+        </View>
+        <View style={[styles.statusBadge, { backgroundColor: `${statusIcon.color}15` }]}>
+          <Icon name={statusIcon.name} size={14} color={statusIcon.color} />
+          <Text style={[styles.statusText, { color: statusIcon.color }]}>
+            {data_pagos.est_pag}
+          </Text>
+        </View>
       </View>
 
-      <Text style={[styles.amount, { color: colors.darkSilver }]}>
-        <FormatAmount amount={(data_pagos.est_pag==='Pagado') ? data_pagos.mon_ori_pag : data_pagos.mon_pag }/>
+      {/* AMOUNT */}
+      <Text style={styles.amount}>
+        <FormatAmount amount={amount} />
       </Text>
-      <View style={styles.row}>
-        <Icon name="calendar-outline" size={30} color={colors.mediumSilver} />
-        <Text style={[styles.date, { color: colors.mediumSilver }]}>{formatDate(data_pagos.fec_pag)}</Text>
+
+      {/* FOOTER */}
+      <View style={styles.footer}>
+        <Icon name="calendar-outline" size={16} color="#999" />
+        <Text style={styles.date}>{formatDate(data_pagos.fec_pag)}</Text>
       </View>
-    </Touchable>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    marginVertical: 10,
-    marginHorizontal: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 5 },
-    shadowRadius: 10,
-    elevation: 5,
-    borderLeftWidth: 5, // Indicador de color para el estado
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
   },
-  row: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: 10,
   },
-  type: {
-    fontSize: 18,
-    fontWeight: '600',
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 8,
   },
-  status: {
-    fontSize: 16,
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  concept: {
+    fontSize: 14,
     fontWeight: '600',
+    color: '#1A1A1A',
+    flex: 1,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   amount: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginVertical: 5,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 8,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   date: {
-    fontSize: 14,
-    marginLeft: 5,
-  }
+    fontSize: 13,
+    color: '#999',
+  },
 });
 
 export default PaymentCard;

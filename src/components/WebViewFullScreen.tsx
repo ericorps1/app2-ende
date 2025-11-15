@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
 import WebView from 'react-native-webview';
-import { View, StyleSheet, useWindowDimensions, Text, ScrollView, TouchableOpacity, Touchable } from 'react-native';
+import { View, StyleSheet, useWindowDimensions, Text, ScrollView, TouchableOpacity } from 'react-native';
 import RenderHtml from 'react-native-render-html';
 import { HTMLSource } from 'react-native-render-html';
-import { colors } from '../theme/platformTheme';
 import { BackButtonNavigation } from './BackButtonNavigation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChatAlumno } from './ChatAlumno';
 import { fnDownloadFile } from '../hooks/useDownloads';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface PropsWebViewFullScreen {
     route: {
@@ -25,77 +25,116 @@ interface PropsWebViewFullScreen {
 export const WebViewFullScreen = ({ route, navigation }:PropsWebViewFullScreen) => {
     const {url, title, htmlText, downloadFile, viewMiniChat} = route.params;
     const { width } = useWindowDimensions();
-    const [download, setDownload] = useState(false)
+    const [download, setDownload] = useState(false);
 
     return (
-        <SafeAreaView style={ styles.container }>
+        <SafeAreaView style={styles.container}>
             <BackButtonNavigation onPressBack={() => navigation.pop()} title={title}/>
-            <ScrollView style={{marginBottom: 50}}>
-                <View style={ styles.bodyWevViewFS }>
-                    <View style={styles.bodyContentElements}>
+            
+            <ScrollView 
+                style={styles.scrollView}
+                contentContainerStyle={styles.contentContainer}
+                showsVerticalScrollIndicator={false}
+            >
+                {/* HTML CONTENT */}
+                {htmlText && (
+                    <View style={styles.htmlContainer}>
                         <RenderHtml
-                            contentWidth={width}
+                            contentWidth={width - 32}
                             source={htmlText}
                         />
                     </View>
-                    { url && downloadFile===false && //si viene una url y no es un archivo de descarga se monta la previsualizacion
-                        <View style={styles.bodyContentElements}>
-                            <WebView
-                                visible={true}
-                                source={{uri: url.trim()}}
-                                style={{width: '100%',height: 400}}
-                            />
-                        </View>
-                    }
-                    { url && downloadFile===true && //Si es una url y es un archivo de descarga se monta el botón de descarga
-                        <View style={styles.bodyContentElements}>
-                            <TouchableOpacity
-                                style={ styles.btnDownload }
-                                onPress={()=>fnDownloadFile(url)}
-                            >
-                                <Text style={ styles.btnDownloadText }>DESCARGAR</Text>
-                            </TouchableOpacity>
-                            { download && <WebView
-                                    visible={true}
+                )}
+
+                {/* PREVIEW */}
+                {url && !downloadFile && (
+                    <View style={styles.previewContainer}>
+                        <WebView
+                            source={{uri: url.trim()}}
+                            style={styles.webview}
+                        />
+                    </View>
+                )}
+
+                {/* DOWNLOAD BUTTON */}
+                {url && downloadFile && (
+                    <View style={styles.downloadContainer}>
+                        <TouchableOpacity
+                            style={styles.downloadButton}
+                            onPress={() => fnDownloadFile(url)}
+                            activeOpacity={0.7}
+                        >
+                            <Icon name="download" size={20} color="#FFF" />
+                            <Text style={styles.downloadText}>Descargar archivo</Text>
+                        </TouchableOpacity>
+                        
+                        {download && (
+                            <View style={styles.previewContainer}>
+                                <WebView
                                     source={{uri: url}}
-                                    style={{width: '100%',height: 400}}
-                                /> 
-                            }
-                        </View>
-                    }
-                </View>
+                                    style={styles.webview}
+                                />
+                            </View>
+                        )}
+                    </View>
+                )}
             </ScrollView>
-            { viewMiniChat && <ChatAlumno/> }
+
+            {viewMiniChat && <ChatAlumno/>}
         </SafeAreaView>
     )
 }
 
 const styles = StyleSheet.create({
     container: {
-      paddingTop: 10,
-      flex: 1,
-      paddingLeft: 20,
+        flex: 1,
+        backgroundColor: '#F5F5F5',
     },
-    bodyWevViewFS: { 
-      flex: 1,
-      justifyContent: 'flex-start',
+    scrollView: {
+        flex: 1,
     },
-    title: {
-      fontSize: 30,
-      color: colors.darkBlue
+    contentContainer: {
+        paddingBottom: 100,
     },
-    bodyContentElements: {
-        paddingRight: 20,
-        paddingVertical: 20,
+    htmlContainer: {
+        backgroundColor: '#FFF',
+        marginHorizontal: 16,
+        marginTop: 16,
+        padding: 16,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E8E8E8',
     },
-    btnDownload: {
-        backgroundColor: colors.primary,
-        padding: 5,
+    previewContainer: {
+        backgroundColor: '#FFF',
+        marginHorizontal: 16,
+        marginTop: 16,
+        borderRadius: 12,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#E8E8E8',
+    },
+    webview: {
+        width: '100%',
+        height: 400,
+    },
+    downloadContainer: {
+        marginHorizontal: 16,
+        marginTop: 16,
+    },
+    downloadButton: {
+        flexDirection: 'row',
+        backgroundColor: '#000',
+        paddingVertical: 14,
+        paddingHorizontal: 20,
         borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
     },
-    btnDownloadText: {
-        color: 'white',
-        textAlign: 'center',
-        fontSize: 18
-    }
-})
+    downloadText: {
+        color: '#FFF',
+        fontSize: 15,
+        fontWeight: '600',
+    },
+});

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { View, Text, StyleSheet } from 'react-native';
-import { colors } from '../theme/platformTheme';
 
 interface PropsCounterTime {
     minutos: number;
@@ -9,6 +8,7 @@ interface PropsCounterTime {
 
 export const CounterTime = ({minutos,onEnd}:PropsCounterTime) => {
     const [time, setTime] = useState({minutos, segundos: 0});
+    
     useEffect(() => {
         let min = time.minutos;
         let seg = time.segundos;
@@ -24,33 +24,28 @@ export const CounterTime = ({minutos,onEnd}:PropsCounterTime) => {
                 setTime({minutos: min,segundos: seg});
             }
         },1000);
-        return () => {//se limpia el interval para que no siga ejecutandose al desmontar el componente
+        return () => {
             clearInterval(counter);
         }
-    },[]);
+    },[time]);
 
     return (
         <View style={styles.container}>
-            <Text style={styles.timer}>{time.minutos.toString().padStart(2,'0')}:{time.segundos.toString().padStart(2,'0')}</Text>
+            <Text style={styles.timer}>
+                {time.minutos.toString().padStart(2,'0')}:{time.segundos.toString().padStart(2,'0')}
+            </Text>
         </View>  
     )
 }
 
 const styles = StyleSheet.create({
     container: {
-        position: 'absolute',
-        right: 10,
-        top: 50,
-        zIndex: 999,
-        padding: 10,
-        borderRadius: 5,
-        backgroundColor: colors.softBlue,
-        borderWidth: 1,
-        opacity: 0.8,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     timer: {
-        color: colors.darkBlue,
-        fontWeight: 'bold',
-        fontSize: 20,
+        color: '#FF3B30',
+        fontWeight: '700',
+        fontSize: 16,
     }
 });

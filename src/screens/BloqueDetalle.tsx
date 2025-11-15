@@ -139,26 +139,31 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
   }
 
   const getFileIconAndColor = (fileName: string | null) => {
-    if (!fileName) return { icon: 'file', color: '#999' };
+    if (!fileName) return { icon: 'file-document-outline', color: '#666' };
     
     const extension = fileName.split('.').pop()?.toLowerCase();
     
+    // Si no hay extensión, retornar default
+    if (!extension || extension === fileName) {
+      return { icon: 'file-document-outline', color: '#666' };
+    }
+    
     switch(extension) {
       case 'pdf':
-        return { icon: 'file-pdf', color: '#D32F2F' };
+        return { icon: 'file-pdf-box', color: '#D32F2F' };
       case 'doc':
       case 'docx':
-        return { icon: 'file-word', color: '#2B579A' };
+        return { icon: 'file-word-box', color: '#2B579A' };
       case 'xls':
       case 'xlsx':
-        return { icon: 'file-excel', color: '#217346' };
+        return { icon: 'file-excel-box', color: '#217346' };
       case 'ppt':
       case 'pptx':
-        return { icon: 'file-powerpoint', color: '#D24726' };
+        return { icon: 'file-powerpoint-box', color: '#D24726' };
       case 'zip':
       case 'rar':
       case '7z':
-        return { icon: 'file-archive', color: '#FFA000' };
+        return { icon: 'folder-zip', color: '#FFA000' };
       case 'jpg':
       case 'jpeg':
       case 'png':
@@ -173,11 +178,11 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
       case 'mp3':
       case 'wav':
       case 'flac':
-        return { icon: 'file-audio', color: '#00BCD4' };
+        return { icon: 'file-music', color: '#00BCD4' };
       case 'txt':
-        return { icon: 'file-alt', color: '#607D8B' };
+        return { icon: 'file-document', color: '#607D8B' };
       default:
-        return { icon: 'file', color: '#999' };
+        return { icon: 'file-document-outline', color: '#666' };
     }
   }
 

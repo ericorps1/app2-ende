@@ -87,13 +87,16 @@ export const Materias = ({route}:any) => {
           {/* BLOQUES */}
           {bloques.length > 0 ? (
             <View style={styles.bloquesSection}>
-              {bloques.map((bloque: BloqueDataInfo) => (
-                <TarjetaBloque 
-                  key={bloque.id_blo} 
-                  bloque_data={bloque} 
-                  nom_mat={nom_mat}
-                />
-              ))}
+              {bloques
+                .sort((a: BloqueDataInfo, b: BloqueDataInfo) => a.ord_blo - b.ord_blo)
+                .map((bloque: BloqueDataInfo) => (
+                  <TarjetaBloque 
+                    key={bloque.id_blo} 
+                    bloque_data={bloque} 
+                    nom_mat={nom_mat}
+                  />
+                ))
+              }
             </View>
           ) : (
             <View style={styles.emptyState}>

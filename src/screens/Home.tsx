@@ -1,12 +1,11 @@
-import React, {useContext, useState, useEffect } from 'react'
-import { Text, StyleSheet, ScrollView, SafeAreaView, Linking } from 'react-native';
+import React, { useContext, useState, useEffect } from 'react';
+import { Text, StyleSheet, ScrollView, SafeAreaView, Linking, View, RefreshControl } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 import PaperMessages from '../components/PaperMessages';
 import { colors, platformTheme } from '../theme/platformTheme';
 import { ActividadesPendientes } from '../components/ActividadesPendientes';
-import { AvisosEstudiante } from '../components/AvisosEstudiante';
 import { baseUrlSite } from '../hooks/useGlobal';
-import {requestUserPermission,NotificationListener} from '../utils/pushnotification_helper'
+import { requestUserPermission, NotificationListener } from '../utils/pushnotification_helper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeviceInfo from 'react-native-device-info';
 import { PagosAnticipadosVencidos } from '../components/PagosAnticipadosVencidos';
@@ -14,151 +13,245 @@ import { getMessaging } from '@react-native-firebase/messaging';
 import endeApi from '../api/estudianteAPI';
 import { useAppDispatch } from '../app/hooks';
 import { addNotifications } from '../features/notifications/dataNotificationsSlice';
-import { useNavigation } from "@react-navigation/core";
+import { useNavigation } from '@react-navigation/core';
 import { updateStatusNotificationService } from '../services/PushNotificationsService';
 
 export const Home = () => {
   const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
-  const { data_alumno, token, logOut } = useContext( AuthContext );
-  const [encuestasPendientes, setEncuestasPendientes] = useState([])
+  const { data_alumno } = useContext(AuthContext);
+  
+  const [encuestasPendientes, setEncuestasPendientes] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    validarToken();
-    NotificationListener();
-    getEncuestasAlumno();
-    updateNotifications();
-    const unsubscribe = getMessaging().onMessage(async remoteMessage => {
-      const id_not = remoteMessage?.data?.not_id ?? 0;
-      await updateStatusNotificationService(id_not, 'Recibida');
-      await updateNotifications();
-    });
-    const unsubscribe2 = getMessaging().onNotificationOpenedApp(async remoteMessage => {//evento cuando se oprime en la notificación recibida en el dispositivo
-      await updateNotifications();
-      console.log(
-        'Se abrio la app desde la notificación:',
-        remoteMessage,
-      );
-      const notification = typeof remoteMessage?.data?.notification === 'string' 
-        ? JSON.parse(remoteMessage?.data?.notification) 
-        : null;
-      if(notification){
-        navigation.navigate('DetalleNotificacion', { notification })
-      }
-    });
+    initializeHome();
+    
+    const unsubscribeMessage = getMessaging().onMessage(handleIncomingMessage);
+    const unsubscribeOpen = getMessaging().onNotificationOpenedApp(handleNotificationOpen);
+    const unsubscribeTokenRefresh = getMessaging().onTokenRefresh(handleTokenRefresh);
 
-    // 🔄 Manejo de refresh de token
-    const unsubscribe3 = getMessaging().onTokenRefresh(async (newToken) => {
-      console.log('Nuevo token FCM:', newToken);
-      try {
-        // Actualizar token en AsyncStorage
-        await AsyncStorage.setItem('fcmtoken', newToken);
-        // Enviar token actualizado a tu backend
-        await vincularUsuario();
-      } catch (error) {
-        console.log('Error actualizando token FCM:', error);
-      }
-    });
     return () => {
       setEncuestasPendientes([]);
-      unsubscribe();
-      unsubscribe2();
-      unsubscribe3();
+      unsubscribeMessage();
+      unsubscribeOpen();
+      unsubscribeTokenRefresh();
+    };
+  }, []);
+
+  const getSaludo = () => {
+    const hora = new Date().getHours();
+    if (hora >= 6 && hora < 12) return 'Buenos días';
+    if (hora >= 12 && hora < 19) return 'Buenas tardes';
+    return 'Buenas noches';
+  };
+
+  const getNombreAlumno = () => {
+    const nombreCompleto = data_alumno?.nom_alu || '';
+    const nombre = nombreCompleto.split(' ')[0];
+    return nombre;
+  };
+
+  const initializeHome = async () => {
+    await validarToken();
+    NotificationListener();
+    await Promise.all([
+      getEncuestasAlumno(),
+      updateNotifications(),
+    ]);
+  };
+
+  const handleIncomingMessage = async (remoteMessage: any) => {
+    const id_not = remoteMessage?.data?.not_id ?? 0;
+    await updateStatusNotificationService(id_not, 'Recibida');
+    await updateNotifications();
+  };
+
+  const handleNotificationOpen = async (remoteMessage: any) => {
+    await updateNotifications();
+    console.log('App abierta desde notificación:', remoteMessage);
+    
+    const notification = typeof remoteMessage?.data?.notification === 'string'
+      ? JSON.parse(remoteMessage?.data?.notification)
+      : null;
+      
+    if (notification) {
+      navigation.navigate('DetalleNotificacion', { notification });
     }
-  }, [])
+  };
+
+  const handleTokenRefresh = async (newToken: string) => {
+    console.log('Nuevo token FCM:', newToken);
+    try {
+      await AsyncStorage.setItem('fcmtoken', newToken);
+      await vincularUsuario();
+    } catch (error) {
+      console.log('Error actualizando token FCM:', error);
+    }
+  };
 
   const updateNotifications = async () => {
-    const {data} = await endeApi.get(`notificaciones/${data_alumno?.id_alu}`);
-    if(data.trans){
-      if(data.data.length > 0){
-        dispatch(addNotifications(data.data))
+    try {
+      const { data } = await endeApi.get(`notificaciones/${data_alumno?.id_alu}`);
+      if (data.trans && data.data.length > 0) {
+        dispatch(addNotifications(data.data));
       }
+    } catch (error) {
+      console.log('Error actualizando notificaciones:', error);
     }
-  }
+  };
 
   const validarToken = async () => {
+    try {
       await requestUserPermission();
       const token = await AsyncStorage.getItem('fcmtoken');
-      const {data} = await endeApi.get('push_notification/validarToken', {params:{token, usuario: data_alumno?.id_alu}});
-      if(data.trans && token!==null){
-          if(!data.miUsuario){//Si no ha sido asignado a otro usuario y no ha sido asignado a mi usuario lo asigno a mi usuario
-              await vincularUsuario();
-          }
+      
+      if (!token) return;
+      
+      const { data } = await endeApi.get('push_notification/validarToken', {
+        params: { token, usuario: data_alumno?.id_alu }
+      });
+      
+      if (data.trans && !data.miUsuario) {
+        await vincularUsuario();
       }
-  }
+    } catch (error) {
+      console.log('Error validando token:', error);
+    }
+  };
 
   const getEncuestasAlumno = async () => {
-      const {data} = await endeApi.get(`encuestas/encuestasPendientes/${data_alumno?.id_alu}/${data_alumno?.id_cad1}/${data_alumno?.id_pla8}`);
-      if(data.trans){
-          setEncuestasPendientes(data.data)
+    try {
+      const { data } = await endeApi.get(
+        `encuestas/encuestasPendientes/${data_alumno?.id_alu}/${data_alumno?.id_cad1}/${data_alumno?.id_pla8}`
+      );
+      if (data.trans) {
+        setEncuestasPendientes(data.data);
       }
-  }
+    } catch (error) {
+      console.log('Error obteniendo encuestas:', error);
+    }
+  };
 
   const vincularUsuario = async () => {
+    try {
       const token = await AsyncStorage.getItem('fcmtoken');
-      if(token && data_alumno?.id_alu){//Si existe el token ya sea desde el AsyncStorage o generado desde firebase, se asocia al usuario en la base de datos (dispositivo -> usuario)
-          const headers = {headers:{ 'Content-Type':'multipart/form-data' }};
-          let dataDesv = true;
-          if(dataDesv){
-              const deviceInfo = {
-                  deviceId: await DeviceInfo.getDeviceId(),
-                  model: DeviceInfo.getModel(),
-                  brand: DeviceInfo.getBrand(),
-                  systemName: DeviceInfo.getSystemName(),
-                  systemVersion: DeviceInfo.getSystemVersion(),
-                  uniqueId: DeviceInfo.getUniqueId(),
-              };
-              await endeApi.post('/push_notification/vincularUsuarioToken', {token, usuario: data_alumno?.id_alu, deviceInfo: JSON.stringify(deviceInfo)}, headers);//Se quita el token a cualquier usuario que ya lo tenga asignado.
-          }
-          // console.log('Guardar token en la bd');
-      }
-  }
+      
+      if (!token || !data_alumno?.id_alu) return;
+
+      const deviceInfo = {
+        deviceId: await DeviceInfo.getDeviceId(),
+        model: DeviceInfo.getModel(),
+        brand: DeviceInfo.getBrand(),
+        systemName: DeviceInfo.getSystemName(),
+        systemVersion: DeviceInfo.getSystemVersion(),
+        uniqueId: DeviceInfo.getUniqueId(),
+      };
+
+      await endeApi.post(
+        '/push_notification/vincularUsuarioToken',
+        {
+          token,
+          usuario: data_alumno?.id_alu,
+          deviceInfo: JSON.stringify(deviceInfo)
+        },
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+    } catch (error) {
+      console.log('Error vinculando usuario:', error);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([
+      getEncuestasAlumno(),
+      updateNotifications(),
+    ]);
+    setRefreshing(false);
+  };
+
+  const handleResponderEncuestas = () => {
+    Linking.openURL(baseUrlSite);
+    setEncuestasPendientes([]);
+  };
 
   return (
-      <SafeAreaView style={styles.container}>
-          <ScrollView>
-              {/* <WhiteLogo /> */}
-              <AvisosEstudiante/>
-              <ActividadesPendientes/>
-              <PagosAnticipadosVencidos/>
-          </ScrollView>
-          <PaperMessages
-            visible={encuestasPendientes.length>0}
-            title='Encuestas pendientes'
-            message=<Text>Tu opinion es lo más importante para nosotros. Ayúdanos a mejorar la experiencia ENDE.</Text>
-            buttonText='RESPONDER ENCUESTAS'
-            dismissable={true}
-            colorTitle={colors.blue}
-            colorBody={colors.darkBlue}
-            pressButton = { () => {Linking.openURL(baseUrlSite);setEncuestasPendientes([])} }
-            btnTxtCancel='AHORA NO'
-            evtBtnCancel={() => setEncuestasPendientes([])}
-            styleButton={platformTheme.btnBlue}
-            styleBtnCancel={platformTheme.btnSilver}
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#000"
+            colors={['#000']}
           />
-      </SafeAreaView>
-      
-  )
-}
+        }
+      >
+        {/* HEADER DE SALUDO */}
+        <View style={styles.header}>
+          <Text style={styles.greeting}>{getSaludo()}</Text>
+          <Text style={styles.userName}>{getNombreAlumno()}</Text>
+        </View>
 
+        <View style={styles.content}>
+          <ActividadesPendientes />
+          <PagosAnticipadosVencidos />
+        </View>
+      </ScrollView>
+
+      <PaperMessages
+        visible={encuestasPendientes.length > 0}
+        title="Encuestas pendientes"
+        message={
+          <Text style={styles.modalMessage}>
+            Tu opinión es lo más importante para nosotros. Ayúdanos a mejorar la experiencia ENDE.
+          </Text>
+        }
+        buttonText="RESPONDER ENCUESTAS"
+        dismissable={true}
+        colorTitle={colors.blue}
+        colorBody={colors.darkBlue}
+        pressButton={handleResponderEncuestas}
+        btnTxtCancel="AHORA NO"
+        evtBtnCancel={() => setEncuestasPendientes([])}
+        styleButton={platformTheme.btnBlue}
+        styleBtnCancel={platformTheme.btnSilver}
+      />
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1
-    },
-    title: {
-        fontSize: 20,
-        marginBottom: 20
-    },
-
-    card_1: {
-        borderRadius: 20,
-        backgroundColor: "#ffffff",
-        flex: 1,
-        alignItems: 'center',
-        padding: 30,
-        width: 350,
-        margin: 10
-        
-    }
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 16,
+    backgroundColor: '#FFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  greeting: {
+    fontSize: 15,
+    color: '#666',
+    marginBottom: 4,
+  },
+  userName: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#000',
+  },
+  content: {
+    paddingBottom: 20,
+  },
+  modalMessage: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#666',
+  },
 });
