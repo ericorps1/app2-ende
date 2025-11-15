@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, RefreshControl } from 'react-native';
 import endeApi from '../api/estudianteAPI';
 import { AuthContext } from '../context/AuthContext';
 import { colors, platformTheme } from '../theme/platformTheme';
@@ -8,71 +8,152 @@ import DocumentationCard from '../components/DocumentationCard';
 import { IntDocumentationCard } from '../interfaces/appInterfaces';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useFocusEffect } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export const Documentacion = () => {
   const [loadingDoc, setLoadingDoc] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const { data_alumno } = useContext( AuthContext );
   const [documentacion, setDocumentacion] = useState([]);
+  
   useFocusEffect(
     useCallback(() => {
       getDocumentacion();
     }, [])
   );
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await getDocumentacion();
+    setRefreshing(false);
+  };
+
   const getDocumentacion = async() => {
-      setLoadingDoc(true);
-      console.log('data_alumno?.id_alu_ram', data_alumno?.id_alu_ram);
+    setLoadingDoc(true);
+    try {
       const {data} = await endeApi.get('/documento_alu_ram', { params: { 'id_alu_ram': data_alumno?.id_alu_ram } });
-      if(data.data.length>0){
+      if(data.data && data.data.length > 0){
         setDocumentacion(data.data);
-      }else{
+      } else {
         setDocumentacion([]);
       }
-      setLoadingDoc(false);
+    } catch (error) {
+      console.log('Error getDocumentacion:', error);
+      setDocumentacion([]);
+    }
+    setLoadingDoc(false);
   }
 
-  const {height} = useWindowDimensions();
+  if(loadingDoc) {
+    return <LoadingScreen text='Cargando documentación...'/>;
+  }
 
   return (
-    <ScrollView>
-      {
-        loadingDoc ? 
-          <View style={{marginVertical: 20}}>
-            <LoadingScreen text='Cargando documentación...'/>
-          </View>
-        :
-          (documentacion.length>0) ?
-            documentacion.map(( data_doc:IntDocumentationCard )=>{
-              return (
-                <DocumentationCard key={data_doc.id_doc_alu_ram} data_doc={data_doc} onPressEvnt={true} />
-              )
-            })
-          :
-            <View style={{marginVertical: 20}}>
-              <Text style={{textAlign: 'center', marginHorizontal: 20}}>Actualmente no posee documentación.</Text>
-            </View>
+    <ScrollView 
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl 
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor="#000"
+          colors={['#000']}
+        />
       }
+    >
+      {/* HEADER */}
+      <View style={styles.headerSection}>
+        <Icon name="file-document-multiple-outline" size={28} color="#000" />
+        <View style={styles.headerTextContainer}>
+          <Text style={styles.headerTitle}>Documentación</Text>
+          <Text style={styles.headerSubtitle}>
+            {documentacion.length} {documentacion.length === 1 ? 'documento' : 'documentos'}
+          </Text>
+        </View>
+      </View>
+
+      {/* DOCUMENTOS */}
+      {documentacion.length > 0 ? (
+        <View style={styles.documentsContainer}>
+          {documentacion.map((data_doc: IntDocumentationCard) => {
+            return (
+              <DocumentationCard 
+                key={data_doc.id_doc_alu_ram} 
+                data_doc={data_doc} 
+                onPressEvnt={true} 
+              />
+            )
+          })}
+        </View>
+      ) : (
+        <View style={styles.emptyState}>
+          <Icon name="file-document-outline" size={64} color="#E0E0E0" />
+          <Text style={styles.emptyStateText}>No hay documentación disponible</Text>
+          <Text style={styles.emptyStateSubtext}>
+            Los documentos aparecerán aquí cuando estén disponibles
+          </Text>
+        </View>
+      )}
     </ScrollView>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    ...platformTheme.shadowBox,
-    padding: 10,
-  },
-  containerTitlePayExp: {
-    overflow: 'hidden',
-    borderTopRightRadius: 10,
-    borderTopLeftRadius: 10,
-    height: 50,
-  },
-  textTitle: {
     flex: 1,
-    fontSize: 20,
-    fontWeight: 'bold',
-    padding: 10,
-    color: 'white',
-    backgroundColor: colors.primary,
+    backgroundColor: '#F5F5F5',
+  },
+  headerSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 12,
+    padding: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  headerTextContainer: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 2,
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#666',
+  },
+  documentsContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+    paddingHorizontal: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 8,
+    textAlign: 'center',
   },
 });

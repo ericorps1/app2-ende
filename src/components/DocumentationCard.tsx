@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { View, Text, StyleSheet, Pressable, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { FormatAmount, formatDate } from '../hooks/useFormats';
 import { colors, statusColorsDoc, statusIconDoc } from '../theme/platformTheme';
 import { useNavigation } from '@react-navigation/core';
-import { Touchable } from './Touchable';
 import { IntDocumentationCard } from '../interfaces/appInterfaces';
-import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
 
 interface PropsDocumentationCard {
   data_doc: IntDocumentationCard;
@@ -16,80 +14,147 @@ interface PropsDocumentationCard {
 const DocumentationCard = ({ data_doc, onPressEvnt = true }: PropsDocumentationCard) => {
   const navigation = useNavigation<any>();
 
-  let onPressTP = () => {};
-  if(onPressEvnt) 
-    onPressTP = () => navigation.navigate('DocumentationDetails', { documentation: data_doc })
+  const onPressTP = onPressEvnt 
+    ? () => navigation.navigate('DocumentationDetails', { documentation: data_doc })
+    : () => {};
+
+  const getStatusConfig = (status: string) => {
+    // Normalizar el estatus para comparación
+    const normalizedStatus = status.toLowerCase().trim();
+    
+    // Mapeo de estatus con colores e íconos
+    const statusMap: {[key: string]: {color: string, icon: string}} = {
+      'pendiente': { color: '#FF9500', icon: 'clock-outline' },
+      'entregado': { color: '#1976D2', icon: 'check-circle-outline' },
+      'aprobado': { color: '#34C759', icon: 'check-circle' },
+      'rechazado': { color: '#FF3B30', icon: 'close-circle-outline' },
+      'en revisión': { color: '#1976D2', icon: 'eye-outline' },
+      'revision': { color: '#1976D2', icon: 'eye-outline' },
+    };
+
+    // Buscar el estatus normalizado
+    const config = statusMap[normalizedStatus];
+    
+    if (config) {
+      return config;
+    }
+
+    // Intentar con statusColorsDoc y statusIconDoc del theme si existen
+    const themeColor = statusColorsDoc?.[status];
+    const themeIcon = statusIconDoc?.[status];
+
+    if (themeColor || themeIcon) {
+      return {
+        color: themeColor || '#666',
+        icon: themeIcon || 'file-document-outline'
+      };
+    }
+
+    // Default
+    return { color: '#666', icon: 'file-document-outline' };
+  };
+
+  const statusConfig = getStatusConfig(data_doc.est_doc_alu_ram);
 
   return (
-    <Touchable 
+    <TouchableOpacity 
       onPress={onPressTP}
-      styleContainer={{
-        ...styles.card,
-        borderLeftColor: statusColorsDoc[data_doc.est_doc_alu_ram]
-    }}>
-      <View style={styles.row}>
-        <View style={[styles.col, styles.colStart, { flex: 1 }]}>
-          <Text style={[styles.type,{ color: colors.silver }]}>{data_doc.nom_doc_ram}</Text>
-          <FontAwesome5Icon name={'file-upload'}  size={50} style={styles.icon} />
+      style={styles.card}
+      activeOpacity={0.7}
+    >
+      <View style={styles.header}>
+        <View style={styles.iconContainer}>
+          <Icon name="file-document-outline" size={24} color="#666" />
         </View>
-        <View style={[styles.col, styles.colCenter]}>
-          <Text style={[styles.status, { color: statusColorsDoc[data_doc.est_doc_alu_ram] }]}>{data_doc.est_doc_alu_ram}</Text>
-          <FontAwesome5Icon name={statusIconDoc[data_doc.est_doc_alu_ram]} size={50} color={statusColorsDoc[data_doc.est_doc_alu_ram]} />
-          <Text style={[styles.date, { color: colors.mediumSilver }]}>{data_doc.fec_doc_alu_ram ? formatDate(data_doc.fec_doc_alu_ram) : ''}</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.documentName} numberOfLines={2}>
+            {data_doc.nom_doc_ram}
+          </Text>
+          {data_doc.fec_doc_alu_ram && (
+            <Text style={styles.date}>
+              {formatDate(data_doc.fec_doc_alu_ram)}
+            </Text>
+          )}
         </View>
       </View>
-    </Touchable>
+
+      <View style={styles.footer}>
+        <View style={[
+          styles.statusBadge,
+          { backgroundColor: statusConfig.color + '20' }
+        ]}>
+          <Icon 
+            name={statusConfig.icon} 
+            size={16} 
+            color={statusConfig.color} 
+          />
+          <Text style={[
+            styles.statusText,
+            { color: statusConfig.color }
+          ]}>
+            {data_doc.est_doc_alu_ram}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFF',
     borderRadius: 12,
-    padding: 20,
-    marginVertical: 10,
-    marginHorizontal: 10,
+    padding: 16,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 5 },
-    shadowRadius: 10,
-    elevation: 5,
-    borderLeftWidth: 5, // Indicador de color para el estado
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  row: {
+  header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 5,
+    marginBottom: 12,
   },
-  type: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  col: {
-    flexDirection: 'column',
-    gap: 10,
-  },
-  colStart: {
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
-  },
-  colCenter: {
+  iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
   },
-  status: {
-    fontSize: 16,
+  headerContent: {
+    flex: 1,
+  },
+  documentName: {
+    fontSize: 15,
     fontWeight: '600',
+    color: '#000',
+    marginBottom: 4,
   },
   date: {
-    fontSize: 14,
-    marginLeft: 5,
-    alignContent: 'flex-end'
+    fontSize: 13,
+    color: '#666',
   },
-  icon: {
-    marginTop: 15,
-    marginBottom: 5
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
 

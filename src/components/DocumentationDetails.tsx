@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { FilePick, IntDocumentationCard, PropsDocumentationDetails } from '../interfaces/appInterfaces';
 import { BackButtonNavigation } from './BackButtonNavigation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DocumentationCard from './DocumentationCard';
-import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import DocumentPicker from 'react-native-document-picker';
 import { useUploads } from '../hooks/useUploads';
-import { nombreGuionesMinus } from '../hooks/useFormats';
+import { nombreGuionesMinus, formatDate } from '../hooks/useFormats';
 import { fnDownloadFile } from '../hooks/useDownloads';
 import { baseUrlFiles } from '../hooks/useGlobal';
 import { colors, platformTheme } from '../theme/platformTheme';
@@ -29,7 +29,6 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
   const handleError = (err: unknown) => {
     if (DocumentPicker.isCancel(err)) {
       console.log('cancelled', err)
-      // User cancelled the picker, exit any dialogs or menus and move on
     } else {
       throw err
     }
@@ -52,7 +51,6 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
     } catch (error) {
       handleError(error);
     }
-    // console.log(resp);
   }
 
   const uploadFile = async () => {
@@ -100,8 +98,6 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
     });
   }
 
-  // Función para eliminar el archivo
-
   const deleteFileFunc = async () => {
     try {
       setDeleting(true);
@@ -132,69 +128,109 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
 
   return (
     <SafeAreaView style={styles.container}>
-      <BackButtonNavigation onPressBack={() => navigation.pop()} title={documentation.nom_doc_ram}/>
-      <DocumentationCard data_doc={documentation} onPressEvnt={false}/>
-      {
-        documentation.est_doc_alu_ram === 'Pendiente' ? (
-          <View style={styles.uploadContainer}>
-            <Text style={styles.validFormatsText}>
-              {
-                obFile.name !== "" ?
-                  <Text>{obFile.name+'  '}<FontAwesome5Icon onPress={() => setObFile(initialStateObFile)} name="times" size={16} color={colors.error} /></Text>
-                :
-                  <>FORMATOS VÁLIDOS: <Text style={styles.formatTypes}>pdf, jpeg, jpg, png</Text></>
-              }
-            </Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <BackButtonNavigation onPressBack={() => navigation.pop()} title={documentation.nom_doc_ram}/>
+        
+        <View style={styles.cardContainer}>
+          <DocumentationCard data_doc={documentation} onPressEvnt={false}/>
+        </View>
 
-            <View style={styles.iconWrapper}>
-              <FontAwesome5Icon name="cloud-upload-alt" size={72} color="#6B7280" />
+        {documentation.est_doc_alu_ram === 'Pendiente' ? (
+          <View style={styles.uploadSection}>
+            <View style={styles.infoCard}>
+              <Icon name="information-outline" size={20} color="#1976D2" />
+              <Text style={styles.infoText}>
+                Formatos válidos: <Text style={styles.infoBold}>PDF, JPEG, JPG, PNG</Text> (máx. 5MB)
+              </Text>
             </View>
 
-            {
-                obFile.name !== "" ?
-                  <View style={platformTheme.fila}>
-                    <TouchableOpacity activeOpacity={0.7} style={styles.selectFileButton} onPress={uploadFile}>
-                      <FontAwesome5Icon name="upload" size={20} color="#fff" style={{ marginRight: 8 }} />
-                      <Text style={styles.selectFileButtonText}>Subir</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity activeOpacity={0.7} style={styles.cancelUpload} onPress={() => setObFile(initialStateObFile)}>
-                      <FontAwesome5Icon name="times" size={20} color="#fff" style={{ marginRight: 8 }} />
-                      <Text style={styles.selectFileButtonText}>Cancelar</Text>
-                    </TouchableOpacity>
+            {obFile.name !== "" ? (
+              <View style={styles.fileSelectedCard}>
+                <View style={styles.fileSelectedHeader}>
+                  <Icon name="file-check-outline" size={24} color="#34C759" />
+                  <View style={styles.fileSelectedInfo}>
+                    <Text style={styles.fileSelectedName} numberOfLines={1}>{obFile.name}</Text>
+                    <Text style={styles.fileSelectedSize}>{(obFile.size / 1024).toFixed(2)} KB</Text>
                   </View>
-                :
-                  <TouchableOpacity activeOpacity={0.7} style={styles.selectFileButton} onPress={loadFile}>
-                    <FontAwesome5Icon name="file" size={20} color="#fff" style={{ marginRight: 8 }} />
-                    <Text style={styles.selectFileButtonText}>Seleccionar archivo</Text>
+                  <TouchableOpacity onPress={() => setObFile(initialStateObFile)} activeOpacity={0.7}>
+                    <Icon name="close-circle" size={24} color="#E53935" />
                   </TouchableOpacity>
-              }
-            
-          </View>
-        )
-        :
-        (
-          documentation.est_doc_alu_ram === 'Entregado' || 
-          (documentation.est_doc_alu_ram === 'Aprobado' && documentation.arc_doc_alu_ram && documentation.arc_doc_alu_ram!=='') )
-            ? (
-              <View style={styles.uploadContainer}>
-                <Text style={styles.validFormatsText}>
-                  {documentation.arc_doc_alu_ram ?? 'Archivo sin nombre'}
-                </Text>
-
-                <View style={styles.iconWrapper}>
-                  <FontAwesome5Icon name="cloud-download-alt" size={72} color="#6B7280" />
                 </View>
-                <View style={platformTheme.fila}>
-                  <TouchableOpacity style={styles.selectFileButton} onPress={downloadFileFunc}>
-                    <Text style={styles.selectFileButtonText}>Descargar</Text>
+
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity 
+                    activeOpacity={0.7} 
+                    style={[styles.button, styles.buttonPrimary]} 
+                    onPress={uploadFile}
+                  >
+                    <Icon name="cloud-upload-outline" size={20} color="#FFF" />
+                    <Text style={styles.buttonText}>Subir archivo</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.deleteFileButton} onPress={confirmDeleteFile}>
-                    <Text style={styles.selectFileButtonText}>Eliminar</Text>
+                  <TouchableOpacity 
+                    activeOpacity={0.7} 
+                    style={[styles.button, styles.buttonSecondary]} 
+                    onPress={() => setObFile(initialStateObFile)}
+                  >
+                    <Icon name="close" size={20} color="#666" />
+                    <Text style={[styles.buttonText, {color: '#666'}]}>Cancelar</Text>
                   </TouchableOpacity>
                 </View>
               </View>
-            ) : null
-      }
+            ) : (
+              <TouchableOpacity 
+                activeOpacity={0.7} 
+                style={styles.uploadCard} 
+                onPress={loadFile}
+              >
+                <Icon name="cloud-upload-outline" size={64} color="#D0D0D0" />
+                <Text style={styles.uploadTitle}>Seleccionar archivo</Text>
+                <Text style={styles.uploadSubtitle}>Toca para elegir un documento</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : (
+          documentation.est_doc_alu_ram === 'Entregado' || 
+          (documentation.est_doc_alu_ram === 'Aprobado' && documentation.arc_doc_alu_ram && documentation.arc_doc_alu_ram!=='')
+        ) ? (
+          <View style={styles.uploadSection}>
+            <View style={styles.fileCard}>
+              <View style={styles.fileHeader}>
+                <Icon name="file-document-outline" size={48} color="#1976D2" />
+                <View style={styles.fileInfo}>
+                  <Text style={styles.fileName} numberOfLines={2}>
+                    {documentation.arc_doc_alu_ram ?? 'Archivo sin nombre'}
+                  </Text>
+                  {documentation.fec_doc_alu_ram && (
+                    <Text style={styles.fileDate}>
+                      Entregado: {formatDate(documentation.fec_doc_alu_ram, '/')}
+                    </Text>
+                  )}
+                </View>
+              </View>
+
+              <View style={styles.actionButtons}>
+                <TouchableOpacity 
+                  style={[styles.button, styles.buttonPrimary]} 
+                  onPress={downloadFileFunc}
+                  activeOpacity={0.7}
+                >
+                  <Icon name="download-outline" size={20} color="#FFF" />
+                  <Text style={styles.buttonText}>Descargar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.button, styles.buttonDanger]} 
+                  onPress={confirmDeleteFile}
+                  activeOpacity={0.7}
+                >
+                  <Icon name="trash-can-outline" size={20} color="#FFF" />
+                  <Text style={styles.buttonText}>Eliminar</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        ) : null}
+      </ScrollView>
+
       <PaperMessages
         visible={alerts.type !== ''}
         title={alerts.title}
@@ -222,77 +258,140 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
-    padding: 5,
+    backgroundColor: '#F5F5F5',
   },
-  uploadContainer: {
-    marginTop: 20,
-    marginHorizontal: 16,
-    padding: 24,
-    borderRadius: 16,
-    backgroundColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 4,
+  cardContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  uploadSection: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 20,
+  },
+  infoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 16,
+    gap: 10,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#1976D2',
+  },
+  infoBold: {
+    fontWeight: '700',
+  },
+  uploadCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 40,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    borderStyle: 'dashed',
   },
-
-  validFormatsText: {
+  uploadTitle: {
     fontSize: 16,
-    color: '#374151',
-    textAlign: 'center',
-    marginBottom: 12,
     fontWeight: '600',
+    color: '#000',
+    marginTop: 16,
+    marginBottom: 4,
   },
-
-  formatTypes: {
-    fontWeight: 'bold',
-    color: '#1F2937',
+  uploadSubtitle: {
+    fontSize: 13,
+    color: '#666',
   },
-
-  iconWrapper: {
+  fileSelectedCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  fileSelectedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
+  fileSelectedInfo: {
+    flex: 1,
+  },
+  fileSelectedName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 2,
+  },
+  fileSelectedSize: {
+    fontSize: 12,
+    color: '#666',
+  },
+  fileCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  fileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 20,
+    gap: 16,
   },
-
-  selectFileButton: {
-    flexDirection: 'row',
-    backgroundColor: colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    marginRight: 10,
+  fileInfo: {
+    flex: 1,
   },
-
-  deleteFileButton: {
-    flexDirection: 'row',
-    backgroundColor: colors.error,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-  },
-
-  cancelUpload: {
-    flexDirection: 'row',
-    backgroundColor: colors.error,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    marginLeft: 10,
-  },
-
-  selectFileButtonText: {
-    color: '#ffffff',
+  fileName: {
+    fontSize: 15,
     fontWeight: '600',
-    fontSize: 16,
+    color: '#000',
+    marginBottom: 4,
   },
-
-  deleteFileButtonText: {
-    color: '#ffffff',
+  fileDate: {
+    fontSize: 13,
+    color: '#666',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  button: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    gap: 8,
+  },
+  buttonPrimary: {
+    backgroundColor: '#000',
+  },
+  buttonSecondary: {
+    backgroundColor: '#F5F5F5',
+  },
+  buttonDanger: {
+    backgroundColor: '#E53935',
+  },
+  buttonText: {
+    fontSize: 14,
     fontWeight: '600',
-    fontSize: 16,
+    color: '#FFF',
   },
 });
 
