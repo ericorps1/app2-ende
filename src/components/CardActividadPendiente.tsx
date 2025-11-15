@@ -1,31 +1,35 @@
 import React from 'react'
 import { ActividadPendiente } from '../interfaces/appInterfaces'
 import { Text, StyleSheet, View, TouchableOpacity } from 'react-native';
-import { Avatar, Button, Card, Paragraph, Title } from 'react-native-paper';
-import { colors, platformTheme } from '../theme/platformTheme';
-import { Image, StyleProp } from 'react-native';
 import { formatDateActividades } from '../hooks/useFormats';
 import { useNavigation } from '@react-navigation/core';
 import { updateInfo } from '../features/chatBloque/dataChatSlice';
 import { useAppDispatch } from '../app/hooks';
-import { baseUrlSite } from '../hooks/useGlobal';
 import endeApi from '../api/estudianteAPI';
-import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
 interface PropsCardActividadPendiente {
   actividadPendiente: ActividadPendiente;
   viewType: 'normal' | 'mini';
 }
 
-
 export const CardActividadPendiente = ({actividadPendiente, viewType}:PropsCardActividadPendiente) => {
   const dispatch = useAppDispatch();
-  let iconName = 'file';
-  switch (actividadPendiente.tipo) {
-    case 'Entregable': iconName = 'file'; break;
-    case 'Examen': iconName = 'diagnoses'; break;
-    case 'Foro': iconName = 'comment'; break;
-  }
+  
+  const getIconData = (tipo: string) => {
+    switch (tipo) {
+      case 'Entregable': 
+        return { icon: 'file-document-outline', label: 'Tarea' };
+      case 'Examen': 
+        return { icon: 'clipboard-text-outline', label: 'Cuestionario' };
+      case 'Foro': 
+        return { icon: 'forum-outline', label: 'Foro' };
+      default: 
+        return { icon: 'file-outline', label: tipo };
+    }
+  };
 
+  const iconData = getIconData(actividadPendiente.tipo);
   const navigation = useNavigation<any>();
 
   const pressActPendiente = async() => {
@@ -56,71 +60,82 @@ export const CardActividadPendiente = ({actividadPendiente, viewType}:PropsCardA
 
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
+      activeOpacity={0.7}
       style={styles.container}
       onPress={pressActPendiente}
     >
-      <View style={ [styles.iconWrapper, viewType === 'mini' ? { width: 50, height: 50 } : { width: 70, height: 70 }]}>
-        <FontAwesome5Icon name={iconName} style={{ ...styles.icon, fontSize: viewType === 'mini' ? 20 : 30,}} />
+      <View style={styles.leftSection}>
+        <View style={styles.iconWrapper}>
+          <Icon name={iconData.icon} size={20} color="#000" />
+        </View>
+        <View style={styles.pendingDot} />
       </View>
-      <View style={styles.contaierInfoActividad}>
-        <Text style={styles.titleActividad}>{ 
-          actividadPendiente.tipo==='Entregable' 
-            ? 'Tarea' 
-            : actividadPendiente.tipo==='Examen' 
-              ? 'Cuestionario' 
-              : actividadPendiente.tipo
-          }</Text>
-        <Text style={styles.descActividad}>{ actividadPendiente.actividad}</Text>
-        {
-          viewType==='normal' && <View style={styles.containerFooterAct}>
-            <Text style={styles.textFooter}>
-              Desde: {formatDateActividades(actividadPendiente.inicio)}{"\n"}
-              Hasta: {formatDateActividades(actividadPendiente.fin)}
-            </Text>
-          </View>
-        }
+      <View style={styles.content}>
+        <Text style={styles.title} numberOfLines={1}>
+          {iconData.label}
+        </Text>
+        <Text style={styles.subtitle} numberOfLines={2}>
+          {actividadPendiente.actividad}
+        </Text>
+        {viewType === 'normal' && (
+          <Text style={styles.dateText}>
+            Hasta: {formatDateActividades(actividadPendiente.fin)}
+          </Text>
+        )}
       </View>
+      <Icon name="chevron-right" size={20} color="#D0D0D0" />
     </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    ...platformTheme.fila,
-    margin: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
-  contaierInfoActividad: {
-    marginLeft: 5,
-    width: '100%',
-    flex: 1,
-  },
-  titleActividad: {
-    fontSize: 16,
-    color: colors.darkBlue,
-    textTransform: 'uppercase',
-    fontWeight: 'bold',
-  },
-  descActividad: {
-    fontSize: 14,
-    color: colors.darkSilver,
-  },
-  containerFooterAct: {
-    flex: 1,
-    justifyContent: 'flex-end'
-  },
-  textFooter: {
-    fontSize: 12,
-    marginBottom: 5
-  },
-  icon: {
-    color: colors.primary,
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 14,
   },
   iconWrapper: {
-    borderRadius: 40,
-    backgroundColor: '#f5f5f5',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+  },
+  pendingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4A90E2',
+    marginLeft: -8,
+  },
+  content: {
+    flex: 1,
+    marginRight: 10,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 3,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 19,
+    marginBottom: 4,
+  },
+  dateText: {
+    fontSize: 13,
+    color: '#999',
   },
 });

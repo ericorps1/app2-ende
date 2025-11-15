@@ -1,5 +1,5 @@
 import React, {useContext, useState, useEffect} from 'react'
-import { View, ScrollView, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, ScrollView, Image, StyleSheet, Dimensions, TouchableOpacity, RefreshControl } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 import { Portal, TextInput, Modal, Text, Button, Provider, Avatar, Divider, DefaultTheme } from 'react-native-paper';
 import { platformTheme, colors } from '../theme/platformTheme';
@@ -23,6 +23,7 @@ export const Cuenta = () => {
     const { data_alumno, checkToken } = useContext( AuthContext );
     const [infoAlumno, setInfoAlumno] = useState<DataProfileAlumno|any>([]);
     const [loadingAccount, setLoadingAccount] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [modalText, setModalText] = useState('');
     const [loadingForm, setLoadingForm] = useState(false);
     const [typeMsgModal, setTypeMsgModal] = useState<TypesMsgModalType>('success')
@@ -42,6 +43,20 @@ export const Cuenta = () => {
         exp_year: '',
         brand: ''
     });
+
+    useEffect(() => {
+        getDataProfile();
+        getDomiciliation();
+    }, [])
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await Promise.all([
+            getDataProfile(),
+            getDomiciliation()
+        ]);
+        setRefreshing(false);
+    }
 
     const getDataProfile = async () => {
         try { 
@@ -63,6 +78,7 @@ export const Cuenta = () => {
             setLoadingAccount(false);
         } catch (error:any) {
             console.log('getDataProfile',error);
+            setLoadingAccount(false);
         }
     }
 
@@ -90,11 +106,6 @@ export const Cuenta = () => {
             console.log('getDomiciliation', error);
         }
     };
-
-    useEffect(() => {
-        getDataProfile();
-        getDomiciliation();
-    }, [])
 
     const updateInfo = async () => {
         const valTel = valFormInput(infoAlumno.tel_alu, 'Teléfono', 1, 10, true);
@@ -276,16 +287,24 @@ export const Cuenta = () => {
                     showsVerticalScrollIndicator={false} 
                     scrollEnabled={scrollEnabled}
                     style={styles.container}
+                    refreshControl={
+                        <RefreshControl 
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            tintColor="#000"
+                            colors={['#000']}
+                        />
+                    }
                 >
-                    {/* HEADER MINIMALISTA */}
+                    {/* HEADER */}
                     <View style={styles.header}>
                         <View style={styles.avatarSection}>
-                            <TouchableOpacity onPress={() => getPhoto('img')}>
+                            <TouchableOpacity onPress={() => getPhoto('img')} activeOpacity={0.8}>
                                 { (data_alumno?.fot_alu || newProfilePic!=='') 
                                     ? (
                                         <Image 
                                             source={{ uri: (newProfilePic==='') ? 'https://plataforma.ahjende.com/uploads/'+data_alumno?.fot_alu : newProfilePic}}
-                                            style={ styles.avatar }
+                                            style={styles.avatar}
                                         />
                                     )
                                     : (
@@ -295,12 +314,15 @@ export const Cuenta = () => {
                                     )
                                 }
                                 <View style={styles.cameraIconBadge}>
-                                    <Icon name="camera" size={16} color="#FFF" />
+                                    <Icon name="camera" size={14} color="#FFF" />
                                 </View>
                             </TouchableOpacity>
                             <View style={styles.userInfo}>
                                 <Text style={styles.userName}>{data_alumno?.nom_alu}</Text>
-                                <Text style={styles.userSubtitle}>{data_alumno?.estatus_general}</Text>
+                                <View style={styles.statusBadge}>
+                                    <View style={styles.statusDot} />
+                                    <Text style={styles.userSubtitle}>{data_alumno?.estatus_general}</Text>
+                                </View>
                             </View>
                         </View>
                         
@@ -310,15 +332,19 @@ export const Cuenta = () => {
                                     style={styles.photoActionButton}
                                     onPress={uploadImg}
                                     disabled={uploading}
+                                    activeOpacity={0.7}
                                 >
-                                    <Icon name="check" size={20} color="#000" />
+                                    <Icon name="check" size={18} color="#34C759" />
+                                    <Text style={styles.photoActionText}>Guardar</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity 
                                     style={[styles.photoActionButton, styles.cancelButton]}
                                     onPress={() => setNewProfilePic('')}
                                     disabled={uploading}
+                                    activeOpacity={0.7}
                                 >
-                                    <Icon name="close" size={20} color="#000" />
+                                    <Icon name="close" size={18} color="#666" />
+                                    <Text style={[styles.photoActionText, styles.cancelText]}>Cancelar</Text>
                                 </TouchableOpacity>
                             </View>
                         )}
@@ -426,9 +452,11 @@ export const Cuenta = () => {
                             style={styles.primaryButton}
                             onPress={updateInfo}
                             disabled={loadingForm}
+                            activeOpacity={0.7}
                         >
+                            {loadingForm && <Icon name="loading" size={18} color="#FFF" style={styles.buttonIcon} />}
                             <Text style={styles.primaryButtonText}>
-                                {loadingForm ? 'Guardando...' : 'Guardar cambios'}
+                                {loadingForm ? 'Guardando cambios' : 'Guardar cambios'}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -439,15 +467,16 @@ export const Cuenta = () => {
                         <TouchableOpacity 
                             style={styles.menuItem}
                             onPress={() => setModalContrasena(true)}
+                            activeOpacity={0.7}
                         >
                             <View style={styles.menuItemIcon}>
-                                <Icon name="lock-outline" size={24} color="#000" />
+                                <Icon name="lock-outline" size={20} color="#000" />
                             </View>
                             <View style={styles.menuItemContent}>
                                 <Text style={styles.menuItemTitle}>Contraseña</Text>
                                 <Text style={styles.menuItemSubtitle}>Cambiar contraseña de acceso</Text>
                             </View>
-                            <Icon name="chevron-right" size={24} color="#999" />
+                            <Icon name="chevron-right" size={20} color="#D0D0D0" />
                         </TouchableOpacity>
                     </View>
 
@@ -469,6 +498,8 @@ export const Cuenta = () => {
                 {/* MODAL CONTRASEÑA */}
                 <Modal visible={modalContrasena} onDismiss={()=>setModalContrasena(false)} contentContainerStyle={styles.modal}>
                     <Text style={styles.modalTitle}>Cambiar contraseña</Text>
+                    <Text style={styles.modalSubtitle}>Ingresa tu contraseña actual y elige una nueva</Text>
+                    
                     <TextInput
                         secureTextEntry={true}
                         mode="flat"
@@ -503,6 +534,7 @@ export const Cuenta = () => {
                         style={styles.primaryButton}
                         onPress={cambiarContrasena}
                         disabled={loadingActuCont}
+                        activeOpacity={0.7}
                     >
                         <Text style={styles.primaryButtonText}>
                             {loadingActuCont ? 'Actualizando...' : 'Actualizar contraseña'}
@@ -512,6 +544,7 @@ export const Cuenta = () => {
                         style={styles.secondaryButton}
                         onPress={() => setModalContrasena(false)}
                         disabled={loadingActuCont}
+                        activeOpacity={0.7}
                     >
                         <Text style={styles.secondaryButtonText}>Cancelar</Text>
                     </TouchableOpacity>
@@ -525,13 +558,13 @@ export const Cuenta = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#F5F5F5',
     },
     header: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#FFF',
         paddingTop: 60,
         paddingHorizontal: 20,
-        paddingBottom: 24,
+        paddingBottom: 20,
         borderBottomWidth: 1,
         borderBottomColor: '#F0F0F0',
     },
@@ -540,9 +573,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     avatar: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
+        width: 72,
+        height: 72,
+        borderRadius: 36,
         backgroundColor: '#000',
         justifyContent: 'center',
         alignItems: 'center',
@@ -550,20 +583,20 @@ const styles = StyleSheet.create({
     },
     avatarText: {
         color: '#FFF',
-        fontSize: 28,
-        fontWeight: '600',
+        fontSize: 26,
+        fontWeight: '700',
     },
     cameraIconBadge: {
         position: 'absolute',
         bottom: 0,
         right: 0,
         backgroundColor: '#000',
-        width: 28,
-        height: 28,
-        borderRadius: 14,
+        width: 24,
+        height: 24,
+        borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 3,
+        borderWidth: 2,
         borderColor: '#FFF',
     },
     userInfo: {
@@ -571,39 +604,61 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     userName: {
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: '700',
         color: '#000',
-        marginBottom: 4,
+        marginBottom: 6,
+    },
+    statusBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    statusDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: '#34C759',
     },
     userSubtitle: {
-        fontSize: 14,
+        fontSize: 13,
         color: '#666',
+        fontWeight: '500',
     },
     photoActions: {
         flexDirection: 'row',
         marginTop: 16,
-        gap: 12,
+        gap: 8,
     },
     photoActionButton: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: '#F0F0F0',
-        justifyContent: 'center',
+        flex: 1,
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
+        height: 44,
+        borderRadius: 10,
+        backgroundColor: '#E8F5E9',
+        gap: 6,
     },
     cancelButton: {
-        backgroundColor: '#FFF',
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
+        backgroundColor: '#F5F5F5',
+    },
+    photoActionText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#34C759',
+    },
+    cancelText: {
+        color: '#666',
     },
     section: {
+        backgroundColor: '#FFF',
+        marginTop: 12,
         paddingHorizontal: 20,
-        paddingVertical: 24,
+        paddingVertical: 20,
     },
     sectionTitle: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '700',
         color: '#000',
         marginBottom: 20,
@@ -611,19 +666,17 @@ const styles = StyleSheet.create({
         letterSpacing: 0.5,
     },
     inputContainer: {
-        marginBottom: 20,
+        marginBottom: 16,
     },
     inputRow: {
         flexDirection: 'row',
         gap: 12,
-        marginBottom: 20,
     },
     inputHalf: {
         flex: 1,
-        marginBottom: 0,
     },
     label: {
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: '600',
         color: '#666',
         marginBottom: 8,
@@ -632,45 +685,46 @@ const styles = StyleSheet.create({
     },
     input: {
         backgroundColor: '#F5F5F5',
-        borderRadius: 8,
-        fontSize: 16,
-        height: 52,
-        paddingHorizontal: 16,
+        borderRadius: 10,
+        fontSize: 15,
+        height: 48,
+        paddingHorizontal: 14,
     },
     primaryButton: {
+        flexDirection: 'row',
         backgroundColor: '#000',
-        height: 52,
-        borderRadius: 8,
+        height: 48,
+        borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
         marginTop: 8,
+        gap: 8,
+    },
+    buttonIcon: {
+        marginRight: -4,
     },
     primaryButtonText: {
         color: '#FFF',
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '600',
     },
     secondaryButton: {
-        backgroundColor: '#FFF',
-        height: 52,
-        borderRadius: 8,
+        backgroundColor: '#F5F5F5',
+        height: 48,
+        borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 12,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
+        marginTop: 10,
     },
     secondaryButtonText: {
         color: '#000',
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '600',
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
+        paddingVertical: 14,
     },
     menuItemIcon: {
         width: 40,
@@ -679,13 +733,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#F5F5F5',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 16,
+        marginRight: 14,
     },
     menuItemContent: {
         flex: 1,
     },
     menuItemTitle: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '600',
         color: '#000',
         marginBottom: 2,
@@ -704,13 +758,18 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '700',
         color: '#000',
+        marginBottom: 6,
+    },
+    modalSubtitle: {
+        fontSize: 14,
+        color: '#666',
         marginBottom: 24,
     },
     modalInput: {
         backgroundColor: '#F5F5F5',
-        borderRadius: 8,
-        marginBottom: 16,
-        height: 52,
-        paddingHorizontal: 16,
+        borderRadius: 10,
+        marginBottom: 14,
+        height: 48,
+        paddingHorizontal: 14,
     },
 });

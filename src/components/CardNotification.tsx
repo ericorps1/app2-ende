@@ -1,7 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import { Notification } from "../interfaces/appInterfaces";
-import { colors, platformTheme } from "../theme/platformTheme";
-import FontAwesome5Icon from "react-native-vector-icons/FontAwesome5";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/core";
 
 interface CardNotificationProps {
@@ -10,68 +9,82 @@ interface CardNotificationProps {
 
 export const CardNotification = ({notification}:CardNotificationProps) => {
   const navigation = useNavigation<any>();
+  const isUnread = notification.est_not !== 'Leida';
+  
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
-      style={[styles.container, {backgroundColor: notification.est_not === 'Leida' ? colors.white : colors.softSilver}]}
+      activeOpacity={0.7}
+      style={[styles.container, isUnread && styles.unreadContainer]}
       onPress={() => navigation.navigate('DetalleNotificacion', { notification })}
     >
-      <View style={ styles.iconWrapper }>
-        <FontAwesome5Icon name={'bell'} style={ styles.icon } />
+      <View style={styles.leftSection}>
+        <View style={styles.iconWrapper}>
+          <Icon name="bell-outline" size={20} color="#000" />
+        </View>
+        {isUnread && <View style={styles.unreadDot} />}
       </View>
-      <View style={styles.contaierInfoActividad}>
-        <Text style={styles.titleActividad}>{ notification.tit_not }</Text>
-        <Text style={styles.messageText}>{notification.men_not.length > 90 ? `${notification.men_not.substring(0, 90)}...` : notification.men_not}</Text>
+      <View style={styles.content}>
+        <Text style={[styles.title, isUnread && styles.unreadTitle]} numberOfLines={1}>
+          {notification.tit_not}
+        </Text>
+        <Text style={styles.message} numberOfLines={2}>
+          {notification.men_not}
+        </Text>
       </View>
+      <Icon name="chevron-right" size={20} color="#D0D0D0" />
     </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    ...platformTheme.fila,
-    padding: 5,
-    marginBottom: 2,
-    borderRadius: 10
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    backgroundColor: '#F8F8F8',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
-  contaierInfoActividad: {
-    marginLeft: 5,
-    width: '100%',
-    flex: 1,
+  unreadContainer: {
+    backgroundColor: '#F0F8FF',
   },
-  titleActividad: {
-    fontSize: 16,
-    color: '#000000', // NEGRO - SIEMPRE SE VE
-    textTransform: 'uppercase',
-    fontWeight: 'bold',
-  },
-  messageText: {
-    fontSize: 14,
-    color: '#333333', // GRIS OSCURO - SIEMPRE SE VE
-  },
-  descActividad: {
-    fontSize: 14,
-    color: colors.darkSilver,
-  },
-  containerFooterAct: {
-    flex: 1,
-    justifyContent: 'flex-end'
-  },
-  textFooter: {
-    fontSize: 12,
-    marginBottom: 5
-  },
-  icon: {
-    color: colors.primary,
-    fontSize: 20,
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 14,
   },
   iconWrapper: {
-    borderRadius: 40,
-    backgroundColor: '#f5f5f5',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
-    width: 50,
-    height: 50,
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4A90E2',
+    marginLeft: -8,
+  },
+  content: {
+    flex: 1,
+    marginRight: 10,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 3,
+  },
+  unreadTitle: {
+    fontWeight: '700',
+  },
+  message: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 19,
   },
 });
