@@ -11,6 +11,9 @@ import { Avatar, Card, IconButton } from 'react-native-paper';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { formatDate } from '../hooks/useFormats';
 import { useNavigation } from '@react-navigation/core';
+import { updateInfo } from '../features/chatBloque/dataChatSlice';
+import { useAppDispatch } from '../app/hooks';
+import endeApi from '../api/estudianteAPI';
 
 interface ObjListAct{
     tableHead: [string,string,string,string,string,string,string,string,string,string,string,string];
@@ -47,6 +50,7 @@ export const Actividades = () => {
   });
   const { data_alumno } = useContext( AuthContext );
   const [totales, setTotales] = useState({puntos: 0, puntosObtenidos: 0, aprovechamiento: 0})
+  const dispatch = useAppDispatch();
   useEffect(() => {
     getActividades();
     return () => {}
@@ -85,7 +89,7 @@ export const Actividades = () => {
 
   const navigation = useNavigation<any>();
 
-  const handleActividadPress = (actividad:ListadoActividades) => {
+  const handleActividadPress = async (actividad:ListadoActividades) => {
     const nom_mat = actividad.materia;
     const bloque_data = {
       id_blo: actividad.id_blo,
@@ -93,7 +97,29 @@ export const Actividades = () => {
       des_blo: actividad.des_blo,
       id_sub_hor: actividad.id_sub_hor
     };
+
+    await loadDataMiniChat(actividad.id_sub_hor,nom_mat);
     navigation.navigate('BloqueDetalle', {bloque_data, nom_mat})
+  }
+
+
+  const loadDataMiniChat = async(id_sub_hor:number,nom_mat:string) => {
+    const {data} = await endeApi.get('/sub_hor/dataProfesorxSubHor/'+id_sub_hor);
+    if(data.trans){
+      const dataPro = data.data[0];
+      dispatch(updateInfo(
+        {
+          id_emp: dataPro.id_emp,
+          id_pro: dataPro.id_pro,
+          nom_pro: dataPro.nom_emp+' '+dataPro.app_emp+' '+dataPro.apm_emp,
+          fot_emp: dataPro.fot_emp,
+          tipo: dataPro.tip_emp,
+          id_sub_hor,
+          materia: nom_mat
+        }
+      ));
+    }
+    return true;
   }
 
   if(loading){

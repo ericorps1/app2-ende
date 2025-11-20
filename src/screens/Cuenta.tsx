@@ -19,6 +19,7 @@ import RenderPdf from '../components/RenderUrlPdf';
 const { width } = Dimensions.get('window');
 
 export const Cuenta = () => {
+    const { token } = useContext(AuthContext);
     const { data_alumno, checkToken } = useContext( AuthContext );
     const [infoAlumno, setInfoAlumno] = useState<DataProfileAlumno|any>([]);
     const [loadingAccount, setLoadingAccount] = useState(true);
@@ -159,7 +160,13 @@ export const Cuenta = () => {
             if(!objImg.assets) return false;
             if(!objImg.assets[0]) return false;
             setUploading(true);
-            const { upload, filename } = await useUploads('/alumno/'+data_alumno?.id_alu, objImg.assets[0]);
+            const { upload, filename } = await useUploads(
+              '/alumno/'+data_alumno?.id_alu,
+              objImg.assets[0]
+              ,{},
+              token ?? ''
+            );
+            console.log('uploadImg filename',filename);
             if(upload===true){
                 await checkToken();
             }

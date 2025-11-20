@@ -4,6 +4,8 @@ import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
 import com.facebook.react.defaults.DefaultReactActivityDelegate;
+import android.content.res.Configuration;
+import android.os.Bundle; 
 
 public class MainActivity extends ReactActivity {
 
@@ -14,6 +16,16 @@ public class MainActivity extends ReactActivity {
   @Override
   protected String getMainComponentName() {
     return "appmobileende";
+  }
+
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    
+    // Forzar tema claro
+    Configuration config = getResources().getConfiguration();
+    config.uiMode = Configuration.UI_MODE_NIGHT_NO;
+    getResources().updateConfiguration(config, getResources().getDisplayMetrics());
   }
 
   /**

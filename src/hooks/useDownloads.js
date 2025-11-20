@@ -9,6 +9,8 @@ import {
   Platform,
   TouchableOpacity,
   PermissionsAndroid,
+  ToastAndroid,
+  Alert
 } from 'react-native';
 
 // Import RNFetchBlob for the file download
@@ -45,49 +47,128 @@ const fnDownloadFile = async (fileUrl, fileName='') => {
   }
 };
 
-const downloadFile = (fileUrl,fileName) => {
-  
-  // Get today's date to add the time suffix in filename
-  let date = new Date();
-  // File URL which we want to download
-  let FILE_URL = fileUrl;    
-  // Function to get extention of the file url
-  let file_ext = getFileExtention(FILE_URL);
-  
-  file_ext = '.' + file_ext[0];
-  
-  // config: To get response by passing the downloading related options
-  // fs: Root directory path to download
-  const { config, fs } = RNFetchBlob;
-  let RootDir = fs.dirs.PictureDir;
-  const localFile = fileName 
-    ? '/'+fileName 
-    : '/file_' + Math.floor(date.getTime() + date.getSeconds() / 2) + file_ext
-  let options = {
-    fileCache: true,
-    addAndroidDownloads: {
-      path: RootDir+localFile,
-      description: 'Descargando archivo...',
-      notification: true,
-      // useDownloadManager works with Android only
-      useDownloadManager: true,   
-    },
-  };
-  config(options)
-    .fetch('GET', FILE_URL)
-    .then(res => {
-      // Alert after successful downloading
-      console.log('res -> ', JSON.stringify(res));
-      alert('Archivo guardado exitosamente en '+res.data+'.');
-    });
+const showMessage = (message, isError = false) => {
+  if (Platform.OS === 'android') {
+    ToastAndroid.show(message, ToastAndroid.LONG);
+  } else {
+    Alert.alert(isError ? 'Error' : 'Éxito', message);
+  }
 };
 
-const getFileExtention = fileUrl => {
-  // To get the file extension
-  return /[.]/.exec(fileUrl) ?
-            /[^.]+$/.exec(fileUrl) : undefined;
+const downloadFile = async (fileUrl, fileName) => {
+  try {
+    // Validar que la URL no esté vacía
+    if (!fileUrl || fileUrl.trim() === '') {
+      showMessage('La URL del archivo está vacía', true);
+      return { success: false, error: 'URL vacía' };
+    }
+
+    // Validar formato de URL básico
+    if (!fileUrl.startsWith('http://') && !fileUrl.startsWith('https://')) {
+      showMessage('La URL debe comenzar con http:// o https://', true);
+      return { success: false, error: 'URL inválida' };
+    }
+
+    // Mostrar indicador de inicio de descarga
+    showMessage('Iniciando descarga...');
+
+    // Verificar que la URL sea accesible
+    try {
+      const headResponse = await fetch(fileUrl, { 
+        method: 'HEAD',
+        timeout: 5000 // 5 segundos timeout
+      });
+      
+      if (!headResponse.ok) {
+        throw new Error(`HTTP ${headResponse.status}`);
+      }
+    } catch (fetchError) {
+      showMessage('El archivo es inválido, contacta a tu profesor.', true);
+      return { success: false, error: 'URL no accesible' };
+    }
+
+    const date = new Date();
+    const { config, fs } = RNFetchBlob;
+    const RootDir = fs.dirs.DownloadDir; // Cambié a DownloadDir para mejor compatibilidad
+
+    let file_ext = getFileExtention(fileUrl);
+    file_ext = file_ext && file_ext[0] ? '.' + file_ext[0] : '.bin';
+
+    const localFile = fileName
+      ? '/' + fileName
+      : '/file_' + Math.floor(date.getTime() + date.getSeconds() / 2) + file_ext;
+
+    const options = {
+      fileCache: true,
+      addAndroidDownloads: {
+        path: RootDir + localFile,
+        description: 'Descargando archivo...',
+        notification: true,
+        useDownloadManager: true,
+        mediaScannable: true, // Para que aparezca en galería si es imagen
+      },
+    };
+
+    const res = await config(options)
+      .fetch('GET', fileUrl)
+      .progress((received, total) => {
+        const percentage = Math.floor((received / total) * 100);
+      });
+
+    // Verificar que el archivo existe
+    const fileExists = await fs.exists(res.path());
+
+    if (fileExists) {
+      const stats = await fs.stat(res.path());
+
+      showMessage(`Archivo guardado exitosamente`);
+      return { 
+        success: true, 
+        path: res.path(),
+        size: stats.size 
+      };
+    } else {
+      throw new Error('El archivo no se guardó correctamente');
+    }
+
+  } catch (error) {
+    console.error('Error completo en descarga:', error);
+
+    let errorMessage = 'Error al descargar el archivo';
+
+    if (error.message?.includes('Network request failed')) {
+      errorMessage = 'Sin conexión a internet';
+    } else if (error.message?.includes('404')) {
+      errorMessage = 'Archivo no encontrado (404)';
+    } else if (error.message?.includes('403')) {
+      errorMessage = 'Acceso denegado (403)';
+    } else if (error.message?.includes('500')) {
+      errorMessage = 'Error del servidor (500)';
+    } else if (error.message?.includes('timeout')) {
+      errorMessage = 'Tiempo de espera agotado';
+    } else if (error.message?.includes('ENOENT')) {
+      errorMessage = 'Error al guardar el archivo';
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
+    showMessage(errorMessage, true);
+    return { success: false, error: errorMessage };
+  }
 };
 
+// Función auxiliar mejorada para obtener extensión
+const getFileExtention = (url) => {
+  try {
+    // Eliminar query params y fragmentos
+    const cleanUrl = url.split('?')[0].split('#')[0];
+    const extension = cleanUrl.split('.').pop().toLowerCase();
+    return [extension];
+  } catch (error) {
+    console.error('Error obteniendo extensión:', error);
+    return ['bin']; // Extensión por defecto
+  }
+};
 export {
   fnDownloadFile
 }

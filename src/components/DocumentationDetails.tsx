@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/core';
 import { FilePick, IntDocumentationCard, PropsDocumentationDetails } from '../interfaces/appInterfaces';
@@ -15,8 +15,10 @@ import { colors, platformTheme } from '../theme/platformTheme';
 import PaperMessages from './PaperMessages';
 import { LoadingScreen } from '../screens/LoadingScreen';
 import endeApi from '../api/estudianteAPI';
+import { AuthContext } from '../context/AuthContext';
 
 const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) => {
+  const { token } = useContext(AuthContext);
   const params = route.params;
 
   const initialStateObFile = { fileCopyUri: null, name: "", size: 0, type: "", uri: "" };
@@ -68,7 +70,8 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
       const resp = await useUploads(
         '/documento_alu_ram/uploadfile/'+documentation.id_doc_alu_ram,
         { ...obFile, fileName: serverFileName },
-        {}
+        {},
+        token ?? ''
       );
       setUploading(false);
       if (resp.trans === true) {

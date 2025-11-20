@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import WebView from 'react-native-webview';
-import { View, StyleSheet, useWindowDimensions, Text, ScrollView, TouchableOpacity, Touchable } from 'react-native';
+import { View, StyleSheet, useWindowDimensions, Text, ScrollView, TouchableOpacity } from 'react-native';
 import RenderHtml from 'react-native-render-html';
 import { HTMLSource } from 'react-native-render-html';
 import { colors } from '../theme/platformTheme';
@@ -51,7 +51,7 @@ export const WebViewFullScreen = ({ route, navigation }:PropsWebViewFullScreen) 
                         <View style={styles.bodyContentElements}>
                             <TouchableOpacity
                                 style={ styles.btnDownload }
-                                onPress={()=>fnDownloadFile(url)}
+                                onPress={ () => fnDownloadFile(url)}
                             >
                                 <Text style={ styles.btnDownloadText }>DESCARGAR</Text>
                             </TouchableOpacity>

@@ -60,7 +60,8 @@
     "react-native-video": "6.0.0-alpha.11",
     "react-native-watch-connectivity": "1.1.0",
     "react-native-webrtc": "124.0.4",
-    "react-native-webview": "13.8.7"
+    "react-native-webview": "13.8.7",
+    "rn-fetch-blob": "^0.12.0"
   },
   "devDependencies": {
     "@babel/core": "7.25.9",
