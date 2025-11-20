@@ -77,7 +77,6 @@ const downloadFile = (fileUrl,fileName) => {
     .fetch('GET', FILE_URL)
     .then(res => {
       // Alert after successful downloading
-      console.log('res -> ', JSON.stringify(res));
       alert('Archivo guardado exitosamente en '+res.data+'.');
     });
 };
