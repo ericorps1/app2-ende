@@ -10,7 +10,6 @@ interface MeetingProps {
 
 export const JitsiMeetScreen = ( { route, navigation }: MeetingProps ) => {
   const { data_alumno } = useContext( AuthContext );
-  console.log('--------------data_alumno?.fot_alu-----------', data_alumno?.fot_alu);
   const jitsiMeeting = useRef(null);
   const { id_sub_hor, title, nom_mat } = route.params;
   const onReadyToClose = useCallback(() => {

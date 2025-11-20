@@ -23,7 +23,7 @@ export const TarjetaBloque = ({ bloque_data, nom_mat }: TarjetaBloqueINT) => {
     <Card
       style={styles.card}
       elevation={5}
-      onLongPress={() => console.log('card longpress ' + id_blo)}
+      onLongPress={() => {}}
       onPress={pressTarjetaBloque}
     >
       <LinearGradient

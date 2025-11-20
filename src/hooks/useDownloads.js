@@ -16,42 +16,23 @@ import {
 // Import RNFetchBlob for the file download
 import RNFetchBlob from 'react-native-blob-util';
 
-const fnDownloadFile = async (fileUrl, fileName='') => {
-  
-  // Function to check the platform
-  // If Platform is Android then check for permissions.
-
-  if (Platform.OS === 'ios') {
-    downloadFile(fileUrl,fileName);
-  } else {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,{
-          title: 'UPS!, necesitamos permisos.',
-          message:
-            'Necesitamos acceder a tu sistema de archivos para poder guardar los documentos que descargas.',
-        }
-      );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        // Start downloading
-        downloadFile(fileUrl,fileName);
-        console.log('Storage Permission Granted.');
-      } else {
-        // If permission denied then show alert
-        Alert.alert('Error','No tenemos permiso para acceder a tu sistema de archivos :(');
-      }
-    } catch (err) {
-      // To handle permission related exception
-      console.log("++++"+err);
-    }
-  }
-};
-
 const showMessage = (message, isError = false) => {
   if (Platform.OS === 'android') {
     ToastAndroid.show(message, ToastAndroid.LONG);
   } else {
     Alert.alert(isError ? 'Error' : 'Éxito', message);
+  }
+};
+
+const getFileExtention = (url) => {
+  try {
+    // Eliminar query params y fragmentos
+    const cleanUrl = url.split('?')[0].split('#')[0];
+    const extension = cleanUrl.split('.').pop().toLowerCase();
+    return [extension];
+  } catch (error) {
+    console.error('Error obteniendo extensión:', error);
+    return ['bin']; // Extensión por defecto
   }
 };
 
@@ -89,7 +70,7 @@ const downloadFile = async (fileUrl, fileName) => {
 
     const date = new Date();
     const { config, fs } = RNFetchBlob;
-    const RootDir = fs.dirs.DownloadDir; // Cambié a DownloadDir para mejor compatibilidad
+    const RootDir = fs.dirs.DownloadDir;
 
     let file_ext = getFileExtention(fileUrl);
     file_ext = file_ext && file_ext[0] ? '.' + file_ext[0] : '.bin';
@@ -105,7 +86,7 @@ const downloadFile = async (fileUrl, fileName) => {
         description: 'Descargando archivo...',
         notification: true,
         useDownloadManager: true,
-        mediaScannable: true, // Para que aparezca en galería si es imagen
+        mediaScannable: true,
       },
     };
 
@@ -113,6 +94,7 @@ const downloadFile = async (fileUrl, fileName) => {
       .fetch('GET', fileUrl)
       .progress((received, total) => {
         const percentage = Math.floor((received / total) * 100);
+        console.log('Progreso:', percentage + '%');
       });
 
     // Verificar que el archivo existe
@@ -120,7 +102,6 @@ const downloadFile = async (fileUrl, fileName) => {
 
     if (fileExists) {
       const stats = await fs.stat(res.path());
-
       showMessage(`Archivo guardado exitosamente`);
       return { 
         success: true, 
@@ -157,18 +138,38 @@ const downloadFile = async (fileUrl, fileName) => {
   }
 };
 
-// Función auxiliar mejorada para obtener extensión
-const getFileExtention = (url) => {
-  try {
-    // Eliminar query params y fragmentos
-    const cleanUrl = url.split('?')[0].split('#')[0];
-    const extension = cleanUrl.split('.').pop().toLowerCase();
-    return [extension];
-  } catch (error) {
-    console.error('Error obteniendo extensión:', error);
-    return ['bin']; // Extensión por defecto
+const fnDownloadFile = async (fileUrl, fileName = '') => {
+  // Function to check the platform
+  // If Platform is Android then check for permissions.
+
+  if (Platform.OS === 'ios') {
+    return await downloadFile(fileUrl, fileName);
+  } else {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE, {
+          title: 'UPS!, necesitamos permisos.',
+          message:
+            'Necesitamos acceder a tu sistema de archivos para poder guardar los documentos que descargas.',
+        }
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        // Start downloading
+        console.log('Storage Permission Granted.');
+        return await downloadFile(fileUrl, fileName);
+      } else {
+        // If permission denied then show alert
+        Alert.alert('Error', 'No tenemos permiso para acceder a tu sistema de archivos :(');
+        return { success: false, error: 'Permiso denegado' };
+      }
+    } catch (err) {
+      // To handle permission related exception
+      console.log("Error en permisos: " + err);
+      return { success: false, error: err.message };
+    }
   }
 };
+
 export {
   fnDownloadFile
-}
+};
