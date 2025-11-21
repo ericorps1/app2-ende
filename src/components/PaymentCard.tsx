@@ -12,6 +12,7 @@ interface PropsPaymentCard {
     amount: number;
     est_pag: 'Pagado' | 'Pendiente' | 'Vencido';
     fec_pag: string;
+    fin_pag: string; // Fecha de vencimiento
     con_pag: string;
     mon_ori_pag: string;
     mon_pag: string;
@@ -21,8 +22,51 @@ interface PropsPaymentCard {
 const PaymentCard = ({ data_pagos }: PropsPaymentCard) => {
   const navigation = useNavigation<any>();
 
+  // Validar si el pago está vencido
+  const getEstadoPago = () => {
+    if (data_pagos.est_pag === 'Pagado') {
+      return 'Pagado';
+    }
+
+    if (data_pagos.est_pag === 'Pendiente') {
+      // Obtener fecha actual sin horas
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      
+      // Parsear la fecha de vencimiento de manera más robusta
+      // Puede venir como "2025-11-14" o "14/11/2025" o con hora
+      let fechaVencimiento: Date;
+      
+      if (data_pagos.fin_pag.includes('-')) {
+        // Formato ISO: "2025-11-14" o "2025-11-14T00:00:00"
+        const [year, month, day] = data_pagos.fin_pag.split('T')[0].split('-');
+        fechaVencimiento = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      } else if (data_pagos.fin_pag.includes('/')) {
+        // Formato DD/MM/YYYY: "14/11/2025"
+        const [day, month, year] = data_pagos.fin_pag.split('/');
+        fechaVencimiento = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      } else {
+        // Fallback: intentar parsear directamente
+        fechaVencimiento = new Date(data_pagos.fin_pag);
+      }
+      
+      fechaVencimiento.setHours(0, 0, 0, 0);
+
+      // Solo está vencido si la fecha de vencimiento ya pasó
+      if (fechaVencimiento < hoy) {
+        return 'Vencido';
+      }
+      
+      return 'Pendiente';
+    }
+
+    return data_pagos.est_pag;
+  };
+
+  const estadoReal = getEstadoPago();
+
   const getStatusIcon = () => {
-    switch (data_pagos.est_pag) {
+    switch (estadoReal) {
       case 'Pagado':
         return { name: 'check-circle', color: '#4CAF50' };
       case 'Vencido':
@@ -33,7 +77,7 @@ const PaymentCard = ({ data_pagos }: PropsPaymentCard) => {
   };
 
   const statusIcon = getStatusIcon();
-  const amount = data_pagos.est_pag === 'Pagado' ? data_pagos.mon_ori_pag : data_pagos.mon_pag;
+  const amount = estadoReal === 'Pagado' ? data_pagos.mon_ori_pag : data_pagos.mon_pag;
 
   return (
     <TouchableOpacity
@@ -52,7 +96,7 @@ const PaymentCard = ({ data_pagos }: PropsPaymentCard) => {
         <View style={[styles.statusBadge, { backgroundColor: `${statusIcon.color}15` }]}>
           <Icon name={statusIcon.name} size={14} color={statusIcon.color} />
           <Text style={[styles.statusText, { color: statusIcon.color }]}>
-            {data_pagos.est_pag}
+            {estadoReal}
           </Text>
         </View>
       </View>

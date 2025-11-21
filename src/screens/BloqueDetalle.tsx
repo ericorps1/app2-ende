@@ -90,11 +90,48 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
 
   const viewDetailRecTeorico = (htmlText:string,url_vid:string|null,title:string,arc_arc:string|null) => {
     if(url_vid!==null && url_vid!==''){
-      navigation.navigate('WebViewFullScreen', {htmlText: {html: htmlText}, title, url: url_vid.replace('watch?v=','embed/'), downloadFile:false, viewMiniChat: true});
+      let videoId = null;
+      let isYouTube = false;
+      
+      if (url_vid.includes('youtube.com') || url_vid.includes('youtu.be')) {
+        isYouTube = true;
+        
+        if (url_vid.includes('youtube.com/watch')) {
+          videoId = url_vid.split('watch?v=')[1]?.split('&')[0];
+        } else if (url_vid.includes('youtu.be/')) {
+          videoId = url_vid.split('youtu.be/')[1]?.split('?')[0];
+        } else if (url_vid.includes('youtube.com/embed/')) {
+          videoId = url_vid.split('embed/')[1]?.split('?')[0];
+        }
+      }
+      
+      navigation.navigate('WebViewFullScreen', {
+        htmlText: {html: htmlText}, 
+        title, 
+        url: url_vid,
+        isYouTube,
+        videoId,
+        downloadFile: false, 
+        viewMiniChat: true
+      });
     }else if (arc_arc!==null && arc_arc!==''){
-      navigation.navigate('WebViewFullScreen', {htmlText: {html: htmlText}, title, url: baseUrlFiles+arc_arc, downloadFile:true, viewMiniChat: true});
+      navigation.navigate('WebViewFullScreen', {
+        htmlText: {html: htmlText}, 
+        title, 
+        url: baseUrlFiles+arc_arc, 
+        downloadFile: true, 
+        viewMiniChat: true,
+        isYouTube: false
+      });
     }else{
-      navigation.navigate('WebViewFullScreen', {htmlText: {html: htmlText}, title, url: null, downloadFile:false, viewMiniChat: true});
+      navigation.navigate('WebViewFullScreen', {
+        htmlText: {html: htmlText}, 
+        title, 
+        url: null, 
+        downloadFile: false, 
+        viewMiniChat: true,
+        isYouTube: false
+      });
     }
   }
 

@@ -151,15 +151,20 @@ export const ExamenRespuesta = ({route,navigation}:PropsActividad) => {
 
       <StepsPagination infoRenderSteps={pagPreguntas}/>
 
+      {/* ✅ MODAL ARREGLADO CON BOTÓN DE CANCELAR */}
       <PaperMessages 
-        buttonText='Finalizar'
-        dismissable={true}
-        message={'¿Desea finalizar el examen? Se guardarán todas las respuestas seleccionadas.'}
-        title='¿Finalizar?'
         visible={finalizarExamenAlert}
-        pressButton={guardarRespuestas}
         onDismiss={() => setFinalizarExamenAlert(false)}
+        title='¿Finalizar?'
+        message='¿Desea finalizar el examen? Se guardarán todas las respuestas seleccionadas.'
+        buttonText='Finalizar'
+        pressButton={guardarRespuestas}
+        btnTxtCancel='Cancelar'
+        evtBtnCancel={() => setFinalizarExamenAlert(false)}
+        loading={loadingResp}
+        dismissable={true}
       />
+      
       <ModalMessages 
         visible={messageAlert !== ''}
         modalText={messageAlert}

@@ -35,9 +35,15 @@ const PaperMessages = ({
 }: PropsPaperMessages) => {
   
   const getIconByType = () => {
-    if (title.toLowerCase().includes('error')) return { name: 'alert-circle', color: '#FF3B30' };
-    if (title.toLowerCase().includes('éxito') || title.toLowerCase().includes('exito')) return { name: 'check-circle', color: '#34C759' };
-    if (title.toLowerCase().includes('confirmar')) return { name: 'help-circle', color: '#FF9500' };
+    if (title.toLowerCase().includes('error') || title.toLowerCase().includes('sin intentos')) {
+      return { name: 'alert-circle', color: '#FF3B30' };
+    }
+    if (title.toLowerCase().includes('éxito') || title.toLowerCase().includes('exito') || title.toLowerCase().includes('completado')) {
+      return { name: 'check-circle', color: '#34C759' };
+    }
+    if (title.toLowerCase().includes('confirmar') || title.toLowerCase().includes('iniciar') || title.toLowerCase().includes('finalizar')) {
+      return { name: 'help-circle', color: '#FF9500' };
+    }
     return { name: 'information', color: '#1976D2' };
   };
 
@@ -50,8 +56,16 @@ const PaperMessages = ({
       animationType="fade"
       onRequestClose={dismissable && !loading ? onDismiss : undefined}
     >
-      <View style={styles.overlay}>
-        <View style={styles.container}>
+      <TouchableOpacity 
+        style={styles.overlay}
+        activeOpacity={1}
+        onPress={dismissable && !loading ? onDismiss : undefined}
+      >
+        <TouchableOpacity 
+          style={styles.container}
+          activeOpacity={1}
+          onPress={(e) => e.stopPropagation()}
+        >
           {/* ICON */}
           <View style={[styles.iconContainer, { backgroundColor: icon.color + '20' }]}>
             <Icon name={icon.name} size={48} color={icon.color} />
@@ -96,8 +110,8 @@ const PaperMessages = ({
               )}
             </TouchableOpacity>
           </View>
-        </View>
-      </View>
+        </TouchableOpacity>
+      </TouchableOpacity>
     </Modal>
   );
 };

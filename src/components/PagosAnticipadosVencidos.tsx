@@ -12,7 +12,7 @@ export const PagosAnticipadosVencidos = () => {
   const [loadingPayExp, setLoadingPayExp] = useState(false);
   const { data_alumno } = useContext(AuthContext);
   const [viewContent, setViewContent] = useState(false);
-  const paysExpired: Pagos[] = useAppSelector(state => state.datapagos);
+  const allPagos: Pagos[] = useAppSelector(state => state.datapagos);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -35,8 +35,18 @@ export const PagosAnticipadosVencidos = () => {
     }
   };
 
+  // Filtrar solo pagos pendientes vencidos
+  const paysExpired = allPagos.filter((pago: any) => {
+    if (pago.est_pag !== 'Pendiente') return false;
+    
+    const fechaVencimiento = new Date(pago.fin_pag);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
+    
+    return fechaVencimiento < hoy;
+  });
+
   const totalPagos = paysExpired.length;
-  const totalVencidos = paysExpired.filter((p: any) => p.estado === 'vencido').length;
 
   return (
     <View style={styles.container}>
@@ -51,11 +61,10 @@ export const PagosAnticipadosVencidos = () => {
             <Icon name="credit-card-outline" size={22} color="#000" />
           </View>
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>Pagos anticipados y vencidos</Text>
+            <Text style={styles.title}>Pagos pendientes</Text>
             {totalPagos > 0 && (
               <Text style={styles.subtitle}>
-                {totalPagos} {totalPagos === 1 ? 'pago' : 'pagos'}
-                {totalVencidos > 0 && ` • ${totalVencidos} vencido${totalVencidos > 1 ? 's' : ''}`}
+                {totalPagos} {totalPagos === 1 ? 'pago pendiente' : 'pagos pendientes'}
               </Text>
             )}
           </View>
@@ -86,7 +95,7 @@ export const PagosAnticipadosVencidos = () => {
               <Icon name="check-circle-outline" size={48} color="#4CAF50" />
               <Text style={styles.emptyTitle}>¡Todo al corriente!</Text>
               <Text style={styles.emptyMessage}>
-                No tienes pagos anticipados ni vencidos
+                No tienes pagos pendientes
               </Text>
             </View>
           )}

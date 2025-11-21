@@ -202,18 +202,22 @@ export const Examen = ({ route, navigation }: PropsActividad) => {
         message={`Se descontará 1 intento. Intentos disponibles: ${calAct.int_cal_act}`}
         buttonText="Iniciar"
         pressButton={iniciarExamen}
+        btnTxtCancel="Cancelar"
+        evtBtnCancel={() => setVisibleAlertInicExa(false)}
         dismissable
       />
+      
       <PaperMessages
         visible={visibleAlertNoIntentos}
         onDismiss={() => setVisibleAlertNoIntentos(false)}
         title="¡SIN INTENTOS!"
-        message={`No tienes más intentos para este examen.`}
+        message="No tienes más intentos para este examen."
         buttonText="Cerrar"
+        pressButton={() => setVisibleAlertNoIntentos(false)}
         colorTitle={colors.danger}
-        styleButton={platformTheme.btnDanger}
         dismissable
       />
+      
       <PaperMessages
         visible={visibleAlertFinExamen}
         onDismiss={() => setVisibleAlertFinExamen(false)}
@@ -221,6 +225,8 @@ export const Examen = ({ route, navigation }: PropsActividad) => {
         message="Esto guardará tu nota definitiva. No podrás volver a intentarlo."
         buttonText="Finalizar"
         pressButton={finalizarExamen}
+        btnTxtCancel="Cancelar"
+        evtBtnCancel={() => setVisibleAlertFinExamen(false)}
         dismissable
       />
     </View>

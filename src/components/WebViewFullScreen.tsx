@@ -1,13 +1,14 @@
 import React, { useState } from 'react'
 import WebView from 'react-native-webview';
 import { View, StyleSheet, useWindowDimensions, Text, ScrollView, TouchableOpacity } from 'react-native';
-import RenderHtml from 'react-native-render-html';
 import { HTMLSource } from 'react-native-render-html';
 import { BackButtonNavigation } from './BackButtonNavigation';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChatAlumno } from './ChatAlumno';
 import { fnDownloadFile } from '../hooks/useDownloads';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import YoutubePlayer from 'react-native-youtube-iframe';
+import { HtmlToJsx } from './HtmlToJsx';
 
 interface PropsWebViewFullScreen {
     route: {
@@ -17,13 +18,15 @@ interface PropsWebViewFullScreen {
             htmlText: HTMLSource;
             downloadFile: boolean;
             viewMiniChat?: boolean;
+            isYouTube?: boolean;
+            videoId?: string;
         }
     },
     navigation: any
 }
 
 export const WebViewFullScreen = ({ route, navigation }:PropsWebViewFullScreen) => {
-    const {url, title, htmlText, downloadFile, viewMiniChat} = route.params;
+    const {url, title, htmlText, downloadFile, viewMiniChat, isYouTube, videoId} = route.params;
     const { width } = useWindowDimensions();
     const [download, setDownload] = useState(false);
 
@@ -36,18 +39,35 @@ export const WebViewFullScreen = ({ route, navigation }:PropsWebViewFullScreen) 
                 contentContainerStyle={styles.contentContainer}
                 showsVerticalScrollIndicator={false}
             >
-                {/* HTML CONTENT */}
-                {htmlText && (
+                {/* YOUTUBE VIDEO */}
+                {isYouTube && videoId && (
+                    <>
+                        <View style={styles.youtubeContainer}>
+                            <YoutubePlayer
+                                height={220}
+                                videoId={videoId}
+                                play={false}
+                            />
+                        </View>
+                        
+                        {/* DESCRIPCIÓN DEBAJO DEL VIDEO */}
+                        {htmlText && htmlText.html && (
+                            <View style={styles.descriptionContainer}>
+                                <HtmlToJsx strHtml={htmlText.html} />
+                            </View>
+                        )}
+                    </>
+                )}
+
+                {/* HTML CONTENT (para recursos que NO son YouTube - WIKIS) */}
+                {!isYouTube && htmlText && htmlText.html && (
                     <View style={styles.htmlContainer}>
-                        <RenderHtml
-                            contentWidth={width - 32}
-                            source={htmlText}
-                        />
+                        <HtmlToJsx strHtml={htmlText.html} />
                     </View>
                 )}
 
-                {/* PREVIEW */}
-                {url && !downloadFile && (
+                {/* PREVIEW (para otros URLs que no sean YouTube) */}
+                {url && !downloadFile && !isYouTube && (
                     <View style={styles.previewContainer}>
                         <WebView
                             source={{uri: url.trim()}}
@@ -95,6 +115,19 @@ const styles = StyleSheet.create({
     },
     contentContainer: {
         paddingBottom: 100,
+    },
+    youtubeContainer: {
+        backgroundColor: '#000',
+        width: '100%',
+    },
+    descriptionContainer: {
+        backgroundColor: '#FFF',
+        marginHorizontal: 16,
+        marginTop: 16,
+        padding: 16,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#E8E8E8',
     },
     htmlContainer: {
         backgroundColor: '#FFF',
