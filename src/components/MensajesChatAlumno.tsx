@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { isImage } from '../hooks/useValidations';
 import ImageModal from 'react-native-image-modal';
 import { fnDownloadFile } from '../hooks/useDownloads';
-import cafeApi from '../api/estudianteAPI';
+import endeApi from '../api/estudianteAPI';
 import { AuthContext } from '../context/AuthContext';
 import { formatDateHour } from '../hooks/useFormats';
 import { LoadingScreen } from '../screens/LoadingScreen';
@@ -61,7 +61,7 @@ export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=3
   };
 
   const loadMessages = async() => {
-      const {data} = await cafeApi.get('mensaje',{params:{id_sal: idSala, usu_visto: data_alumno?.id_alu, tip_usu_visto: 'Alumno'}});
+      const {data} = await endeApi.get('mensaje',{params:{id_sal: idSala, usu_visto: data_alumno?.id_alu, tip_usu_visto: 'Alumno'}});
       if(data.trans){
         setMensajes(data.data);
       }
@@ -75,7 +75,7 @@ export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=3
         await enviarMensaje(idSala);
       }else{
         const headers = {headers:{ 'Content-Type':'multipart/form-data' }};
-        const {data} = await cafeApi.post('sala/salaEstudianteProfesor',{use_alu: data_alumno?.id_alu, use_pro: id_pro}, headers);
+        const {data} = await endeApi.post('sala/salaEstudianteProfesor',{use_alu: data_alumno?.id_alu, use_pro: id_pro}, headers);
         if(data.trans){
           setIdSala(data.id_sal);
           await enviarMensaje(data.id_sal);
@@ -87,12 +87,16 @@ export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=3
   }
 
   const enviarMensaje = async(id_sala:number) => {
+    try {
       const headers = {headers:{ 'Content-Type':'multipart/form-data' }};
-      const {data} = await cafeApi.post('mensaje',{men_men: msgChat,arc_men:'',est_men:'Pendiente',tip_men: 'Alumno', use_men: data_alumno?.id_alu, id_sal: id_sala}, headers);
+      const {data} = await endeApi.post('mensaje',{men_men: msgChat,arc_men:'',est_men:'Pendiente',tip_men: 'Alumno', use_men: data_alumno?.id_alu, id_sal: id_sala}, headers);
       if(data.trans){
           await loadMessages();
           setMsgChat('');
       }
+    } catch (error: any) {
+      console.error('Error enviando mensaje:', error.message);
+    }
   }
 
   return (

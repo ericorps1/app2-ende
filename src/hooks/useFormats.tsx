@@ -127,20 +127,33 @@ const cleanHtmlRenderHtml = (html:string) => {
 }
 
 /**
- * Funcion para formatear el nombre de un usuario, todo en minuscula y separado por guiones
- * @param name nombre que se va a formatear ej: Juanito Perez Londoño
- * @returns string con el nombre formateado ej: juanito-perez-londono
+ * 🔥 Función para formatear el nombre de un usuario/archivo de forma segura para URLs
+ * - Todo en minúscula
+ * - Separado por guiones
+ * - Sin acentos ni caracteres especiales
+ * - Compatible con nombres de archivo
+ * 
+ * @param name nombre que se va a formatear ej: "Juanito Pérez: Londoño"
+ * @returns string con el nombre formateado ej: "juanito-perez-londono"
+ * 
+ * @example
+ * nombreGuionesMinus("Actividad: Mapa de función") → "actividad-mapa-de-funcion"
+ * nombreGuionesMinus("José María Ñoño") → "jose-maria-nono"
+ * nombreGuionesMinus("Test 123 @ #$%") → "test-123"
  */
-const nombreGuionesMinus = (name:string|null|undefined) => {
-    if(name){
-        return name
-            .toLowerCase()
-            .replace(/ /g,'-')
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "");
-    }else{
+const nombreGuionesMinus = (name: string | null | undefined) => {
+    if (!name) {
         return name;
     }
+    
+    return name
+        .toLowerCase()                           // Todo a minúsculas
+        .normalize("NFD")                        // Descomponer caracteres acentuados
+        .replace(/[\u0300-\u036f]/g, "")        // Eliminar acentos
+        .replace(/[^a-z0-9\s-]/g, '')           // 🔥 Eliminar caracteres especiales (: ; @ # $ % & etc)
+        .replace(/\s+/g, '-')                   // Espacios a guiones
+        .replace(/-+/g, '-')                    // Múltiples guiones a uno solo
+        .replace(/^-+|-+$/g, '');               // 🔥 Eliminar guiones al inicio/final
 }
 
 export {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import WebView from 'react-native-webview';
 import { View, StyleSheet, useWindowDimensions, Text, ScrollView, TouchableOpacity } from 'react-native';
+import RenderHtml from 'react-native-render-html';
 import { HTMLSource } from 'react-native-render-html';
 import { BackButtonNavigation } from './BackButtonNavigation';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,7 +9,6 @@ import { ChatAlumno } from './ChatAlumno';
 import { fnDownloadFile } from '../hooks/useDownloads';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import YoutubePlayer from 'react-native-youtube-iframe';
-import { HtmlToJsx } from './HtmlToJsx';
 
 interface PropsWebViewFullScreen {
     route: {
@@ -39,7 +39,7 @@ export const WebViewFullScreen = ({ route, navigation }:PropsWebViewFullScreen) 
                 contentContainerStyle={styles.contentContainer}
                 showsVerticalScrollIndicator={false}
             >
-                {/* YOUTUBE VIDEO */}
+                {/* ========== YOUTUBE VIDEO ========== */}
                 {isYouTube && videoId && (
                     <>
                         <View style={styles.youtubeContainer}>
@@ -52,23 +52,29 @@ export const WebViewFullScreen = ({ route, navigation }:PropsWebViewFullScreen) 
                         
                         {/* DESCRIPCIÓN DEBAJO DEL VIDEO */}
                         {htmlText && htmlText.html && (
-                            <View style={styles.descriptionContainer}>
-                                <HtmlToJsx strHtml={htmlText.html} />
+                            <View style={styles.cardContainer}>
+                                <RenderHtml
+                                    contentWidth={width - 64}
+                                    source={htmlText}
+                                />
                             </View>
                         )}
                     </>
                 )}
 
-                {/* HTML CONTENT (para recursos que NO son YouTube - WIKIS) */}
+                {/* ========== HTML CONTENT (WIKIS / NO-YOUTUBE) ========== */}
                 {!isYouTube && htmlText && htmlText.html && (
-                    <View style={styles.htmlContainer}>
-                        <HtmlToJsx strHtml={htmlText.html} />
+                    <View style={styles.cardContainer}>
+                        <RenderHtml
+                            contentWidth={width - 64}
+                            source={htmlText}
+                        />
                     </View>
                 )}
 
-                {/* PREVIEW (para otros URLs que no sean YouTube) */}
+                {/* ========== PREVIEW WEBVIEW (URLs que no son YouTube ni archivos) ========== */}
                 {url && !downloadFile && !isYouTube && (
-                    <View style={styles.previewContainer}>
+                    <View style={styles.cardContainer}>
                         <WebView
                             source={{uri: url.trim()}}
                             style={styles.webview}
@@ -76,7 +82,7 @@ export const WebViewFullScreen = ({ route, navigation }:PropsWebViewFullScreen) 
                     </View>
                 )}
 
-                {/* DOWNLOAD BUTTON */}
+                {/* ========== DOWNLOAD BUTTON ========== */}
                 {url && downloadFile && (
                     <View style={styles.downloadContainer}>
                         <TouchableOpacity
@@ -84,12 +90,13 @@ export const WebViewFullScreen = ({ route, navigation }:PropsWebViewFullScreen) 
                             onPress={() => fnDownloadFile(url)}
                             activeOpacity={0.7}
                         >
-                            <Icon name="download" size={20} color="#FFF" />
+                            <Icon name="download" size={22} color="#FFF" />
                             <Text style={styles.downloadText}>Descargar archivo</Text>
                         </TouchableOpacity>
                         
+                        {/* PREVIEW OPCIONAL DESPUÉS DE DESCARGAR */}
                         {download && (
-                            <View style={styles.previewContainer}>
+                            <View style={[styles.cardContainer, {marginTop: 16}]}>
                                 <WebView
                                     source={{uri: url}}
                                     style={styles.webview}
@@ -100,6 +107,7 @@ export const WebViewFullScreen = ({ route, navigation }:PropsWebViewFullScreen) 
                 )}
             </ScrollView>
 
+            {/* ========== MINI CHAT ========== */}
             {viewMiniChat && <ChatAlumno/>}
         </SafeAreaView>
     )
@@ -116,11 +124,16 @@ const styles = StyleSheet.create({
     contentContainer: {
         paddingBottom: 100,
     },
+    
+    // ===== YOUTUBE =====
     youtubeContainer: {
         backgroundColor: '#000',
         width: '100%',
+        marginBottom: 0,
     },
-    descriptionContainer: {
+    
+    // ===== CARDS GENERALES =====
+    cardContainer: {
         backgroundColor: '#FFF',
         marginHorizontal: 16,
         marginTop: 16,
@@ -128,29 +141,21 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         borderColor: '#E8E8E8',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
     },
-    htmlContainer: {
-        backgroundColor: '#FFF',
-        marginHorizontal: 16,
-        marginTop: 16,
-        padding: 16,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#E8E8E8',
-    },
-    previewContainer: {
-        backgroundColor: '#FFF',
-        marginHorizontal: 16,
-        marginTop: 16,
-        borderRadius: 12,
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: '#E8E8E8',
-    },
+    
+    // ===== WEBVIEW =====
     webview: {
         width: '100%',
         height: 400,
+        borderRadius: 8,
     },
+    
+    // ===== DOWNLOAD =====
     downloadContainer: {
         marginHorizontal: 16,
         marginTop: 16,
@@ -158,16 +163,22 @@ const styles = StyleSheet.create({
     downloadButton: {
         flexDirection: 'row',
         backgroundColor: '#000',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderRadius: 10,
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+        borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 10,
+        gap: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 6,
+        elevation: 4,
     },
     downloadText: {
         color: '#FFF',
-        fontSize: 15,
-        fontWeight: '600',
+        fontSize: 16,
+        fontWeight: '700',
+        letterSpacing: 0.5,
     },
 });

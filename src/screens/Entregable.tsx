@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, Platform } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 import { FilePick, PropsActividad, TypesMsgModalType } from '../interfaces/appInterfaces';
 import DocumentPicker from 'react-native-document-picker';
@@ -22,6 +22,7 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
   const initialStateObFile = { fileCopyUri: null, name: "", size: 0, type: "", uri: "" };
   const { data_alumno } = useContext(AuthContext);
   const {identificador, titulo, descripcion, identificador_copia, nom_blo, nom_mat} = route.params.data_actividad;
+  
   const [infoRespTarea, setInfoRespTarea] = useState<any>([]);
   const [obFile, setObFile] = useState<FilePick>(initialStateObFile);
   const [loading, setLoading] = useState(false);
@@ -35,143 +36,383 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
     getEntregableAlu();
   }, [])
 
+  // ========== REFRESH ==========
   const onRefresh = async () => {
     setRefreshing(true);
     await getEntregableAlu();
     setRefreshing(false);
   };
 
+  // ========== OBTENER ENTREGABLE ==========
   const getEntregableAlu = async () => {
-    const {data} = await cafeApi.get('/tarea', {params: {id_ent_cop: identificador_copia, id_alu_ram: data_alumno?.id_alu_ram}});
-    setLoading(true);
-    if(data.trans){
-      setInfoRespTarea(data.data);
-    }else{
+    try {
+      console.log('\n═══════════════════════════════════════');
+      console.log('🔄 OBTENIENDO ENTREGABLE DEL ALUMNO');
+      console.log('═══════════════════════════════════════');
+      console.log('ID Entregable Copia:', identificador_copia);
+      console.log('ID Alumno RAM:', data_alumno?.id_alu_ram);
+      
+      setLoading(true);
+      const {data} = await cafeApi.get('/tarea', {
+        params: {
+          id_ent_cop: identificador_copia, 
+          id_alu_ram: data_alumno?.id_alu_ram
+        }
+      });
+      
+      console.log('📥 RESPUESTA DEL GET /tarea:');
+      console.log(JSON.stringify(data, null, 2));
+      
+      if(data.trans){
+        console.log('✅ Datos recibidos:', data.data.length, 'registros');
+        if (data.data.length > 0) {
+          console.log('📋 DETALLE DEL REGISTRO:');
+          console.log(JSON.stringify(data.data[0], null, 2));
+        }
+        setInfoRespTarea(data.data);
+      } else {
+        console.log('⚠️ Sin datos de entregable');
+        setInfoRespTarea([]);
+      }
+      
+      console.log('═══════════════════════════════════════\n');
+      
+    } catch (error: any) {
+      console.error('═══════════════════════════════════════');
+      console.error('❌ ERROR AL OBTENER ENTREGABLE');
+      console.error('═══════════════════════════════════════');
+      console.error('Error completo:', error);
+      console.error('Response:', error.response?.data);
+      console.error('═══════════════════════════════════════\n');
       setInfoRespTarea([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
+  // ========== MANEJO DE ERRORES DOCUMENT PICKER ==========
   const handleError = (err: unknown) => {
     if (DocumentPicker.isCancel(err)) {
-      console.log('cancelled', err)
+      console.log('📱 Usuario canceló selección');
     } else {
-      throw err
+      console.error('❌ Error en DocumentPicker:', err);
+      throw err;
     }
   }
 
+  // ========== SELECCIONAR ARCHIVO (CON FIX PARA ANDROID) ==========
   const loadFile = async () => {
     try {
-      const file: any = await DocumentPicker.pickSingle();
-      setObFile(file);
+      const file: any = await DocumentPicker.pickSingle({
+        copyTo: 'cachesDirectory', // 🔥 CLAVE: Copiar a cache (Android)
+      });
+      
+      console.log('═══════════════════════════════════════');
+      console.log('📁 ARCHIVO SELECCIONADO');
+      console.log('═══════════════════════════════════════');
+      console.log('Nombre:', file.name);
+      console.log('URI original:', file.uri);
+      console.log('URI copia:', file.fileCopyUri);
+      console.log('Tipo:', file.type);
+      console.log('Tamaño:', file.size, 'bytes');
+      console.log('═══════════════════════════════════════\n');
+      
+      // 🔥 Usar fileCopyUri en lugar de uri para Android
+      const realUri = Platform.OS === 'android' 
+        ? file.fileCopyUri || file.uri 
+        : file.uri;
+      
+      setObFile({
+        ...file,
+        uri: realUri, // 🔥 Usar el URI copiado
+      });
+      
     } catch (error) {
       handleError(error);
     }
   }
 
+  // ========== TOMAR FOTO / GALERÍA (CON FIX PARA ANDROID) ==========
   const getPhoto = async (type: 'photo' | 'img') => {
     let result: any = { assets: undefined };
-    if(type === 'photo'){
+    
+    if (type === 'photo') {
       const permission = await requestCameraPermission();
-      if(!permission){
+      if (!permission) {
         setTypeMsg('error');
         setAlertMsg('No se ha concedido el permiso para usar la cámara.');
         return false;
       }
-      result = await launchCamera({mediaType: 'photo', cameraType: 'front', maxWidth: 500, maxHeight: 500});
-    }else{
-      result = await launchImageLibrary({mediaType: 'photo', maxWidth: 500, maxHeight: 500});
+      
+      result = await launchCamera({
+        mediaType: 'photo',
+        cameraType: 'back',
+        maxWidth: 1024,
+        maxHeight: 1024,
+        quality: 0.8,
+        saveToPhotos: false, // 🔥 No guardar en galería
+      });
+    } else {
+      result = await launchImageLibrary({
+        mediaType: 'photo',
+        maxWidth: 1024,
+        maxHeight: 1024,
+        quality: 0.8,
+      });
     }
-    if(result.assets){
-      setObFile({...result.assets[0], name: result.assets[0].fileName});
+    
+    if (result.assets) {
+      const asset = result.assets[0];
+      
+      console.log('═══════════════════════════════════════');
+      console.log('📸 FOTO/IMAGEN SELECCIONADA');
+      console.log('═══════════════════════════════════════');
+      console.log('Nombre:', asset.fileName);
+      console.log('URI:', asset.uri);
+      console.log('Tipo:', asset.type);
+      console.log('Tamaño:', asset.fileSize, 'bytes');
+      console.log('═══════════════════════════════════════\n');
+      
+      setObFile({
+        name: asset.fileName || `photo_${Date.now()}.jpg`,
+        uri: asset.uri, // 🔥 Este URI ya es válido desde la cámara/galería
+        type: asset.type || 'image/jpeg',
+        size: asset.fileSize || 0,
+        fileCopyUri: asset.uri,
+      });
     }
-  }
+  };
 
+  // ========== SUBIR ARCHIVO (CON VALIDACIONES MEJORADAS) ==========
   const uploadFile = async () => {
-    console.log('🔥 INICIANDO UPLOAD');
-    console.log('📦 obFile:', obFile);
+    console.log('\n\n');
+    console.log('═══════════════════════════════════════');
+    console.log('🔥 INICIANDO PROCESO DE UPLOAD');
+    console.log('═══════════════════════════════════════');
+    console.log('📦 Información del archivo:');
+    console.log('   Nombre:', obFile.name);
+    console.log('   URI:', obFile.uri);
+    console.log('   Tipo MIME:', obFile.type);
+    console.log('   Tamaño:', obFile.size, 'bytes');
+    console.log('   FileCopyUri:', obFile.fileCopyUri);
     
     const arrFileName = obFile.name.split('.');
     const fileExt = arrFileName[arrFileName.length - 1];
+    console.log('   Extensión:', fileExt);
+    console.log('═══════════════════════════════════════\n');
     
-    if(obFile.name === "") {
-      console.log('❌ Nombre vacío');
-      return false;
-    }
-    
-    try { 
-      console.log('✅ Iniciando setLoading(true)');
+    try {
+      // ========== VALIDACIONES ESTRICTAS ==========
+      console.log('🔍 Ejecutando validaciones...');
+      
+      if (!obFile.name || obFile.name === "") {
+        console.log('❌ VALIDACIÓN FALLIDA: Nombre vacío');
+        setTypeMsg('error');
+        setAlertMsg('El archivo no tiene nombre válido.');
+        return false;
+      }
+      console.log('✅ Validación 1/3: Nombre OK');
+      
+      if (!obFile.uri || obFile.uri === '') {
+        console.log('❌ VALIDACIÓN FALLIDA: URI vacío');
+        setTypeMsg('error');
+        setAlertMsg('No se pudo acceder al archivo. Por favor, selecciónalo nuevamente.');
+        return false;
+      }
+      console.log('✅ Validación 2/3: URI OK');
+      
+      // Validar tipo de archivo
+      if (!obFile.type) {
+        console.warn('⚠️ Sin tipo MIME, asignando por defecto');
+        obFile.type = 'application/octet-stream';
+      }
+      console.log('✅ Validación 3/3: Tipo MIME OK');
+      
+      console.log('✅ TODAS LAS VALIDACIONES PASADAS\n');
+      
       setLoading(true);
       
-      const serverFileName = `${nombreGuionesMinus(data_alumno?.nom_gen + '-' + data_alumno?.nom_alu + '-' + nom_blo + '-' + titulo + '-' + nom_mat)}.${fileExt}`;
-      console.log('📝 Server filename:', serverFileName);
+      // ========== PREPARAR NOMBRE DEL ARCHIVO ==========
+      const serverFileName = `${nombreGuionesMinus(
+        data_alumno?.nom_gen + '-' + 
+        data_alumno?.nom_alu + '-' + 
+        nom_blo + '-' + 
+        titulo + '-' + 
+        nom_mat
+      )}.${fileExt}`;
       
-      const uploadData = {
-        file: {...obFile, fileName: serverFileName},
-        params: {doc_tar: obFile.name, id_ent_cop: identificador_copia, id_alu_ram: data_alumno?.id_alu_ram}
+      console.log('═══════════════════════════════════════');
+      console.log('📝 PREPARANDO DATOS PARA ENVÍO');
+      console.log('═══════════════════════════════════════');
+      console.log('Nombre original:', obFile.name);
+      console.log('Nombre en servidor:', serverFileName);
+      console.log('ID Entregable Copia:', identificador_copia);
+      console.log('ID Alumno RAM:', data_alumno?.id_alu_ram);
+      console.log('═══════════════════════════════════════\n');
+      
+      // ========== PREPARAR DATOS ADICIONALES ==========
+      const additionalData = {
+        doc_tar: obFile.name,
+        id_ent_cop: identificador_copia,
+        id_alu_ram: data_alumno?.id_alu_ram,
       };
-      console.log('📤 Datos a enviar:', uploadData);
       
-      console.log('⏳ Llamando useUploads...');
+      console.log('⏳ Enviando petición al servidor...');
+      console.log('🌐 Endpoint: /tarea/');
+      console.log('📤 Método: POST (multipart/form-data)\n');
+      
+      // ========== UPLOAD ==========
       const resp = await useUploads(
-        '/tarea/', 
-        {...obFile, fileName: serverFileName}, 
-        {doc_tar: obFile.name, id_ent_cop: identificador_copia, id_alu_ram: data_alumno?.id_alu_ram}
+        '/tarea/',
+        {
+          ...obFile,
+          fileName: serverFileName,
+          name: serverFileName, // 🔥 Asegurar que el nombre sea correcto
+        },
+        additionalData
       );
-      console.log('📨 Respuesta:', resp);
       
-      if(resp.trans === true){
+      console.log('═══════════════════════════════════════');
+      console.log('📨 RESPUESTA RECIBIDA DEL SERVIDOR');
+      console.log('═══════════════════════════════════════');
+      console.log(JSON.stringify(resp, null, 2));
+      console.log('═══════════════════════════════════════\n');
+      
+      // ========== PROCESAR RESPUESTA ==========
+      if (resp.trans === true) {
+        console.log('✅✅✅ UPLOAD EXITOSO ✅✅✅\n');
         setTypeMsg('success');
         setAlertMsg('Actividad entregada exitosamente.');
         setObFile(initialStateObFile);
         await getEntregableAlu();
-      }else{
+      } else {
+        console.log('═══════════════════════════════════════');
+        console.log('⚠️ UPLOAD FALLIDO - RESPUESTA NEGATIVA');
+        console.log('═══════════════════════════════════════');
+        console.log('trans:', resp.trans);
+        console.log('msg:', resp.msg);
+        console.log('data:', resp.data);
+        console.log('═══════════════════════════════════════\n');
+        
         setTypeMsg('error');
-        setAlertMsg('La actividad no se pudo entregar, por favor, vuelva a intentarlo. \n' + resp.msg);
+        setAlertMsg(
+          'La actividad no se pudo entregar:\n' + 
+          (resp.msg || 'Error desconocido del servidor')
+        );
       }
+      
     } catch (error: any) {
-      console.log('💥 ERROR CATCH:', error);
-      console.log('💥 ERROR MESSAGE:', error.message);
-      console.log('💥 ERROR STACK:', error.stack);
-      setTypeMsg('error');
-      setAlertMsg('Error inesperado: ' + error.message);
+      console.log('\n');
+      console.error('═══════════════════════════════════════');
+      console.error('💥 ERROR CRÍTICO EN UPLOAD');
+      console.error('═══════════════════════════════════════');
+      console.error('Tipo de error:', error.name);
+      console.error('Mensaje:', error.message);
+      console.error('Stack:', error.stack);
+      console.error('═══════════════════════════════════════');
+      
+      if (error.response) {
+        console.error('📥 RESPUESTA DEL SERVIDOR (ERROR):');
+        console.error('═══════════════════════════════════════');
+        console.error('Status Code:', error.response.status);
+        console.error('Status Text:', error.response.statusText);
+        console.error('Data:', JSON.stringify(error.response.data, null, 2));
+        console.error('Headers:', error.response.headers);
+        console.error('═══════════════════════════════════════\n');
+        
+        setTypeMsg('error');
+        setAlertMsg(
+          `Error del servidor (${error.response.status}):\n${
+            error.response.data?.msg || 
+            error.response.data?.message || 
+            JSON.stringify(error.response.data) ||
+            'Error desconocido'
+          }`
+        );
+      } else if (error.request) {
+        console.error('📡 SIN RESPUESTA DEL SERVIDOR:');
+        console.error('═══════════════════════════════════════');
+        console.error('Request enviado pero sin respuesta');
+        console.error('Request:', error.request);
+        console.error('═══════════════════════════════════════\n');
+        
+        setTypeMsg('error');
+        setAlertMsg('Sin respuesta del servidor. Verifica tu conexión a internet.');
+      } else {
+        console.error('⚠️ ERROR ANTES DE ENVIAR REQUEST:');
+        console.error('═══════════════════════════════════════');
+        console.error('Error al preparar la petición');
+        console.error('Detalles:', error);
+        console.error('═══════════════════════════════════════\n');
+        
+        setTypeMsg('error');
+        setAlertMsg('Error al preparar el archivo: ' + error.message);
+      }
+      
     } finally {
-      console.log('🏁 Terminando - setLoading(false)');
+      console.log('🏁 Proceso de upload finalizado\n\n');
       setLoading(false);
     }
-  }
+  };
 
+  // ========== DESCARGAR ARCHIVO (CON FIX URL ENCODING) ==========
   const downloadFileFunc = () => {
-    fnDownloadFile(baseUrlFiles + infoRespTarea[0].doc_tar, infoRespTarea[0].doc_tar);
+    const fileName = infoRespTarea[0].doc_tar;
+    
+    console.log('═══════════════════════════════════════');
+    console.log('📥 INICIANDO DESCARGA');
+    console.log('═══════════════════════════════════════');
+    console.log('Nombre original:', fileName);
+    console.log('Nombre decodificado:', decodeURIComponent(fileName));
+    console.log('URL completa:', baseUrlFiles + fileName);
+    console.log('═══════════════════════════════════════\n');
+    
+    // 🔥 Decodificar el nombre del archivo para mostrar correctamente
+    const decodedFileName = decodeURIComponent(fileName);
+    
+    fnDownloadFile(
+      baseUrlFiles + fileName, // URL con encoding (servidor lo espera así)
+      decodedFileName          // Nombre local sin encoding
+    );
   }
 
+  // ========== CONFIRMAR ELIMINACIÓN ==========
   const pressDelete = () => {
     setTitleEliminar('¿Eliminar entregable?');
     setTextEliminar('¿Seguro que desea eliminar el entregable? Esta acción es irreversible.');
   }
 
+  // ========== ELIMINAR TAREA ==========
   const eliminarTarea = async () => {
-    setLoading(true);
-    const {data} = await cafeApi.delete('/tarea/' + infoRespTarea[0]?.id_tar);
-    if(data.trans === true){
-      setTypeMsg('success');
-      setAlertMsg('Entrega eliminada exitosamente.');
-      setTitleEliminar('');
-      setTextEliminar('');
-      setInfoRespTarea([]);
-    }else{
+    try {
+      setLoading(true);
+      const {data} = await cafeApi.delete('/tarea/' + infoRespTarea[0]?.id_tar);
+      
+      if (data.trans === true) {
+        setTypeMsg('success');
+        setAlertMsg('Entrega eliminada exitosamente.');
+        setTitleEliminar('');
+        setTextEliminar('');
+        setInfoRespTarea([]);
+        await getEntregableAlu();
+      } else {
+        setTypeMsg('error');
+        setAlertMsg('La entrega no se pudo eliminar, por favor, intentelo nuevamente.');
+      }
+    } catch (error) {
+      console.error('❌ Error al eliminar:', error);
       setTypeMsg('error');
-      setAlertMsg('La entrega no se pudo eliminar, por favor, intentelo nuevamente.');
+      setAlertMsg('Error al eliminar la entrega.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    getEntregableAlu();
   }
 
-  if(loading) return <LoadingScreen/>
+  if (loading) return <LoadingScreen/>
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
+      {/* ========== HEADER ========== */}
       <View style={styles.header}>
         <TouchableOpacity 
           onPress={() => navigation.pop()} 
@@ -186,6 +427,7 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
         </View>
       </View>
 
+      {/* ========== CONTENT ========== */}
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
@@ -218,13 +460,15 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
           </View>
 
           {infoRespTarea.length ? (
-            // ARCHIVO YA SUBIDO
+            // ========== ARCHIVO YA SUBIDO ==========
             <View style={styles.uploadedFile}>
               <View style={styles.fileInfo}>
                 <Icon name="file-check" size={40} color="#34C759" />
                 <View style={styles.fileDetails}>
                   <Text style={styles.fileLabel}>Archivo entregado</Text>
-                  <Text style={styles.fileName} numberOfLines={2}>{infoRespTarea[0].doc_tar}</Text>
+                  <Text style={styles.fileName} numberOfLines={2}>
+                    {decodeURIComponent(infoRespTarea[0].doc_tar)}
+                  </Text>
                 </View>
               </View>
 
@@ -251,11 +495,13 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
               </View>
             </View>
           ) : obFile.uri ? (
-            // ARCHIVO SELECCIONADO
+            // ========== ARCHIVO SELECCIONADO ==========
             <View style={styles.selectedFile}>
               <View style={styles.selectedFileInfo}>
                 <Icon name="file" size={32} color="#666" />
-                <Text style={styles.selectedFileName} numberOfLines={2}>{obFile.name}</Text>
+                <Text style={styles.selectedFileName} numberOfLines={2}>
+                  {obFile.name}
+                </Text>
               </View>
 
               <View style={styles.selectedFileActions}>
@@ -282,7 +528,7 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
               </View>
             </View>
           ) : (
-            // SELECCIONAR ARCHIVO
+            // ========== SELECCIONAR ARCHIVO ==========
             <View style={styles.selectOptions}>
               <View style={styles.imageOptions}>
                 <TouchableOpacity 
@@ -320,8 +566,10 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
         </View>
       </ScrollView>
 
+      {/* ========== CHAT ========== */}
       <ChatAlumno/>
 
+      {/* ========== MODALES ========== */}
       <ModalMessages
         visible={alertMsg !== ''}
         typeMsgModal={typeMsg}
@@ -482,7 +730,7 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#FF6B6B',
     borderRadius: 10,
     paddingVertical: 12,
     flexDirection: 'row',

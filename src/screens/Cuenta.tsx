@@ -49,6 +49,26 @@ export const Cuenta = () => {
         getDomiciliation();
     }, [])
 
+    // ========== HELPER: OBTENER COLOR Y ESTILO DEL ESTATUS ==========
+    const getStatusStyle = (status: string | undefined) => {
+        if (!status) return { color: '#999', dotColor: '#999' };
+        
+        const statusUpper = status.toUpperCase();
+        
+        // Verde para activos
+        if (statusUpper === 'ACTIVO' || statusUpper === 'REINGRESO') {
+            return { color: '#34C759', dotColor: '#34C759' };
+        }
+        
+        // Rojo para bajas
+        if (statusUpper === 'BAJA' || statusUpper === 'NP') {
+            return { color: '#FF6B6B', dotColor: '#FF6B6B' };
+        }
+        
+        // Gris para cualquier otro caso
+        return { color: '#999', dotColor: '#999' };
+    };
+
     const onRefresh = async () => {
         setRefreshing(true);
         await Promise.all([
@@ -278,6 +298,9 @@ export const Cuenta = () => {
         setLoadingActuCont(false);
     }
 
+    // 🔥 Obtener estilo del estatus
+    const statusStyle = getStatusStyle(data_alumno?.estatus_general);
+
     return (
         (loadingAccount) 
         ? <LoadingScreen/>
@@ -320,9 +343,12 @@ export const Cuenta = () => {
                             
                             <Text style={styles.heroName}>{data_alumno?.nom_alu}</Text>
                             
+                            {/* 🔥 STATUS BADGE CON COLOR DINÁMICO */}
                             <View style={styles.statusBadge}>
-                                <View style={styles.statusDot} />
-                                <Text style={styles.statusText}>{data_alumno?.estatus_general}</Text>
+                                <View style={[styles.statusDot, { backgroundColor: statusStyle.dotColor }]} />
+                                <Text style={[styles.statusText, { color: statusStyle.color }]}>
+                                    {data_alumno?.estatus_general}
+                                </Text>
                             </View>
 
                             {/* PLANTEL */}
@@ -632,12 +658,12 @@ const styles = StyleSheet.create({
         width: 6,
         height: 6,
         borderRadius: 3,
-        backgroundColor: '#34C759',
+        // 🔥 El color se asigna dinámicamente
     },
     statusText: {
         fontSize: 13,
-        color: '#666',
         fontWeight: '600',
+        // 🔥 El color se asigna dinámicamente
     },
     plantelBadge: {
         flexDirection: 'row',

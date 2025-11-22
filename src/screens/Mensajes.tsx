@@ -175,7 +175,7 @@ export const Mensajes = () => {
                                         id_sal={sala.id_sal}
                                         urlImg='https://plataforma.ahjende.com/img/grupo.jpg'
                                         styleImg={styles.imgSala}
-                                        nombre={sala.desc_sala}
+                                        nombre={sala.nom_sal}
                                         grupo={sala.nom_sal}
                                         title='Grupal'
                                         lastSms={sala.last_nom_usu ? `${sala.last_nom_usu}: ${sala.last_men_men}` : ''}
@@ -277,6 +277,7 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#000',
         marginBottom: 4,
+        fontFamily: 'NotoColorEmoji',
     },
     heroSubtitle: {
         fontSize: 14,
@@ -305,6 +306,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: '#000',
         paddingVertical: 0,
+        fontFamily: 'NotoColorEmoji',
     },
     clearButton: {
         padding: 4,

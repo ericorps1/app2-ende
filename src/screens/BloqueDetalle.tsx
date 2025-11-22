@@ -25,8 +25,10 @@ interface BloqueDetalleProps {
 
 export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
   const { data_alumno } = useContext( AuthContext );
+  
   const {id_blo, nom_blo, des_blo, id_sub_hor, img_blo} = route.params.bloque_data;
   const nom_mat = route.params.nom_mat;
+  
   const [recursosTeoricos, setRecursosTeoricos] = useState([]);
   const [actividades, setActividades] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +36,9 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
   const [viewAlertVencida, setViewAlertVencida] = useState(false);
   const [conBlo, setConBlo] = useState('');
   const [actividadesConCalificacion, setActividadesConCalificacion] = useState<{[key: number]: any}>({});
+  
+  // 🔥 STATE PARA LA IMAGEN DEL BLOQUE
+  const [imagenBloque, setImagenBloque] = useState(img_blo || 'default.jpg');
   
   useEffect( () => {
     getDataView();
@@ -81,10 +86,32 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
     setActividadesConCalificacion(calificaciones);
   }
 
+  // 🔥 OBTENER CONTENIDO E IMAGEN DEL BLOQUE
   const getConBlo = async () => {
-    const {data} = await endeApi.get('/bloque/'+id_blo,{ params:{ cols: 'con_blo' } });
-    if(data.trans){
-      setConBlo(data.data.length>0 ? data.data[0].con_blo : '');
+    try {
+      const {data} = await endeApi.get('/bloque/'+id_blo);
+      
+      console.log('📦 Respuesta del backend (bloque):', data);
+      
+      if(data.trans && data.data.length > 0){
+        const bloqueCompleto = data.data[0];
+        
+        console.log('🔍 Bloque completo:', bloqueCompleto);
+        console.log('🖼️ img_blo del backend:', bloqueCompleto.img_blo);
+        
+        // Guardar contenido
+        setConBlo(bloqueCompleto.con_blo || '');
+        
+        // 🔥 GUARDAR IMAGEN DEL BACKEND
+        if (bloqueCompleto.img_blo) {
+          setImagenBloque(bloqueCompleto.img_blo);
+          console.log('✅ Imagen actualizada:', bloqueCompleto.img_blo);
+        } else {
+          console.log('⚠️ No viene img_blo del backend, usando default');
+        }
+      }
+    } catch (error) {
+      console.log('❌ Error obteniendo contenido del bloque:', error);
     }
   }
 
@@ -136,24 +163,58 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
   }
 
   const viewDetailActividad = (actividad:ActividadData) => {
-    // Verificar si el alumno ya hizo la actividad
-    const calificacion = actividadesConCalificacion[actividad.id_cal_act];
-    const yaHizoActividad = calificacion && (calificacion.fec_cal_act || calificacion.int_cal_act > 0);
+    console.log('\n🔥🔥🔥 CLICK EN ACTIVIDAD 🔥🔥🔥');
+    console.log('═══════════════════════════════════════');
+    console.log('📝 Actividad:', actividad.titulo);
     
-    // Si ya hizo la actividad, puede acceder siempre (aunque esté vencida)
-    if (yaHizoActividad) {
+    const calificacion = actividadesConCalificacion[actividad.id_cal_act];
+    
+    if (!calificacion) {
+      console.log('⚠️ No se encontró calificación');
+      console.log('═══════════════════════════════════════\n');
+      return;
+    }
+
+    const fec_cal_act = calificacion.fec_cal_act;
+    const fin_cal_act = calificacion.fin_cal_act;
+    const pun_cal_act = calificacion.pun_cal_act;
+
+    console.log('📊 Datos de calificación:');
+    console.log('  fec_cal_act:', fec_cal_act);
+    console.log('  fin_cal_act:', fin_cal_act);
+    console.log('  pun_cal_act:', pun_cal_act);
+
+    if (fec_cal_act === null) {
+      const fechaHoy = new Date();
+      
+      const [year, month, day] = fin_cal_act.split('-').map(Number);
+      const fechaFin = new Date(year, month - 1, day);
+      fechaFin.setHours(23, 59, 59, 999);
+
+      console.log('  Fecha hoy:', fechaHoy.toLocaleString('es-MX'));
+      console.log('  Fecha fin:', fechaFin.toLocaleString('es-MX'));
+
+      if (fechaHoy > fechaFin) {
+        console.log('❌ BLOQUEANDO - Actividad vencida y NO realizada');
+        console.log('═══════════════════════════════════════\n');
+        setViewAlertVencida(true);
+        return;
+      } else {
+        console.log('✅ PERMITIENDO - Actividad pendiente pero vigente');
+        console.log('═══════════════════════════════════════\n');
+        navegarAActividad(actividad);
+        return;
+      }
+    } else {
+      if (pun_cal_act !== null) {
+        console.log('✅ PERMITIENDO - Actividad calificada');
+      } else {
+        console.log('✅ PERMITIENDO - Actividad realizada (sin calificar)');
+      }
+      console.log('═══════════════════════════════════════\n');
       navegarAActividad(actividad);
       return;
     }
-    
-    // Si NO hizo la actividad y está vencida, mostrar alerta
-    if (actividad.estatus_fecha === 'Vencida') {
-      setViewAlertVencida(true);
-      return;
-    }
-    
-    // Si está vigente, puede acceder
-    navegarAActividad(actividad);
   }
 
   const navegarAActividad = (actividad: ActividadData) => {
@@ -180,7 +241,6 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
     
     const extension = fileName.split('.').pop()?.toLowerCase();
     
-    // Si no hay extensión, retornar default
     if (!extension || extension === fileName) {
       return { icon: 'file-document-outline', color: '#666' };
     }
@@ -238,6 +298,9 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
     />
   )
 
+  // 🔥 URL DE LA IMAGEN (USA EL STATE)
+  const urlImagen = 'https://plataforma.ahjende.com/fondos_clase/' + imagenBloque;
+
   return (
     <View style={styles.container}>
       <ScrollView 
@@ -253,15 +316,14 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
           />
         }
       >
-        {/* HERO IMAGE - ESTILO NOTION */}
+        {/* 🔥 HERO IMAGE */}
         <ImageBackground
-          source={{ uri: 'https://plataforma.ahjende.com/fondos_clase/' + img_blo }}
+          source={{ uri: urlImagen }}
           style={styles.heroImage}
           imageStyle={styles.heroImageStyle}
         >
           <View style={styles.heroOverlay} />
           
-          {/* BOTÓN BACK FLOTANTE */}
           <TouchableOpacity 
             onPress={() => navigation.pop()} 
             style={styles.backButton}
@@ -270,16 +332,13 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
             <Icon name="arrow-left" size={22} color="#FFF" />
           </TouchableOpacity>
 
-          {/* TÍTULO SOBRE LA IMAGEN */}
           <View style={styles.heroContent}>
             <Text style={styles.heroTitle} numberOfLines={2}>{nom_blo}</Text>
             {des_blo && <Text style={styles.heroSubtitle} numberOfLines={2}>{des_blo}</Text>}
           </View>
         </ImageBackground>
 
-        {/* CONTENIDO */}
         <View style={styles.contentWrapper}>
-          {/* BOTÓN VIDEOCONFERENCIA */}
           <TouchableOpacity 
             style={styles.videoButton}
             onPress={onPressVideoConference}
@@ -292,14 +351,12 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
             <Icon name="chevron-right" size={18} color="#FFF" />
           </TouchableOpacity>
 
-          {/* CONTENIDO DEL BLOQUE */}
           {conBlo !== '' && (
             <View style={styles.contentSection}>
               <HtmlToJsx strHtml={conBlo}/>
             </View>
           )}
 
-          {/* SECCIÓN RECURSOS TEÓRICOS */}
           <View style={styles.sectionHeader}>
             <Icon name="book-open-variant" size={18} color="#000" style={styles.sectionIcon} />
             <Text style={styles.sectionTitle}>Recursos teóricos</Text>
@@ -346,7 +403,6 @@ export const BloqueDetalle = ({ route, navigation }:BloqueDetalleProps) => {
             </View>
           )}
 
-          {/* SECCIÓN ACTIVIDADES */}
           <View style={[styles.sectionHeader, { marginTop: 24 }]}>
             <Icon name="clipboard-text" size={18} color="#000" style={styles.sectionIcon} />
             <Text style={styles.sectionTitle}>Actividades</Text>

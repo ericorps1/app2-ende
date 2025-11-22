@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors, platformTheme } from '../theme/platformTheme';
 import { useStripe } from '@stripe/stripe-react-native';
 import endeApi from '../api/estudianteAPI';
@@ -33,32 +33,58 @@ export const AddDomiciliation = ({
   const { data_alumno, stripeAccountId } = useContext(AuthContext);
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
+  // ========== OBTENER ICONO DE LA TARJETA ==========
   const getCardIcon = (brand: string) => {
     const icons: { [key: string]: string } = {
-      visa: 'cc-visa',
-      mastercard: 'cc-mastercard',
-      amex: 'cc-amex',
-      discover: 'cc-discover',
+      visa: 'credit-card',
+      mastercard: 'credit-card',
+      amex: 'credit-card',
+      discover: 'credit-card',
       default: 'credit-card'
     };
     return icons[(brand || '').toLowerCase()] || icons.default;
   };
 
-  const formatBrand = (brand?: string) => {
-    if (!brand) return 'Tarjeta';
-    return brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase();
+  // ========== OBTENER COLOR DE LA TARJETA ==========
+  const getCardColor = (brand: string) => {
+    const colors: { [key: string]: string } = {
+      visa: '#1A1F71',
+      mastercard: '#EB001B',
+      amex: '#006FCF',
+      discover: '#FF6000',
+      default: '#000'
+    };
+    return colors[(brand || '').toLowerCase()] || colors.default;
   };
 
+  // ========== FORMATEAR NOMBRE DE LA MARCA ==========
+  const formatBrand = (brand?: string) => {
+    if (!brand) return 'Tarjeta';
+    const brandUpper = brand.toUpperCase();
+    const names: { [key: string]: string } = {
+      'VISA': 'Visa',
+      'MASTERCARD': 'Mastercard',
+      'AMEX': 'American Express',
+      'DISCOVER': 'Discover',
+      'DINERS': 'Diners Club',
+      'JCB': 'JCB'
+    };
+    return names[brandUpper] || brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase();
+  };
+
+  // ========== FORMATEAR FECHA DE EXPIRACIÓN ==========
   const formatExpiry = (m?: string, y?: string) => {
     if (!m || !y) return '';
     return `${m.padStart(2, '0')}/${String(y).slice(-2)}`;
   };
 
+  // ========== NÚMERO ENMASCARADO ==========
   const maskedNumber = (last4?: string) => {
     if (!last4) return '•••• •••• •••• ••••';
     return `•••• •••• •••• ${last4}`;
   };
 
+  // ========== GUARDAR DOMICILIACIÓN ==========
   const saveDomiciliation = async () => {
     if (!stripeAccountId) {
       setAlerts({
@@ -203,19 +229,32 @@ export const AddDomiciliation = ({
     }
   };
 
+  // ========== ELIMINAR DOMICILIACIÓN ==========
   const deleteDomiciliation = async () => {
     try {
       setLoading(true);
       const {data} = await endeApi.delete('/domiciliacion/' + data_alumno?.id_alu_ram || '');
       if(data.trans === true) {
         updateDomiciliation();
-        setAlerts({ 'type': 'success', 'title': 'Éxito', 'message': 'Domiciliación eliminada exitosamente.' });
+        setAlerts({ 
+          type: 'success', 
+          title: 'Eliminado', 
+          message: 'Método de pago eliminado correctamente.' 
+        });
       } else {
-        setAlerts({ 'type': 'error', 'title': 'Error', 'message': data.msg || 'Error al eliminar la domiciliación.' });
+        setAlerts({ 
+          type: 'error', 
+          title: 'Error', 
+          message: data.msg || 'No se pudo eliminar el método de pago.' 
+        });
       }
     } catch (error:any) {
       console.log('Error al eliminar la domiciliación:', error);
-      setAlerts({ 'type': 'error', 'title': 'Error', 'message': error.message });
+      setAlerts({ 
+        type: 'error', 
+        title: 'Error', 
+        message: error.message || 'Error al eliminar el método de pago.' 
+      });
     } finally {
       setLoading(false);
     }
@@ -226,6 +265,7 @@ export const AddDomiciliation = ({
       <Text style={styles.sectionTitle}>Métodos de pago</Text>
 
       {!domiciliation?.isSaved ? (
+        // ========== SIN TARJETA GUARDADA ==========
         <TouchableOpacity 
           style={styles.addCard} 
           onPress={saveDomiciliation}
@@ -233,7 +273,7 @@ export const AddDomiciliation = ({
           disabled={loading}
         >
           <View style={styles.addCardIcon}>
-            <FontAwesome5 name="plus" size={18} color="#000" />
+            <Icon name="plus" size={20} color="#000" />
           </View>
           <View style={styles.addCardContent}>
             <Text style={styles.addCardTitle}>
@@ -243,32 +283,54 @@ export const AddDomiciliation = ({
               Configura pagos automáticos de forma segura
             </Text>
           </View>
-          <FontAwesome5 name="chevron-right" size={16} color="#999" />
+          <Icon name="chevron-right" size={18} color="#D0D0D0" />
         </TouchableOpacity>
       ) : (
+        // ========== TARJETA GUARDADA ==========
         <View style={styles.savedCard}>
-          <View style={styles.cardIconWrapper}>
-            <FontAwesome5 
-              name={getCardIcon(domiciliation.brand)} 
-              size={32} 
-              color="#000" 
-            />
+          {/* HEADER DE LA TARJETA */}
+          <View style={styles.cardHeader}>
+            <View style={[styles.cardIconWrapper, { backgroundColor: getCardColor(domiciliation.brand) + '15' }]}>
+              <Icon 
+                name={getCardIcon(domiciliation.brand)} 
+                size={28} 
+                color={getCardColor(domiciliation.brand)}
+              />
+            </View>
+            <View style={styles.activeBadge}>
+              <Icon name="check-circle" size={12} color="#34C759" />
+              <Text style={styles.activeBadgeText}>Activo</Text>
+            </View>
           </View>
           
+          {/* INFO DE LA TARJETA */}
           <View style={styles.cardInfo}>
             <Text style={styles.cardBrand}>{formatBrand(domiciliation.brand)}</Text>
             <Text style={styles.cardNumber}>{maskedNumber(domiciliation.card_no)}</Text>
-            <Text style={styles.cardExpiry}>
-              Vence {formatExpiry(domiciliation.exp_month, domiciliation.exp_year)}
-            </Text>
+            
+            <View style={styles.cardMeta}>
+              <View style={styles.metaItem}>
+                <Icon name="calendar-outline" size={14} color="#999" />
+                <Text style={styles.cardExpiry}>
+                  {formatExpiry(domiciliation.exp_month, domiciliation.exp_year)}
+                </Text>
+              </View>
+              <View style={styles.metaItem}>
+                <Icon name="shield-check-outline" size={14} color="#34C759" />
+                <Text style={styles.verifiedText}>Verificada</Text>
+              </View>
+            </View>
           </View>
 
+          {/* ACCIONES */}
           <View style={styles.cardActions}>
             <TouchableOpacity 
               style={styles.actionButton}
               onPress={saveDomiciliation}
               disabled={loading}
+              activeOpacity={0.7}
             >
+              <Icon name="credit-card-refresh-outline" size={16} color="#FFF" />
               <Text style={styles.actionButtonText}>
                 {loading ? 'Cargando...' : 'Cambiar'}
               </Text>
@@ -278,9 +340,12 @@ export const AddDomiciliation = ({
               onPress={() => setAlerts({
                 type: 'confirmDelete',
                 title: 'Eliminar método de pago',
-                message: '¿Estás seguro? Esta acción no se puede deshacer.'
+                message: '¿Estás seguro que deseas eliminar este método de pago? Esta acción no se puede deshacer.'
               })}
+              disabled={loading}
+              activeOpacity={0.7}
             >
+              <Icon name="delete-outline" size={16} color="#FF6B6B" />
               <Text style={[styles.actionButtonText, styles.deleteButtonText]}>
                 Eliminar
               </Text>
@@ -289,30 +354,34 @@ export const AddDomiciliation = ({
         </View>
       )}
 
+      {/* FOOTER DE SEGURIDAD */}
       <View style={styles.footer}>
-        <FontAwesome5 name="lock" size={12} color="#999" />
-        <Text style={styles.footerText}>Tus datos están protegidos</Text>
+        <Icon name="lock-outline" size={14} color="#999" />
+        <Text style={styles.footerText}>
+          Tus datos están protegidos
+        </Text>
       </View>
 
+      {/* MODAL DE MENSAJES */}
       <PaperMessages
         visible={alerts.type !== ''}
         title={alerts.title}
         message={alerts.message}
-        buttonText={alerts.type === 'confirmDelete' ? 'Confirmar' : 'Aceptar'}
+        buttonText={alerts.type === 'confirmDelete' ? 'Sí, eliminar' : 'Aceptar'}
         dismissable={true}
         styleButton={alerts.type === 'error' ? platformTheme.btnDanger : platformTheme.btnSuccess}
         colorTitle={alerts.type === 'error' ? colors.error : colors.success}
         colorBody={colors.darkSilver}
-        onDismiss={() => setAlerts({'type': '', 'title': '', 'message': ''})}
+        onDismiss={() => setAlerts({type: '', title: '', message: ''})}
         pressButton={() => {
           if (alerts.type === 'confirmDelete') {
             deleteDomiciliation();
-          }else {
-            setAlerts({'type': '', 'title': '', 'message': ''});
+          } else {
+            setAlerts({type: '', title: '', message: ''});
           }
         }}
         btnTxtCancel={alerts.type === 'confirmDelete' ? 'Cancelar' : ''}
-        evtBtnCancel={() => setAlerts({'type': '', 'title': '', 'message': ''})}
+        evtBtnCancel={() => setAlerts({type: '', title: '', message: ''})}
         loading={loading}
       />
     </View>
@@ -321,96 +390,149 @@ export const AddDomiciliation = ({
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: '#FFF',
+    marginTop: 12,
     paddingHorizontal: 20,
-    paddingVertical: 24,
+    paddingVertical: 20,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: '#000',
     marginBottom: 16,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  
+  // ===== ADD CARD =====
   addCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 18,
     paddingHorizontal: 16,
     backgroundColor: '#F5F5F5',
     borderRadius: 12,
     marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
+    borderStyle: 'dashed',
   },
   addCardIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   addCardContent: {
     flex: 1,
   },
   addCardTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: '#000',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   addCardSubtitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#666',
   },
+  
+  // ===== SAVED CARD =====
   savedCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 12,
-    padding: 20,
+    backgroundColor: '#FAFAFA',
+    borderRadius: 14,
+    padding: 18,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#E8E8E8',
     marginBottom: 12,
   },
-  cardIconWrapper: {
-    width: 60,
-    height: 44,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 8,
-    justifyContent: 'center',
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
   },
+  cardIconWrapper: {
+    width: 56,
+    height: 40,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  activeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  activeBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#34C759',
+  },
   cardInfo: {
-    marginBottom: 20,
+    marginBottom: 18,
   },
   cardBrand: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#000',
-    marginBottom: 6,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   cardNumber: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#000',
-    letterSpacing: 1.5,
-    marginBottom: 8,
+    letterSpacing: 2,
+    marginBottom: 12,
+  },
+  cardMeta: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   cardExpiry: {
     fontSize: 13,
-    color: '#666',
+    color: '#999',
+    fontWeight: '500',
   },
+  verifiedText: {
+    fontSize: 13,
+    color: '#34C759',
+    fontWeight: '600',
+  },
+  
+  // ===== ACTIONS =====
   cardActions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
   },
   actionButton: {
     flex: 1,
     height: 44,
     backgroundColor: '#000',
-    borderRadius: 8,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+    flexDirection: 'row',
+    gap: 6,
   },
   actionButtonText: {
     color: '#FFF',
@@ -420,20 +542,23 @@ const styles = StyleSheet.create({
   deleteButton: {
     backgroundColor: '#FFF',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#FFE5E5',
   },
   deleteButtonText: {
-    color: '#000',
+    color: '#FF6B6B',
   },
+  
+  // ===== FOOTER =====
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingTop: 16,
+    gap: 6,
+    paddingTop: 12,
   },
   footerText: {
     fontSize: 12,
     color: '#999',
+    fontWeight: '500',
   },
 });
