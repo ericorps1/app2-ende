@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState, useRef } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { Text, View, TextInput, Platform, KeyboardAvoidingView, Keyboard, TouchableOpacity, ActivityIndicator, StyleSheet, StatusBar, Image, ScrollView, Linking, Modal, Animated, Easing } from 'react-native';
 import { useForm } from '../hooks/useForm';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -10,6 +11,7 @@ import Svg, { Path } from 'react-native-svg';
 interface Props extends StackScreenProps<any, any> {}
 
 export const LoginScreen = ({ navigation }: Props) => {
+    const { theme, toggleTheme, colors: themeColors } = useTheme();
     const { signIn, errorMessage, removeError } = useContext(AuthContext);
     const { email, password, onChange } = useForm({
         email: '',
@@ -105,13 +107,30 @@ export const LoginScreen = ({ navigation }: Props) => {
 
     return (
         <>
-            <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent />
-            <View style={styles.container}>
+            <StatusBar 
+                barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} 
+                backgroundColor={themeColors.background} 
+                translucent 
+            />
+            <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+                {/* DARK MODE TOGGLE - ESQUINA SUPERIOR DERECHA */}
+                <TouchableOpacity 
+                    style={[styles.themeToggle, { backgroundColor: themeColors.backgroundCard }]}
+                    onPress={toggleTheme}
+                    activeOpacity={0.7}
+                >
+                    <Icon 
+                        name={theme === 'dark' ? 'weather-night' : 'white-balance-sunny'} 
+                        size={20} 
+                        color={themeColors.textPrimary} 
+                    />
+                </TouchableOpacity>
+
                 {/* TRIÁNGULO NEGRO INFERIOR - SOLO PERÍMETRO */}
                 <Svg height="120" width="120" style={styles.triangleBottomSvg}>
                     <Path
                         d="M 60 10 L 110 100 L 10 100 Z"
-                        stroke="rgba(0, 0, 0, 0.15)"
+                        stroke={theme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.15)'}
                         strokeWidth="2"
                         fill="transparent"
                     />
@@ -155,24 +174,28 @@ export const LoginScreen = ({ navigation }: Props) => {
                         </Animated.View>
 
                         {/* FORM CARD */}
-                        <View style={styles.formCard}>
+                        <View style={[styles.formCard, { backgroundColor: themeColors.backgroundCard, borderColor: themeColors.borderGray }]}>
                             {/* HEADER */}
                             <View style={styles.formHeader}>
-                                <Text style={styles.welcomeText}>Bienvenido, Líder</Text>
+                                <Text style={[styles.welcomeText, { color: themeColors.textPrimary }]}>Bienvenido, Líder</Text>
                                 <View style={styles.accentLine} />
-                                <Text style={styles.subtitleText}>Accede a tu plataforma educativa</Text>
+                                <Text style={[styles.subtitleText, { color: themeColors.textSecondary }]}>Accede a tu plataforma educativa</Text>
                             </View>
 
                             {/* EMAIL INPUT */}
                             <View style={styles.inputGroup}>
-                                <Text style={styles.inputLabel}>Correo electrónico</Text>
-                                <View style={[styles.inputWrapper, email.length > 0 && styles.inputWrapperFocused]}>
-                                    <Icon name="email-outline" size={20} color="#999" style={styles.inputIcon} />
+                                <Text style={[styles.inputLabel, { color: themeColors.textPrimary }]}>Correo electrónico</Text>
+                                <View style={[
+                                    styles.inputWrapper, 
+                                    { backgroundColor: themeColors.backgroundGray, borderColor: themeColors.borderGray },
+                                    email.length > 0 && [styles.inputWrapperFocused, { backgroundColor: themeColors.backgroundCard, borderColor: themeColors.textPrimary }]
+                                ]}>
+                                    <Icon name="email-outline" size={20} color={themeColors.textSecondary} style={styles.inputIcon} />
                                     <TextInput 
                                         placeholder="tu@correo.com"
-                                        placeholderTextColor="rgba(153, 153, 153, 0.5)"
+                                        placeholderTextColor={themeColors.textTertiary}
                                         keyboardType="email-address"
-                                        style={styles.input}
+                                        style={[styles.input, { color: themeColors.textPrimary }]}
                                         onChangeText={(value) => onChange(value, 'email')}
                                         value={email}
                                         onSubmitEditing={onLogin}
@@ -184,14 +207,18 @@ export const LoginScreen = ({ navigation }: Props) => {
 
                             {/* PASSWORD INPUT */}
                             <View style={styles.inputGroup}>
-                                <Text style={styles.inputLabel}>Contraseña</Text>
-                                <View style={[styles.inputWrapper, password.length > 0 && styles.inputWrapperFocused]}>
-                                    <Icon name="lock-outline" size={20} color="#999" style={styles.inputIcon} />
+                                <Text style={[styles.inputLabel, { color: themeColors.textPrimary }]}>Contraseña</Text>
+                                <View style={[
+                                    styles.inputWrapper, 
+                                    { backgroundColor: themeColors.backgroundGray, borderColor: themeColors.borderGray },
+                                    password.length > 0 && [styles.inputWrapperFocused, { backgroundColor: themeColors.backgroundCard, borderColor: themeColors.textPrimary }]
+                                ]}>
+                                    <Icon name="lock-outline" size={20} color={themeColors.textSecondary} style={styles.inputIcon} />
                                     <TextInput 
                                         placeholder="Ingresa tu contraseña"
-                                        placeholderTextColor="rgba(153, 153, 153, 0.5)"
+                                        placeholderTextColor={themeColors.textTertiary}
                                         secureTextEntry={!showPassword}
-                                        style={styles.input}
+                                        style={[styles.input, { color: themeColors.textPrimary }]}
                                         onChangeText={(value) => onChange(value, 'password')}
                                         value={password}
                                         onSubmitEditing={onLogin}
@@ -206,7 +233,7 @@ export const LoginScreen = ({ navigation }: Props) => {
                                         <Icon 
                                             name={showPassword ? "eye-off" : "eye"} 
                                             size={20} 
-                                            color="#999" 
+                                            color={themeColors.textSecondary} 
                                         />
                                     </TouchableOpacity>
                                 </View>
@@ -224,16 +251,16 @@ export const LoginScreen = ({ navigation }: Props) => {
                             {/* LOGIN BUTTON - NEGRO */}
                             <TouchableOpacity
                                 activeOpacity={0.85}
-                                style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+                                style={[styles.loginButton, { backgroundColor: themeColors.textPrimary }, loading && styles.loginButtonDisabled]}
                                 onPress={onLogin}
                                 disabled={loading}
                             >
                                 {loading ? (
-                                    <ActivityIndicator size="small" color="#FFF" />
+                                    <ActivityIndicator size="small" color={themeColors.backgroundCard} />
                                 ) : (
                                     <>
-                                        <Text style={styles.loginButtonText}>Iniciar sesión</Text>
-                                        <Icon name="arrow-right" size={20} color="#FFF" />
+                                        <Text style={[styles.loginButtonText, { color: themeColors.backgroundCard }]}>Iniciar sesión</Text>
+                                        <Icon name="arrow-right" size={20} color={themeColors.backgroundCard} />
                                     </>
                                 )}
                             </TouchableOpacity>
@@ -242,7 +269,7 @@ export const LoginScreen = ({ navigation }: Props) => {
                         {/* FOOTER */}
                         <View style={styles.footer}>
                             <View style={styles.footerDivider} />
-                            <Text style={styles.footerTitle}>Expertos en educación digital</Text>
+                            <Text style={[styles.footerTitle, { color: themeColors.textPrimary }]}>Expertos en educación digital</Text>
                             <TouchableOpacity 
                                 onPress={handleLinkPress} 
                                 activeOpacity={0.7}
@@ -264,23 +291,23 @@ export const LoginScreen = ({ navigation }: Props) => {
                     onRequestClose={() => setShowModal(false)}
                 >
                     <View style={styles.modalOverlay}>
-                        <View style={styles.modalContent}>
+                        <View style={[styles.modalContent, { backgroundColor: themeColors.backgroundCard }]}>
                             <View style={styles.modalHeader}>
                                 <Icon name="information-outline" size={48} color="#00BFA5" />
                             </View>
                             
-                            <Text style={styles.modalTitle}>Recuperar accesos</Text>
-                            <Text style={styles.modalMessage}>
+                            <Text style={[styles.modalTitle, { color: themeColors.textPrimary }]}>Recuperar accesos</Text>
+                            <Text style={[styles.modalMessage, { color: themeColors.textSecondary }]}>
                                 Para recuperar tus credenciales de acceso, por favor contacta con tu Centro Educativo.
                             </Text>
                             
                             <View style={styles.modalButtons}>
                                 <TouchableOpacity
-                                    style={styles.modalButtonClose}
+                                    style={[styles.modalButtonClose, { backgroundColor: themeColors.textPrimary }]}
                                     activeOpacity={0.8}
                                     onPress={() => setShowModal(false)}
                                 >
-                                    <Text style={styles.modalButtonTextClose}>Entendido</Text>
+                                    <Text style={[styles.modalButtonTextClose, { color: themeColors.backgroundCard }]}>Entendido</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -295,7 +322,23 @@ export const LoginScreen = ({ navigation }: Props) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#FFFFFF',
+    },
+    // DARK MODE TOGGLE
+    themeToggle: {
+        position: 'absolute',
+        top: Platform.OS === 'ios' ? 60 : 40,
+        right: 20,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 999,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 5,
     },
     // TRIÁNGULO SVG INFERIOR
     triangleBottomSvg: {
@@ -341,7 +384,6 @@ const styles = StyleSheet.create({
     },
     // FORM CARD BLANCO
     formCard: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 24,
         padding: 28,
         shadowColor: '#000',
@@ -350,16 +392,14 @@ const styles = StyleSheet.create({
         shadowRadius: 16,
         elevation: 8,
         borderWidth: 1,
-        borderColor: 'rgba(0, 0, 0, 0.06)',
     },
     formHeader: {
         marginBottom: 32,
         alignItems: 'center',
     },
     welcomeText: {
-        fontSize: 32,
+        fontSize: 28,
         fontWeight: '800',
-        color: '#1a1a1a',
         marginBottom: 12,
         letterSpacing: -0.5,
     },
@@ -372,7 +412,6 @@ const styles = StyleSheet.create({
     },
     subtitleText: {
         fontSize: 14,
-        color: '#666',
         fontWeight: '600',
     },
     inputGroup: {
@@ -381,7 +420,6 @@ const styles = StyleSheet.create({
     inputLabel: {
         fontSize: 13,
         fontWeight: '700',
-        color: '#333',
         marginBottom: 10,
         marginLeft: 4,
         letterSpacing: 0.3,
@@ -389,16 +427,12 @@ const styles = StyleSheet.create({
     inputWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F9F9F9',
         borderRadius: 14,
         borderWidth: 2,
-        borderColor: 'rgba(0, 0, 0, 0.08)',
         paddingHorizontal: 16,
         height: 54,
     },
     inputWrapperFocused: {
-        backgroundColor: '#FFFFFF',
-        borderColor: '#1a1a1a',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.08,
@@ -410,7 +444,6 @@ const styles = StyleSheet.create({
     },
     input: {
         flex: 1,
-        color: '#1a1a1a',
         fontSize: 15,
         fontWeight: '600',
         paddingVertical: 0,
@@ -432,7 +465,6 @@ const styles = StyleSheet.create({
     },
     // BOTÓN LOGIN NEGRO
     loginButton: {
-        backgroundColor: '#000000',
         borderRadius: 14,
         flexDirection: 'row',
         paddingVertical: 17,
@@ -449,7 +481,6 @@ const styles = StyleSheet.create({
         opacity: 0.6,
     },
     loginButtonText: {
-        color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '800',
         letterSpacing: 0.5,
@@ -470,7 +501,6 @@ const styles = StyleSheet.create({
     footerTitle: {
         fontSize: 13,
         fontWeight: '700',
-        color: '#333',
         letterSpacing: 0.5,
     },
     websiteButton: {
@@ -499,7 +529,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
     },
     modalContent: {
-        backgroundColor: '#FFFFFF',
         borderRadius: 24,
         padding: 32,
         width: '100%',
@@ -525,14 +554,12 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 24,
         fontWeight: '800',
-        color: '#1a1a1a',
         textAlign: 'center',
         marginBottom: 16,
         letterSpacing: -0.3,
     },
     modalMessage: {
         fontSize: 15,
-        color: '#666',
         textAlign: 'center',
         lineHeight: 22,
         fontWeight: '500',
@@ -542,7 +569,6 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     modalButtonClose: {
-        backgroundColor: '#000000',
         paddingVertical: 16,
         borderRadius: 14,
         shadowColor: '#000',
@@ -552,7 +578,6 @@ const styles = StyleSheet.create({
         elevation: 8,
     },
     modalButtonTextClose: {
-        color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '800',
         textAlign: 'center',

@@ -4,10 +4,27 @@ import { View, Text, StyleSheet } from 'react-native';
 interface PropsCounterTime {
     minutos: number;
     onEnd: () => void;
+    onTimeUpdate?: (percentage: number) => void;
 }
 
-export const CounterTime = ({minutos,onEnd}:PropsCounterTime) => {
+export const CounterTime = ({minutos, onEnd, onTimeUpdate}: PropsCounterTime) => {
     const [time, setTime] = useState({minutos, segundos: 0});
+    
+    // 🎨 Calcular porcentaje de tiempo restante
+    const totalSegundos = minutos * 60;
+    const segundosRestantes = (time.minutos * 60) + time.segundos;
+    const porcentaje = (segundosRestantes / totalSegundos) * 100;
+    
+    // 🎨 Color dinámico según porcentaje
+    const getTimerColor = () => {
+        if (porcentaje > 50) {
+            return '#34C759'; // Verde
+        } else if (porcentaje > 20) {
+            return '#FF9500'; // Naranja
+        } else {
+            return '#FF3B30'; // Rojo
+        }
+    };
     
     useEffect(() => {
         let min = time.minutos;
@@ -28,10 +45,17 @@ export const CounterTime = ({minutos,onEnd}:PropsCounterTime) => {
             clearInterval(counter);
         }
     },[time]);
+    
+    // 🔥 Notificar cambio de porcentaje
+    useEffect(() => {
+        if (onTimeUpdate) {
+            onTimeUpdate(porcentaje);
+        }
+    }, [porcentaje]);
 
     return (
         <View style={styles.container}>
-            <Text style={styles.timer}>
+            <Text style={[styles.timer, { color: getTimerColor() }]}>
                 {time.minutos.toString().padStart(2,'0')}:{time.segundos.toString().padStart(2,'0')}
             </Text>
         </View>  
@@ -44,8 +68,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     timer: {
-        color: '#FF3B30',
         fontWeight: '700',
-        fontSize: 16,
+        fontSize: 20, // 🔥 MÁS GRANDE para el footer
+        letterSpacing: 1.5,
     }
 });

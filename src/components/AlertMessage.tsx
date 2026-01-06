@@ -1,12 +1,15 @@
 import React, { useState } from 'react'
 import { View, StyleSheet, Text, ColorValue, TouchableOpacity } from 'react-native';
 import { colors } from '../theme/platformTheme';
+import { useTheme } from '../context/ThemeContext'; // 👈 IMPORTAR
 
 type EventOK = () => void | Boolean
 
-let txtColor:ColorValue;
-
 export const AlertMessage = ( title: string, message: string, msgType='success', eventOk:EventOK=() => {return false}) => {
+    const { colors: themeColors } = useTheme(); // 👈 HOOK
+    
+    let txtColor:ColorValue;
+    
     switch(msgType){
         case 'success' :
             txtColor=colors.info
@@ -18,9 +21,10 @@ export const AlertMessage = ( title: string, message: string, msgType='success',
             txtColor=colors.danger
             break;
     }
+    
     return (
         <View style={ styles.container }>
-            <View style={ styles.alertWindow }>
+            <View style={ [styles.alertWindow, { backgroundColor: themeColors.backgroundCard }] }>
                 <Text style={ {
                     ...styles.title,
                     color: txtColor
@@ -29,12 +33,15 @@ export const AlertMessage = ( title: string, message: string, msgType='success',
                 </Text>
                 <Text style={ {
                     ...styles.body,
-                    color: 'black'
+                    color: themeColors.textPrimary // 👈 DINÁMICO
                 } }> 
                     { message } 
                 </Text>
-                <TouchableOpacity style={styles.btnOK} onPress={eventOk}>
-                    <Text style={{color:'white',fontSize:15}}>OK</Text>
+                <TouchableOpacity 
+                    style={[styles.btnOK, { backgroundColor: themeColors.textPrimary }]} // 👈 DINÁMICO
+                    onPress={eventOk}
+                >
+                    <Text style={[styles.btnText, { color: themeColors.backgroundCard }]}>OK</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -50,7 +57,6 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     alertWindow: {
-        backgroundColor: 'white',
         top: '30%',
         margin: '10%',
         borderRadius: 10,
@@ -63,14 +69,18 @@ const styles = StyleSheet.create({
     },
     body: {
         fontSize: 15,
-        marginVertical: 10
+        marginVertical: 10,
+        paddingHorizontal: 20,
+        textAlign: 'center',
     },
     btnOK: {
         paddingHorizontal: 20,
-        paddingVertical: 5,
+        paddingVertical: 10,
         borderRadius: 100,
-        backgroundColor: colors.darkBlue,
-        color: 'white',
         marginTop: 20,
+    },
+    btnText: {
+        fontSize: 15,
+        fontWeight: '600',
     }
 });

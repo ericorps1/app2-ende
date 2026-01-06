@@ -1,17 +1,19 @@
 import React, {useContext} from 'react'
 import { ActivityIndicator, View, Text, StyleSheet } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 export const LoadingScreen = ({text='Cargando'}) => {
+    const { colors: themeColors } = useTheme();
     const { token, logOut } = useContext( AuthContext );
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: themeColors.background }]}>
             <ActivityIndicator 
                 size="large"
-                color="#000"
+                color={themeColors.textPrimary}
             />
-            <Text style={styles.text}>{text}</Text>
+            <Text style={[styles.text, { color: themeColors.textSecondary }]}>{text}</Text>
         </View>
     )
 }
@@ -21,12 +23,10 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
     },
     text: {
         marginTop: 16,
         fontSize: 15,
         fontWeight: '600',
-        color: '#666',
     },
 });

@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
-import { platformTheme, colors } from '../theme/platformTheme';
+import { useTheme } from '../context/ThemeContext';
 
 interface PropsBackButtonNavigation {
     onPressBack: () => void;
@@ -9,21 +9,23 @@ interface PropsBackButtonNavigation {
 }
 
 export const BackButtonNavigation = ({onPressBack, title}: PropsBackButtonNavigation) => {
+  const { colors: themeColors } = useTheme();
+  
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { backgroundColor: themeColors.backgroundCard }]}>
       <TouchableOpacity 
-        style={styles.backButton} 
+        style={[styles.backButton, { backgroundColor: themeColors.backgroundGray }]} 
         activeOpacity={0.7}
         onPress={onPressBack}
       >
         <FontAwesome5Icon 
           name="chevron-left" 
           size={18} 
-          color="#374151" 
+          color={themeColors.textPrimary} 
         />
       </TouchableOpacity>
       
-      <Text style={styles.headerTitle} numberOfLines={1}>
+      <Text style={[styles.headerTitle, { color: themeColors.textPrimary }]} numberOfLines={1}>
         {title}
       </Text>
       
@@ -38,7 +40,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 4,
     paddingVertical: 12,
-    backgroundColor: '#ffffff',
     marginBottom: 12,
     borderRadius: 16,
     shadowColor: '#000',
@@ -52,7 +53,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#f1f5f9',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -62,7 +62,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontWeight: '700',
-    color: '#1e293b',
     textAlign: 'center',
   },
   

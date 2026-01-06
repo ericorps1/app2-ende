@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Text, StyleSheet, ScrollView, SafeAreaView, Linking, View, RefreshControl } from 'react-native';
+import { Text, StyleSheet, ScrollView, SafeAreaView, Linking, View, RefreshControl, ActivityIndicator } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import PaperMessages from '../components/PaperMessages';
 import { colors, platformTheme } from '../theme/platformTheme';
 import { ActividadesPendientes } from '../components/ActividadesPendientes';
@@ -15,14 +16,26 @@ import { useAppDispatch } from '../app/hooks';
 import { addNotifications } from '../features/notifications/dataNotificationsSlice';
 import { useNavigation } from '@react-navigation/core';
 import { updateStatusNotificationService } from '../services/PushNotificationsService';
+import { BannerSlider } from '../components/BannerSlider';
+
+interface Banner {
+  id: string;
+  url: string;
+  title?: string;
+  description?: string;
+  link?: string;
+}
 
 export const Home = () => {
+  const { colors: themeColors } = useTheme();
   const navigation = useNavigation<any>();
   const dispatch = useAppDispatch();
   const { data_alumno } = useContext(AuthContext);
   
   const [encuestasPendientes, setEncuestasPendientes] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [loadingBanners, setLoadingBanners] = useState(true);
 
   useEffect(() => {
     initializeHome();
@@ -33,6 +46,7 @@ export const Home = () => {
 
     return () => {
       setEncuestasPendientes([]);
+      setBanners([]);
       unsubscribeMessage();
       unsubscribeOpen();
       unsubscribeTokenRefresh();
@@ -41,9 +55,9 @@ export const Home = () => {
 
   const getSaludo = () => {
     const hora = new Date().getHours();
-    if (hora >= 6 && hora < 12) return 'Buenos días';
-    if (hora >= 12 && hora < 19) return 'Buenas tardes';
-    return 'Buenas noches';
+    if (hora >= 6 && hora < 12) return 'Buenos días ☀️';
+    if (hora >= 12 && hora < 19) return 'Buenas tardes 🌤️';
+    return 'Buenas noches 🌙';
   };
 
   const getNombreAlumno = () => {
@@ -56,9 +70,28 @@ export const Home = () => {
     await validarToken();
     NotificationListener();
     await Promise.all([
+      getCarruselesAlumno(),
       getEncuestasAlumno(),
       updateNotifications(),
     ]);
+  };
+
+  const getCarruselesAlumno = async () => {
+    try {
+      setLoadingBanners(true);
+      const { data } = await endeApi.get(`/carruseles/${data_alumno?.id_alu_ram}`);
+      
+      if (data.trans && data.data) {
+        setBanners(data.data);
+      } else {
+        setBanners([]);
+      }
+    } catch (error) {
+      console.log('❌ ERROR:', error);
+      setBanners([]);
+    } finally {
+      setLoadingBanners(false);
+    }
   };
 
   const handleIncomingMessage = async (remoteMessage: any) => {
@@ -165,6 +198,7 @@ export const Home = () => {
   const onRefresh = async () => {
     setRefreshing(true);
     await Promise.all([
+      getCarruselesAlumno(),
       getEncuestasAlumno(),
       updateNotifications(),
     ]);
@@ -177,22 +211,40 @@ export const Home = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#000"
-            colors={['#000']}
+            tintColor={themeColors.textPrimary}
+            colors={[themeColors.textPrimary]}
           />
         }
       >
-        {/* HEADER DE SALUDO */}
-        <View style={styles.header}>
-          <Text style={styles.greeting}>{getSaludo()}</Text>
-          <Text style={styles.userName}>{getNombreAlumno()}</Text>
+        {loadingBanners ? (
+          <View style={styles.bannerLoader}>
+            <ActivityIndicator size="large" color={themeColors.textPrimary} />
+          </View>
+        ) : banners.length > 0 ? (
+          <BannerSlider 
+            banners={banners} 
+            autoPlayInterval={3000}
+            height={200}
+          />
+        ) : null}
+        
+        <View style={[styles.header, { 
+          backgroundColor: themeColors.backgroundCard,
+          borderBottomColor: themeColors.borderGray 
+        }]}>
+          <Text style={[styles.greeting, { color: themeColors.textSecondary }]}>
+            {getSaludo()}
+          </Text>
+          <Text style={[styles.userName, { color: themeColors.textPrimary }]}>
+            {getNombreAlumno()}
+          </Text>
         </View>
 
         <View style={styles.content}>
@@ -205,7 +257,7 @@ export const Home = () => {
         visible={encuestasPendientes.length > 0}
         title="Encuestas pendientes"
         message={
-          <Text style={styles.modalMessage}>
+          <Text style={[styles.modalMessage, { color: themeColors.textSecondary }]}>
             Tu opinión es lo más importante para nosotros. Ayúdanos a mejorar la experiencia ENDE.
           </Text>
         }
@@ -226,25 +278,20 @@ export const Home = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   header: {
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 16,
-    backgroundColor: '#FFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   greeting: {
     fontSize: 15,
-    color: '#666',
     marginBottom: 4,
   },
   userName: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#000',
   },
   content: {
     paddingBottom: 20,
@@ -252,6 +299,11 @@ const styles = StyleSheet.create({
   modalMessage: {
     fontSize: 14,
     lineHeight: 20,
-    color: '#666',
+  },
+  bannerLoader: {
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
   },
 });

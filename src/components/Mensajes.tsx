@@ -7,6 +7,7 @@ import { AuthContext } from '../context/AuthContext';
 import { colors, platformTheme } from '../theme/platformTheme';
 import cafeApi from '../api/estudianteAPI';
 import { useNavigation } from '@react-navigation/core';
+import { useTheme } from '../context/ThemeContext';
 
 interface listSala {
     id_sal: number;
@@ -20,6 +21,7 @@ interface listSala {
 }
 
 export const Mensajes = () => {
+    const { colors: themeColors } = useTheme();
     const { data_alumno } = useContext( AuthContext );
     const [allSalas, setAllSalas] = useState([]);
     const [salas, setSalas] = useState([]);
@@ -30,7 +32,6 @@ export const Mensajes = () => {
         getSalasUsuario();
         const intervalSalas = setInterval(()=>{
             getSalasUsuario();
-            // console.log('recargando salas');
         },5000);
         return () => {
             setSalas([]);
@@ -55,12 +56,11 @@ export const Mensajes = () => {
 
     const pressSala = (id_sal:number, des_sal:string) => {
         navigation.navigate('ChatSala', {id_sal,des_sal})
-        // console.log('presionando la sala con id '+id_sal, des_sal);
-        // getSalasUsuario();
     }
+
     return (
-        <View style={{flex: 1}}>
-            <View style={styles.containerInfoUserSala}>
+        <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+            <View style={[styles.containerInfoUserSala, { backgroundColor: themeColors.textPrimary }]}>
                 <View style={styles.containerFotoMyUser}>
                     <FotoPerfil 
                         foto={data_alumno?.fot_alu ? data_alumno?.fot_alu : ''}
@@ -69,7 +69,7 @@ export const Mensajes = () => {
                         style={styles.fotoMyUser}
                     />
                 </View>
-                <Text style={styles.textNameUser}>
+                <Text style={[styles.textNameUser, { color: themeColors.backgroundCard }]}>
                     {data_alumno?.nom_alu}
                 </Text>
             </View>
@@ -77,8 +77,16 @@ export const Mensajes = () => {
                 placeholder="Buscar salas"
                 onChangeText={buscarSalas}
                 value={searchBarValue}
-                iconColor={colors.blue}
-                style={styles.searchBar}
+                iconColor={themeColors.textPrimary}
+                placeholderTextColor={themeColors.textTertiary}
+                style={[styles.searchBar, { backgroundColor: themeColors.backgroundCard }]}
+                inputStyle={{ color: themeColors.textPrimary }}
+                theme={{
+                    colors: {
+                        text: themeColors.textPrimary,
+                        placeholder: themeColors.textTertiary,
+                    }
+                }}
             />
             <ScrollView style={styles.scrollView}>
             {
@@ -98,7 +106,9 @@ export const Mensajes = () => {
                         />
                     )
                 :
-                    <Text style={styles.textNoSala}>No se encontró ninguna sala.</Text>
+                    <Text style={[styles.textNoSala, { color: themeColors.textSecondary }]}>
+                        No se encontró ninguna sala.
+                    </Text>
             }
             </ScrollView>
         </View>
@@ -106,9 +116,11 @@ export const Mensajes = () => {
 }
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
     containerInfoUserSala: {
         ...platformTheme.fila,
-        backgroundColor: colors.blue,
         alignItems: 'center'
     },
     searchBar: {
@@ -133,7 +145,6 @@ const styles = StyleSheet.create({
         borderRadius: 30,
     },
     textNameUser: {
-        color: 'white',
         fontWeight: 'bold',
         fontSize: 20,
         flex: 10

@@ -10,8 +10,10 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { updateInfoPagos } from '../features/pagos/dataPagosSlice';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { FormatAmount } from '../hooks/useFormats';
+import { useTheme } from '../context/ThemeContext';
 
 export const Pagos = () => {
+  const { colors: themeColors } = useTheme();
   const { top } = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const dispatch = useAppDispatch();
@@ -22,6 +24,36 @@ export const Pagos = () => {
   
   const { data_alumno } = useContext(AuthContext);
   const pagos = useAppSelector(state => state.datapagos);
+
+  // Detección robusta del tema oscuro (propagado desde Actividades)
+  const isDarkTheme = (() => {
+    const bg = themeColors.background?.toLowerCase() || '';
+    const cardBg = themeColors.backgroundCard?.toLowerCase() || '';
+    const textPrimary = themeColors.textPrimary?.toLowerCase() || '';
+    
+    console.log('🌓 PAGOS - themeColors.background:', themeColors.background);
+    console.log('🌓 PAGOS - themeColors.backgroundCard:', themeColors.backgroundCard);
+    console.log('🌓 PAGOS - themeColors.textPrimary:', themeColors.textPrimary);
+    
+    const isDark = bg === '#000' || 
+                   bg === '#000000' ||
+                   bg === '#121212' || 
+                   bg === '#1a1a1a' ||
+                   cardBg === '#000' ||
+                   cardBg === '#000000' ||
+                   cardBg === '#121212' ||
+                   cardBg === '#1e1e1e' ||
+                   cardBg === '#1a1a1a' ||
+                   textPrimary === '#fff' ||
+                   textPrimary === '#ffffff' ||
+                   textPrimary === '#f5f5f5' ||
+                   bg.includes('black') ||
+                   (bg.startsWith('#') && parseInt(bg.replace('#', ''), 16) < 3355443);
+    
+    console.log('🌓 PAGOS - isDarkTheme resultado:', isDark);
+    
+    return isDark;
+  })();
 
   useEffect(() => {
     obtener_pagos_alumno();
@@ -42,7 +74,6 @@ export const Pagos = () => {
     listaPagos.forEach((pago) => {
       if (pago.est_pag !== 'Pagado' && pago.fin_pag) {
         const fechaVencimiento = new Date(pago.fin_pag);
-        // Agregar 1 día después del fin_pag
         fechaVencimiento.setDate(fechaVencimiento.getDate() + 1);
         fechaVencimiento.setHours(23, 59, 59, 999);
         
@@ -89,7 +120,6 @@ export const Pagos = () => {
       });
     }
   
-    // Ordenar: vencidos primero, luego por fecha
     return pagosFiltrados.sort((a: any, b: any) => {
       const hoy = new Date();
       hoy.setHours(23, 59, 59, 999);
@@ -105,26 +135,63 @@ export const Pagos = () => {
       const aVencido = a.est_pag !== 'Pagado' && fechaVencimientoA < hoy;
       const bVencido = b.est_pag !== 'Pagado' && fechaVencimientoB < hoy;
       
-      // Si uno está vencido y el otro no, el vencido va primero
       if (aVencido && !bVencido) return -1;
       if (!aVencido && bVencido) return 1;
       
-      // Si ambos tienen el mismo estado de vencimiento, ordenar por fecha
       const fechaA = new Date(a.fin_pag).getTime();
       const fechaB = new Date(b.fin_pag).getTime();
       return fechaB - fechaA;
     });
   };
 
+  // Estilos para card de éxito con colores pastel
+  const getSuccessCardStyle = () => {
+    console.log('✅ getSuccessCardStyle - isDarkTheme:', isDarkTheme);
+    if (isDarkTheme) {
+      return {
+        iconBg: '#2D352E', // Verde muy oscuro
+        iconColor: '#A8C4A8', // Verde pastel
+        titleColor: '#A8C4A8' // Verde pastel
+      };
+    } else {
+      return {
+        iconBg: '#E8F5E9',
+        iconColor: '#34C759',
+        titleColor: '#34C759'
+      };
+    }
+  };
+
+  // Estilos para card de alerta con colores pastel
+  const getAlertCardStyle = () => {
+    console.log('⚠️ getAlertCardStyle - isDarkTheme:', isDarkTheme);
+    if (isDarkTheme) {
+      return {
+        iconBg: '#382E2D', // Rojo muy oscuro
+        iconColor: '#D0A8A0', // Rosa salmón pastel
+        badgeBg: '#7A5E5B' // Badge más oscuro pero visible
+      };
+    } else {
+      return {
+        iconBg: '#FFE5E5',
+        iconColor: '#FF3B30',
+        badgeBg: '#FF3B30'
+      };
+    }
+  };
+
   const pagosFiltrados = filtrarPagos();
   const pagosPendientesFiltro = pagosFiltrados.filter((pago: any) => pago.est_pag !== 'Pagado').length;
   const estAlCorriente = cantidadVencidos === 0 && pagos.length > 0;
+
+  const successStyle = getSuccessCardStyle();
+  const alertStyle = getAlertCardStyle();
 
   return (
     (pagos && pagos.length === 0) ?
       <LoadingScreen/>
     :
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: themeColors.background }]}>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.contentContainer}
@@ -133,21 +200,27 @@ export const Pagos = () => {
               refreshing={refreshing}
               onRefresh={onRefresh}
               progressViewOffset={10}
-              tintColor="#000"
-              colors={['#000']}
+              tintColor={themeColors.textPrimary}
+              colors={[themeColors.textPrimary]}
             />
           }
         >
-          {/* BADGE AL CORRIENTE */}
           {estAlCorriente && (
-            <View style={styles.successCard}>
+            <View style={[
+              styles.successCard, 
+              { 
+                backgroundColor: themeColors.backgroundCard,
+                borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
+                borderWidth: 1
+              }
+            ]}>
               <View style={styles.successHeader}>
-                <View style={styles.successIconContainer}>
-                  <Icon name="check-circle" size={20} color="#34C759" />
+                <View style={[styles.successIconContainer, { backgroundColor: successStyle.iconBg }]}>
+                  <Icon name="check-circle" size={20} color={successStyle.iconColor} />
                 </View>
                 <View style={styles.successContent}>
-                  <Text style={styles.successTitle}>¡Excelente!</Text>
-                  <Text style={styles.successSubtitle}>
+                  <Text style={[styles.successTitle, { color: successStyle.titleColor }]}>¡Excelente!</Text>
+                  <Text style={[styles.successSubtitle, { color: themeColors.textSecondary }]}>
                     Estás al corriente con tus pagos
                   </Text>
                 </View>
@@ -155,72 +228,119 @@ export const Pagos = () => {
             </View>
           )}
 
-          {/* ALERTA DE PAGOS VENCIDOS */}
           {cantidadVencidos > 0 && (
-            <View style={styles.alertCard}>
+            <View style={[
+              styles.alertCard, 
+              { 
+                backgroundColor: themeColors.backgroundCard,
+                borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
+                borderWidth: 1
+              }
+            ]}>
               <View style={styles.alertHeader}>
-                <View style={styles.alertIconContainer}>
-                  <Icon name="alert-circle" size={20} color="#FF3B30" />
+                <View style={[styles.alertIconContainer, { backgroundColor: alertStyle.iconBg }]}>
+                  <Icon name="alert-circle" size={20} color={alertStyle.iconColor} />
                 </View>
                 <View style={styles.alertContent}>
-                  <Text style={styles.alertTitle}>Pagos vencidos</Text>
-                  <Text style={styles.alertSubtitle}>
+                  <Text style={[styles.alertTitle, { color: themeColors.textPrimary }]}>Pagos vencidos</Text>
+                  <Text style={[styles.alertSubtitle, { color: themeColors.textSecondary }]}>
                     {cantidadVencidos} {cantidadVencidos === 1 ? 'pago vencido' : 'pagos vencidos'}
                   </Text>
                 </View>
               </View>
               
-              <View style={styles.alertAmount}>
-                <Text style={styles.alertAmountLabel}>Total adeudado</Text>
-                <Text style={styles.alertAmountValue}>
+              <View style={[
+                styles.alertAmount, 
+                { 
+                  backgroundColor: isDarkTheme ? '#2A2A2A' : themeColors.backgroundGray,
+                  borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.04)' : 'transparent',
+                  borderWidth: 1
+                }
+              ]}>
+                <Text style={[styles.alertAmountLabel, { color: themeColors.textSecondary }]}>Total adeudado</Text>
+                <Text style={[styles.alertAmountValue, { color: themeColors.textPrimary }]}>
                   <FormatAmount amount={totalVencido} />
                 </Text>
               </View>
 
               <View style={styles.alertFooter}>
-                <Icon name="information-outline" size={14} color="#666" />
-                <Text style={styles.alertFooterText}>
+                <Icon 
+                  name="information-outline" 
+                  size={14} 
+                  color={isDarkTheme ? '#888' : themeColors.textSecondary} 
+                />
+                <Text style={[styles.alertFooterText, { color: themeColors.textSecondary }]}>
                   Regulariza para evitar bloqueo de acceso
                 </Text>
               </View>
             </View>
           )}
 
-          {/* PILLS / TABS */}
           <View style={styles.filterContainer}>
             <TouchableOpacity
-              style={[styles.filterPill, filtroActivo === 'hoy' && styles.filterPillActive]}
+              style={[
+                styles.filterPill, 
+                { 
+                  backgroundColor: themeColors.backgroundCard,
+                  borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.10)' : themeColors.borderGray 
+                },
+                filtroActivo === 'hoy' && { 
+                  backgroundColor: isDarkTheme ? '#4E5C6A' : themeColors.textPrimary,
+                  borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.15)' : themeColors.textPrimary 
+                }
+              ]}
               onPress={() => setFiltroActivo('hoy')}
               activeOpacity={0.7}
             >
-              <Text style={[styles.filterPillText, filtroActivo === 'hoy' && styles.filterPillTextActive]}>
+              <Text style={[
+                styles.filterPillText, 
+                { color: themeColors.textSecondary },
+                filtroActivo === 'hoy' && { 
+                  color: isDarkTheme ? '#FFFFFF' : themeColors.backgroundCard 
+                }
+              ]}>
                 Hoy
               </Text>
               {filtroActivo === 'hoy' && pagosPendientesFiltro > 0 && (
-                <View style={styles.badge}>
+                <View style={[styles.badge, { backgroundColor: alertStyle.badgeBg }]}>
                   <Text style={styles.badgeText}>{pagosPendientesFiltro}</Text>
                 </View>
               )}
             </TouchableOpacity>
             
             <TouchableOpacity
-              style={[styles.filterPill, filtroActivo === 'todos' && styles.filterPillActive]}
+              style={[
+                styles.filterPill,
+                { 
+                  backgroundColor: themeColors.backgroundCard,
+                  borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.10)' : themeColors.borderGray 
+                },
+                filtroActivo === 'todos' && { 
+                  backgroundColor: isDarkTheme ? '#4E5C6A' : themeColors.textPrimary,
+                  borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.15)' : themeColors.textPrimary 
+                }
+              ]}
               onPress={() => setFiltroActivo('todos')}
               activeOpacity={0.7}
             >
-              <Text style={[styles.filterPillText, filtroActivo === 'todos' && styles.filterPillTextActive]}>
+              <Text style={[
+                styles.filterPillText,
+                { color: themeColors.textSecondary },
+                filtroActivo === 'todos' && { 
+                  color: isDarkTheme ? '#FFFFFF' : themeColors.backgroundCard 
+                }
+              ]}>
                 Todos
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* LISTA DE PAGOS */}
           <View style={styles.paymentsSection}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
+              <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
                 {filtroActivo === 'hoy' ? 'Pagos al día de hoy' : 'Historial completo'}
               </Text>
-              <Text style={styles.sectionSubtitle}>
+              <Text style={[styles.sectionSubtitle, { color: themeColors.textSecondary }]}>
                 {filtroActivo === 'hoy' 
                   ? `${pagosFiltrados.length} ${pagosFiltrados.length === 1 ? 'pago' : 'pagos'} hasta hoy`
                   : `${pagosFiltrados.length} ${pagosFiltrados.length === 1 ? 'pago' : 'pagos'} en total`
@@ -230,13 +350,23 @@ export const Pagos = () => {
             
             {noData === true ? (
               <View style={styles.emptyState}>
-                <Icon name="receipt-text-outline" size={64} color="#E0E0E0" />
-                <Text style={styles.emptyStateText}>No hay pagos registrados</Text>
+                <Icon 
+                  name="receipt-text-outline" 
+                  size={64} 
+                  color={isDarkTheme ? '#444' : themeColors.borderGray} 
+                />
+                <Text style={[styles.emptyStateText, { color: themeColors.textTertiary }]}>
+                  No hay pagos registrados
+                </Text>
               </View>
             ) : pagosFiltrados.length === 0 ? (
               <View style={styles.emptyState}>
-                <Icon name="calendar-check" size={64} color="#E0E0E0" />
-                <Text style={styles.emptyStateText}>
+                <Icon 
+                  name="calendar-check" 
+                  size={64} 
+                  color={isDarkTheme ? '#444' : themeColors.borderGray} 
+                />
+                <Text style={[styles.emptyStateText, { color: themeColors.textTertiary }]}>
                   {filtroActivo === 'hoy' 
                     ? 'No hay pagos pendientes hasta hoy' 
                     : 'No hay pagos registrados'}
@@ -258,7 +388,6 @@ export const Pagos = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   scrollView: {
     flex: 1,
@@ -267,13 +396,12 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   successCard: {
-    backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 2,
   },
@@ -285,7 +413,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E8F5E9',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -296,22 +423,19 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#34C759',
     marginBottom: 2,
   },
   successSubtitle: {
     fontSize: 13,
-    color: '#666',
     fontWeight: '500',
   },
   alertCard: {
-    backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 2,
   },
@@ -324,7 +448,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFE5E5',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -335,16 +458,13 @@ const styles = StyleSheet.create({
   alertTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#000',
     marginBottom: 2,
   },
   alertSubtitle: {
     fontSize: 13,
-    color: '#666',
     fontWeight: '500',
   },
   alertAmount: {
-    backgroundColor: '#FAFAFA',
     padding: 12,
     borderRadius: 8,
     marginBottom: 10,
@@ -352,7 +472,6 @@ const styles = StyleSheet.create({
   alertAmountLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#666',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
@@ -360,7 +479,6 @@ const styles = StyleSheet.create({
   alertAmountValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#000',
   },
   alertFooter: {
     flexDirection: 'row',
@@ -369,7 +487,6 @@ const styles = StyleSheet.create({
   },
   alertFooterText: {
     fontSize: 12,
-    color: '#666',
     flex: 1,
     lineHeight: 16,
     fontWeight: '500',
@@ -385,25 +502,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#FFF',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
     gap: 6,
-  },
-  filterPillActive: {
-    backgroundColor: '#000',
-    borderColor: '#000',
   },
   filterPillText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
-  },
-  filterPillTextActive: {
-    color: '#FFF',
   },
   badge: {
-    backgroundColor: '#FF3B30',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 10,
@@ -424,14 +530,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#000',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   sectionSubtitle: {
     fontSize: 13,
-    color: '#666',
   },
   emptyState: {
     alignItems: 'center',
@@ -440,7 +544,6 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#999',
     marginTop: 16,
   },
 });

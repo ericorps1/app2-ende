@@ -1,7 +1,8 @@
 import * as React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, useColorScheme } from 'react-native';
 import { Dialog, Portal, Provider } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext';
 
 interface PropsPaperConfirmElimReplica {
     rep_id: number;
@@ -22,46 +23,74 @@ export const PaperConfirmElimReplica = ({
     pressDelete,
     btnDisabled
 }: PropsPaperConfirmElimReplica) => {
+    const { theme, colors: themeColors } = useTheme();
+    const colorScheme = useColorScheme();
+    
+    // 🌙 Detectar dark mode
+    const isDarkMode = theme === 'dark' || colorScheme === 'dark';
+
     return (
         <Provider>
             <Portal>
-                <Dialog visible={visible} onDismiss={evDismiss} style={styles.dialog}>
+                <Dialog 
+                    visible={visible} 
+                    onDismiss={evDismiss} 
+                    style={[styles.dialog, { backgroundColor: themeColors.backgroundCard }]}
+                >
                     {/* ÍCONO DE ALERTA */}
                     <View style={styles.iconContainer}>
                         <Icon name="alert-circle-outline" size={48} color="#FF3B30" />
                     </View>
 
                     {/* TÍTULO */}
-                    <Dialog.Title style={styles.title}>{title}</Dialog.Title>
+                    <Dialog.Title style={[styles.title, { color: themeColors.textPrimary }]}>
+                        {title}
+                    </Dialog.Title>
                     
                     {/* CONTENIDO */}
                     <Dialog.Content>
-                        <Text style={styles.text}>{text}</Text>
+                        <Text style={[styles.text, { color: themeColors.textSecondary }]}>
+                            {text}
+                        </Text>
                     </Dialog.Content>
 
                     {/* ACCIONES */}
                     <View style={styles.actions}>
                         <TouchableOpacity 
-                            style={[styles.cancelButton, btnDisabled && styles.buttonDisabled]}
+                            style={[
+                                styles.cancelButton, 
+                                { backgroundColor: themeColors.backgroundGray },
+                                btnDisabled && styles.buttonDisabled
+                            ]}
                             onPress={evDismiss}
                             disabled={btnDisabled}
                             activeOpacity={0.7}
                         >
-                            <Text style={styles.cancelButtonText}>Cancelar</Text>
+                            <Text style={[styles.cancelButtonText, { color: themeColors.textPrimary }]}>
+                                Cancelar
+                            </Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity 
-                            style={[styles.deleteButton, btnDisabled && styles.buttonDisabled]}
+                            style={[
+                                styles.deleteButton, 
+                                { backgroundColor: themeColors.textPrimary },
+                                btnDisabled && styles.buttonDisabled
+                            ]}
                             onPress={() => pressDelete(rep_id)}
                             disabled={btnDisabled}
                             activeOpacity={0.7}
                         >
                             {btnDisabled ? (
-                                <Text style={styles.deleteButtonText}>Eliminando...</Text>
+                                <Text style={[styles.deleteButtonText, { color: themeColors.backgroundCard }]}>
+                                    Eliminando...
+                                </Text>
                             ) : (
                                 <>
-                                    <Icon name="delete-outline" size={18} color="#FFF" />
-                                    <Text style={styles.deleteButtonText}>Eliminar</Text>
+                                    <Icon name="delete-outline" size={18} color={themeColors.backgroundCard} />
+                                    <Text style={[styles.deleteButtonText, { color: themeColors.backgroundCard }]}>
+                                        Eliminar
+                                    </Text>
                                 </>
                             )}
                         </TouchableOpacity>
@@ -75,7 +104,6 @@ export const PaperConfirmElimReplica = ({
 const styles = StyleSheet.create({
     dialog: {
         borderRadius: 16,
-        backgroundColor: '#FFF',
     },
     iconContainer: {
         alignItems: 'center',
@@ -86,12 +114,10 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 18,
         fontWeight: '700',
-        color: '#000',
     },
     text: {
         textAlign: 'center',
         fontSize: 14,
-        color: '#666',
         lineHeight: 20,
     },
     actions: {
@@ -102,7 +128,6 @@ const styles = StyleSheet.create({
     },
     cancelButton: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
         borderRadius: 10,
         paddingVertical: 12,
         alignItems: 'center',
@@ -111,11 +136,9 @@ const styles = StyleSheet.create({
     cancelButtonText: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#000',
     },
     deleteButton: {
         flex: 1,
-        backgroundColor: '#000',
         borderRadius: 10,
         paddingVertical: 12,
         flexDirection: 'row',
@@ -129,6 +152,5 @@ const styles = StyleSheet.create({
     deleteButtonText: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#FFF',
     },
 });

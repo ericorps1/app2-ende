@@ -6,6 +6,7 @@ import ReactNativeBlobUtil from "react-native-blob-util";
 import { colors } from "../theme/platformTheme";
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import RNFetchBlob from "react-native-blob-util";
+import { useTheme } from '../context/ThemeContext'; // 👈 IMPORTAR
 
 const { width } = Dimensions.get("window");
 
@@ -17,6 +18,7 @@ interface Props {
 }
 
 const RenderPdf: React.FC<Props> = ({ title, pdfUrl, patterScrollEnabled, patterStyle }) => {
+  const { colors: themeColors } = useTheme(); // 👈 HOOK
   const [downloading, setDownloading] = useState<boolean>(false);
   const [error, setError] = useState<boolean>(false);
   const [scale, setScale] = useState(1.0);
@@ -87,48 +89,55 @@ const RenderPdf: React.FC<Props> = ({ title, pdfUrl, patterScrollEnabled, patter
       {/* HEADER */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <View style={styles.iconContainer}>
-            <Icon name="file-document-outline" size={24} color="#000" />
+          <View style={[styles.iconContainer, { backgroundColor: themeColors.backgroundGray }]}>
+            <Icon name="file-document-outline" size={24} color={themeColors.textPrimary} />
           </View>
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.subtitle}>Documento PDF</Text>
+            <Text style={[styles.title, { color: themeColors.textPrimary }]}>{title}</Text>
+            <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>Documento PDF</Text>
           </View>
         </View>
         
         <TouchableOpacity 
-          style={[styles.downloadButton, downloading && styles.downloadButtonDisabled]}
+          style={[
+            styles.downloadButton, 
+            { backgroundColor: themeColors.textPrimary },
+            downloading && styles.downloadButtonDisabled
+          ]}
           onPress={handleDownload}
           disabled={downloading || error}
           activeOpacity={0.7}
         >
           {downloading ? (
-            <ActivityIndicator size={20} color="#FFF" />
+            <ActivityIndicator size={20} color={themeColors.backgroundCard} />
           ) : (
-            <Icon name="download-outline" size={20} color="#FFF" />
+            <Icon name="download-outline" size={20} color={themeColors.backgroundCard} />
           )}
-          <Text style={styles.downloadButtonText}>
+          <Text style={[styles.downloadButtonText, { color: themeColors.backgroundCard }]}>
             {downloading ? 'Descargando...' : 'Descargar'}
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* PDF VIEWER */}
-      <View style={styles.pdfCard}>
-        <View style={styles.pdfContainer}>
+      <View style={[styles.pdfCard, { 
+        backgroundColor: themeColors.backgroundCard,
+        borderColor: themeColors.borderGray 
+      }]}>
+        <View style={[styles.pdfContainer, { backgroundColor: themeColors.backgroundGray }]}>
           {error && (
-            <View style={styles.errorContainer}>
-              <Icon name="alert-circle-outline" size={64} color="#666" />
-              <Text style={styles.errorTitle}>Error al cargar PDF</Text>
-              <Text style={styles.errorMessage}>
+            <View style={[styles.errorContainer, { backgroundColor: themeColors.backgroundCard }]}>
+              <Icon name="alert-circle-outline" size={64} color={themeColors.textSecondary} />
+              <Text style={[styles.errorTitle, { color: themeColors.textPrimary }]}>Error al cargar PDF</Text>
+              <Text style={[styles.errorMessage, { color: themeColors.textSecondary }]}>
                 No se pudo mostrar el documento. Intenta descargarlo para verlo.
               </Text>
               <TouchableOpacity
-                style={styles.retryButton}
+                style={[styles.retryButton, { borderColor: themeColors.borderGray }]}
                 onPress={() => setError(false)}
               >
-                <Icon name="refresh" size={18} color="#000" />
-                <Text style={styles.retryButtonText}>Reintentar</Text>
+                <Icon name="refresh" size={18} color={themeColors.textPrimary} />
+                <Text style={[styles.retryButtonText, { color: themeColors.textPrimary }]}>Reintentar</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -143,7 +152,7 @@ const RenderPdf: React.FC<Props> = ({ title, pdfUrl, patterScrollEnabled, patter
                   'Cache-Control': 'no-cache'
                 }
               }}
-              style={styles.pdf}
+              style={[styles.pdf, { backgroundColor: themeColors.backgroundCard }]}
               spacing={10}
               password=""
               scale={scale}
@@ -194,22 +203,25 @@ const RenderPdf: React.FC<Props> = ({ title, pdfUrl, patterScrollEnabled, patter
         </View>
 
         {/* ZOOM CONTROLS */}
-        <View style={styles.zoomControls}>
+        <View style={[styles.zoomControls, { 
+          backgroundColor: themeColors.backgroundCard,
+          borderTopColor: themeColors.borderGray 
+        }]}>
           <TouchableOpacity 
-            style={styles.zoomButton}
+            style={[styles.zoomButton, { borderColor: themeColors.borderGray }]}
             onPress={handleZoomOut}
             activeOpacity={0.7}
           >
-            <Icon name="minus" size={18} color="#000" />
-            <Text style={styles.zoomButtonText}>Zoom</Text>
+            <Icon name="minus" size={18} color={themeColors.textPrimary} />
+            <Text style={[styles.zoomButtonText, { color: themeColors.textPrimary }]}>Zoom</Text>
           </TouchableOpacity>
           <TouchableOpacity 
-            style={styles.zoomButton}
+            style={[styles.zoomButton, { borderColor: themeColors.borderGray }]}
             onPress={handleZoomIn}
             activeOpacity={0.7}
           >
-            <Icon name="plus" size={18} color="#000" />
-            <Text style={styles.zoomButtonText}>Zoom</Text>
+            <Icon name="plus" size={18} color={themeColors.textPrimary} />
+            <Text style={[styles.zoomButtonText, { color: themeColors.textPrimary }]}>Zoom</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -238,7 +250,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -249,17 +260,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#000',
     marginBottom: 2,
   },
   subtitle: {
     fontSize: 13,
-    color: '#666',
   },
   downloadButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#000',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 8,
@@ -269,44 +277,36 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   downloadButtonText: {
-    color: '#FFF',
     fontSize: 14,
     fontWeight: '600',
   },
   pdfCard: {
-    backgroundColor: '#FFF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
     overflow: 'hidden',
   },
   pdfContainer: {
     height: 600,
     position: 'relative',
-    backgroundColor: '#F5F5F5',
   },
   pdf: {
     flex: 1,
     width: width - 40,
-    backgroundColor: '#FFF',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
-    backgroundColor: '#FFF',
   },
   errorTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#000',
     marginTop: 16,
     marginBottom: 8,
   },
   errorMessage: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 24,
@@ -318,13 +318,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
     gap: 8,
   },
   retryButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
   },
   focusBadge: {
     position: 'absolute',
@@ -353,9 +351,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     gap: 12,
-    backgroundColor: '#FFF',
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
   },
   zoomButton: {
     flexDirection: 'row',
@@ -364,13 +360,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
     gap: 6,
   },
   zoomButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
   },
 });
 

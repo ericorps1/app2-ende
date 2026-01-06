@@ -1,7 +1,8 @@
 import React from 'react'
-import { StyleSheet, Text, View, Modal, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Modal, TouchableOpacity, useColorScheme } from 'react-native';
 import { TypesMsgModalType } from '../interfaces/appInterfaces';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext';
 
 interface Props{
     visible: boolean;
@@ -11,6 +12,11 @@ interface Props{
 }
 
 export const ModalMessages = ({ visible, typeMsgModal, modalText, onDismiss}: Props) => {
+  const { theme, colors: themeColors } = useTheme();
+  const colorScheme = useColorScheme();
+  
+  // 🌙 Detectar dark mode
+  const isDarkMode = theme === 'dark' || colorScheme === 'dark';
   
   const getIconAndColor = () => {
     switch(typeMsgModal) {
@@ -37,7 +43,7 @@ export const ModalMessages = ({ visible, typeMsgModal, modalText, onDismiss}: Pr
       onRequestClose={onDismiss}
     >
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: themeColors.backgroundCard }]}>
           {/* ÍCONO */}
           <View style={[styles.iconContainer, { backgroundColor: config.color + '20' }]}>
             <Icon name={config.icon} size={48} color={config.color} />
@@ -47,15 +53,19 @@ export const ModalMessages = ({ visible, typeMsgModal, modalText, onDismiss}: Pr
           <Text style={[styles.title, { color: config.color }]}>{config.title}</Text>
 
           {/* MENSAJE */}
-          <Text style={styles.message}>{modalText}</Text>
+          <Text style={[styles.message, { color: themeColors.textSecondary }]}>
+            {modalText}
+          </Text>
 
           {/* BOTÓN */}
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, { backgroundColor: themeColors.textPrimary }]}
             onPress={onDismiss}
             activeOpacity={0.7}
           >
-            <Text style={styles.buttonText}>Aceptar</Text>
+            <Text style={[styles.buttonText, { color: themeColors.backgroundCard }]}>
+              Aceptar
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -72,7 +82,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   container: {
-    backgroundColor: '#FFF',
     borderRadius: 16,
     padding: 24,
     width: '100%',
@@ -100,13 +109,11 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 15,
-    color: '#666',
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 22,
   },
   button: {
-    backgroundColor: '#000',
     borderRadius: 10,
     paddingVertical: 14,
     paddingHorizontal: 32,
@@ -116,6 +123,5 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#FFF',
   },
 });

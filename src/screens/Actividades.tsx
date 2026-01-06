@@ -10,6 +10,7 @@ import { tiposActividades } from '../interfaces/appInterfaces';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { formatDate } from '../hooks/useFormats';
 import { useNavigation } from '@react-navigation/core';
+import { useTheme } from '../context/ThemeContext';
 
 interface ObjListAct{
     tableHead: [string,string,string,string,string,string,string,string,string,string,string];
@@ -40,6 +41,7 @@ interface ListadoActividades {
 type FilterType = 'pendientes' | 'vencidas' | 'realizadas' | 'calificadas';
 
 export const Actividades = () => {
+  const { colors: themeColors } = useTheme();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,6 +61,39 @@ export const Actividades = () => {
     realizadas: 0,
     calificadas: 0
   });
+
+  // Detectar si es tema oscuro de manera más robusta
+  const isDarkTheme = (() => {
+    const bg = themeColors.background?.toLowerCase() || '';
+    const cardBg = themeColors.backgroundCard?.toLowerCase() || '';
+    const textPrimary = themeColors.textPrimary?.toLowerCase() || '';
+    
+    console.log('🌓 ACTIVIDADES - themeColors.background:', themeColors.background);
+    console.log('🌓 ACTIVIDADES - themeColors.backgroundCard:', themeColors.backgroundCard);
+    console.log('🌓 ACTIVIDADES - themeColors.textPrimary:', themeColors.textPrimary);
+    
+    // Chequear varios formatos de colores oscuros
+    const isDark = bg === '#000' || 
+                   bg === '#000000' ||
+                   bg === '#121212' || 
+                   bg === '#1a1a1a' ||
+                   cardBg === '#000' ||
+                   cardBg === '#000000' ||
+                   cardBg === '#121212' ||
+                   cardBg === '#1e1e1e' ||
+                   cardBg === '#1a1a1a' ||
+                   textPrimary === '#fff' ||
+                   textPrimary === '#ffffff' ||
+                   textPrimary === '#f5f5f5' ||
+                   bg.includes('black') ||
+                   (bg.startsWith('#') && parseInt(bg.replace('#', ''), 16) < 3355443); // Colores muy oscuros
+    
+    console.log('🌓 ACTIVIDADES - isDarkTheme resultado:', isDark);
+    console.log('🌓 ACTIVIDADES - themeColors completo:', themeColors);
+    
+    return isDark;
+  })();
+
   
   useEffect(() => {
     getActividades();
@@ -119,11 +154,9 @@ export const Actividades = () => {
       for(let i = 0; i < dataActTable.tableInfo.length; i++){
         const act = dataActTable.tableInfo[i];
         
-        // Puntos
         puntos = act.puntaje ? Number(puntos) + Number(act.puntaje) : puntos;
         puntosObtenidos = act.calificacion ? Number(puntosObtenidos) + Number(act.calificacion) : puntosObtenidos;
         
-        // Estatus
         const estatus = getEstatusActividad(act.fecha, act.fin, act.calificacion);
         if (estatus === 'pendientes') pendientes++;
         else if (estatus === 'vencidas') vencidas++;
@@ -171,46 +204,103 @@ export const Actividades = () => {
   const getTipoBadgeStyle = (tipo: tiposActividades) => {
     const tipoNormalizado = tipo === 'Entregable' ? 'Tarea' : tipo === 'Examen' ? 'Cuestionario' : tipo;
     
-    switch(tipoNormalizado) {
-      case 'Tarea':
-        return { bg: '#E3F2FD', color: '#1976D2', text: 'Tarea' };
-      case 'Cuestionario':
-        return { bg: '#FFF3E0', color: '#F57C00', text: 'Cuestionario' };
-      case 'Foro':
-        return { bg: '#F3E5F5', color: '#7B1FA2', text: 'Foro' };
-      default:
-        return { bg: '#F5F5F5', color: '#666', text: tipoNormalizado };
+    console.log('🎨 getTipoBadgeStyle - isDarkTheme:', isDarkTheme);
+    console.log('🎨 getTipoBadgeStyle - tipo:', tipoNormalizado);
+    
+    if (isDarkTheme) {
+      // Colores MUCHO más apagados y pastel para modo oscuro
+      switch(tipoNormalizado) {
+        case 'Tarea':
+          console.log('✅ Usando color PASTEL para Tarea:', { bg: '#2A2F35', color: '#9DB4C8' });
+          return { bg: '#2A2F35', color: '#9DB4C8', text: 'Tarea' };
+        case 'Cuestionario':
+          console.log('✅ Usando color PASTEL para Cuestionario:', { bg: '#352F2A', color: '#D4BDA0' });
+          return { bg: '#352F2A', color: '#D4BDA0', text: 'Cuestionario' };
+        case 'Foro':
+          console.log('✅ Usando color PASTEL para Foro:', { bg: '#2F2A35', color: '#C4ADC8' });
+          return { bg: '#2F2A35', color: '#C4ADC8', text: 'Foro' };
+        default:
+          console.log('✅ Usando color PASTEL default:', { bg: '#2B2B2B', color: '#B0B0B0' });
+          return { bg: '#2B2B2B', color: '#B0B0B0', text: tipoNormalizado };
+      }
+    } else {
+      console.log('⚪ Usando colores MODO CLARO');
+      switch(tipoNormalizado) {
+        case 'Tarea':
+          return { bg: '#E3F2FD', color: '#1976D2', text: 'Tarea' };
+        case 'Cuestionario':
+          return { bg: '#FFF3E0', color: '#F57C00', text: 'Cuestionario' };
+        case 'Foro':
+          return { bg: '#F3E5F5', color: '#7B1FA2', text: 'Foro' };
+        default:
+          return { bg: '#F5F5F5', color: '#666', text: tipoNormalizado };
+      }
     }
   };
 
   const getEstatusBadgeStyle = (estatus: FilterType) => {
-    switch(estatus) {
-      case 'pendientes':
-        return { bg: '#F5F5F5', color: '#666', text: 'Pendiente' };
-      case 'vencidas':
-        return { bg: '#FFE0E0', color: '#D32F2F', text: 'Vencida' };
-      case 'realizadas':
-        return { bg: '#E3F2FD', color: '#1976D2', text: 'Realizada' };
-      case 'calificadas':
-        return { bg: '#E8F5E9', color: '#34C759', text: 'Calificada' };
+    console.log('🏷️ getEstatusBadgeStyle - isDarkTheme:', isDarkTheme);
+    console.log('🏷️ getEstatusBadgeStyle - estatus:', estatus);
+    
+    if (isDarkTheme) {
+      // Colores MUCHO más suaves, casi grises con tinte pastel
+      switch(estatus) {
+        case 'pendientes':
+          console.log('✅ Usando color PASTEL para Pendiente:', { bg: '#2B2B2B', color: '#A8A8A8' });
+          return { bg: '#2B2B2B', color: '#A8A8A8', text: 'Pendiente' };
+        case 'vencidas':
+          console.log('✅ Usando color PASTEL para Vencida:', { bg: '#382E2D', color: '#D0A8A0' });
+          return { bg: '#382E2D', color: '#D0A8A0', text: 'Vencida' };
+        case 'realizadas':
+          console.log('✅ Usando color PASTEL para Realizada:', { bg: '#2A2F35', color: '#9DB4C8' });
+          return { bg: '#2A2F35', color: '#9DB4C8', text: 'Realizada' };
+        case 'calificadas':
+          console.log('✅ Usando color PASTEL para Calificada:', { bg: '#2D352E', color: '#A8C4A8' });
+          return { bg: '#2D352E', color: '#A8C4A8', text: 'Calificada' };
+      }
+    } else {
+      console.log('⚪ Usando colores MODO CLARO para estatus');
+      switch(estatus) {
+        case 'pendientes':
+          return { bg: '#F5F5F5', color: '#666', text: 'Pendiente' };
+        case 'vencidas':
+          return { bg: '#FFE0E0', color: '#D32F2F', text: 'Vencida' };
+        case 'realizadas':
+          return { bg: '#E3F2FD', color: '#1976D2', text: 'Realizada' };
+        case 'calificadas':
+          return { bg: '#E8F5E9', color: '#34C759', text: 'Calificada' };
+      }
     }
   };
 
   const getFilterBadgeStyle = (type: FilterType) => {
-    switch(type) {
-      case 'pendientes':
-        return { bg: '#666', text: 'Pendientes' };
-      case 'vencidas':
-        return { bg: '#D32F2F', text: 'Vencidas' };
-      case 'realizadas':
-        return { bg: '#1976D2', text: 'Realizadas' };
-      case 'calificadas':
-        return { bg: '#34C759', text: 'Calificadas' };
+    if (isDarkTheme) {
+      // Colores apagados para filtros en modo oscuro
+      switch(type) {
+        case 'pendientes':
+          return { bg: '#484848', text: 'Pendientes' };
+        case 'vencidas':
+          return { bg: '#7A5E5B', text: 'Vencidas' };
+        case 'realizadas':
+          return { bg: '#4E5C6A', text: 'Realizadas' };
+        case 'calificadas':
+          return { bg: '#50685A', text: 'Calificadas' };
+      }
+    } else {
+      switch(type) {
+        case 'pendientes':
+          return { bg: '#666', text: 'Pendientes' };
+        case 'vencidas':
+          return { bg: '#D32F2F', text: 'Vencidas' };
+        case 'realizadas':
+          return { bg: '#1976D2', text: 'Realizadas' };
+        case 'calificadas':
+          return { bg: '#34C759', text: 'Calificadas' };
+      }
     }
   };
 
   const filteredActivities = dataActTable.tableInfo.filter((act: ListadoActividades) => {
-    // Filtro por búsqueda
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       const matchesSearch = 
@@ -221,7 +311,6 @@ export const Actividades = () => {
       if (!matchesSearch) return false;
     }
 
-    // Filtro por estatus múltiple
     if (activeFilters.length > 0) {
       const estatus = getEstatusActividad(act.fecha, act.fin, act.calificacion);
       return activeFilters.includes(estatus);
@@ -231,9 +320,16 @@ export const Actividades = () => {
   });
 
   const getAprovechamientoColor = () => {
-    if (totales.aprovechamiento >= 80) return '#34C759';
-    if (totales.aprovechamiento >= 60) return '#FF9500';
-    return '#FF3B30';
+    if (isDarkTheme) {
+      // Colores pastel MUY suaves para aprovechamiento
+      if (totales.aprovechamiento >= 80) return '#A8C4A8';
+      if (totales.aprovechamiento >= 60) return '#D4BDA0';
+      return '#D0A8A0';
+    } else {
+      if (totales.aprovechamiento >= 80) return '#34C759';
+      if (totales.aprovechamiento >= 60) return '#FF9500';
+      return '#FF3B30';
+    }
   };
 
   if(loading){
@@ -242,59 +338,79 @@ export const Actividades = () => {
 
   return (
     <ScrollView 
-      style={styles.container}
+      style={[styles.container, { backgroundColor: themeColors.background }]}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl 
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor="#000"
-          colors={['#000']}
+          tintColor={themeColors.textPrimary}
+          colors={[themeColors.textPrimary]}
         />
       }
     >
-      {/* SUMATORIAS CON TOTAL */}
-      <View style={styles.summaryContainer}>
+      <View style={[
+        styles.summaryContainer, 
+        { 
+          backgroundColor: themeColors.backgroundCard,
+          borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent'
+        }
+      ]}>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Total</Text>
-          <Text style={styles.summaryValue}>{dataActTable.tableInfo.length}</Text>
+          <Text style={[styles.summaryLabel, { color: themeColors.textSecondary }]}>Total</Text>
+          <Text style={[styles.summaryValue, { color: themeColors.textPrimary }]}>
+            {dataActTable.tableInfo.length}
+          </Text>
         </View>
-        <View style={styles.summaryDivider} />
+        <View style={[styles.summaryDivider, { backgroundColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : themeColors.borderGray }]} />
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Puntos totales</Text>
-          <Text style={styles.summaryValue}>{totales.puntos}</Text>
+          <Text style={[styles.summaryLabel, { color: themeColors.textSecondary }]}>Puntos totales</Text>
+          <Text style={[styles.summaryValue, { color: themeColors.textPrimary }]}>{totales.puntos}</Text>
         </View>
-        <View style={styles.summaryDivider} />
+        <View style={[styles.summaryDivider, { backgroundColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : themeColors.borderGray }]} />
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Obtenidos</Text>
-          <Text style={styles.summaryValue}>{totales.puntosObtenidos}</Text>
+          <Text style={[styles.summaryLabel, { color: themeColors.textSecondary }]}>Obtenidos</Text>
+          <Text style={[styles.summaryValue, { color: themeColors.textPrimary }]}>
+            {totales.puntosObtenidos}
+          </Text>
         </View>
-        <View style={styles.summaryDivider} />
+        <View style={[styles.summaryDivider, { backgroundColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : themeColors.borderGray }]} />
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Aprovechamiento</Text>
+          <Text style={[styles.summaryLabel, { color: themeColors.textSecondary }]}>Aprovechamiento</Text>
           <Text style={[styles.summaryValue, { color: getAprovechamientoColor() }]}>
             {totales.aprovechamiento.toFixed(1)}%
           </Text>
         </View>
       </View>
 
-      {/* BADGES DE ESTATUS - FILTROS MÚLTIPLES */}
       <View style={styles.badgesContainer}>
         <TouchableOpacity 
           style={[
             styles.badge,
-            activeFilters.includes('pendientes') && styles.badgeActivePending
+            { 
+              backgroundColor: isDarkTheme ? '#2B2B2B' : themeColors.backgroundCard,
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent'
+            },
+            activeFilters.includes('pendientes') && { 
+              backgroundColor: isDarkTheme ? '#484848' : '#666', 
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.10)' : '#808080' 
+            }
           ]}
           onPress={() => handleFilterPress('pendientes')}
           activeOpacity={0.7}
         >
           <Text style={[
             styles.badgeValue,
+            { color: isDarkTheme ? '#B0B0B0' : themeColors.textPrimary },
             activeFilters.includes('pendientes') && styles.badgeValueActive
           ]}>
             {totales.pendientes}
           </Text>
-          <Text style={[styles.badgeLabel, activeFilters.includes('pendientes') && styles.badgeLabelActive]}>
+          <Text style={[
+            styles.badgeLabel, 
+            { color: isDarkTheme ? '#888888' : themeColors.textSecondary },
+            activeFilters.includes('pendientes') && styles.badgeLabelActive
+          ]}>
             Pendientes
           </Text>
         </TouchableOpacity>
@@ -302,20 +418,30 @@ export const Actividades = () => {
         <TouchableOpacity 
           style={[
             styles.badge,
-            styles.badgeDanger,
-            activeFilters.includes('vencidas') && styles.badgeActiveRed
+            { 
+              backgroundColor: isDarkTheme ? '#382E2D' : '#FFEBEE',
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent'
+            },
+            activeFilters.includes('vencidas') && { 
+              backgroundColor: isDarkTheme ? '#7A5E5B' : '#D32F2F', 
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.10)' : '#E57373' 
+            }
           ]}
           onPress={() => handleFilterPress('vencidas')}
           activeOpacity={0.7}
         >
           <Text style={[
             styles.badgeValue,
-            styles.dangerText,
+            { color: isDarkTheme ? '#D0A8A0' : '#D32F2F' },
             activeFilters.includes('vencidas') && styles.badgeValueActive
           ]}>
             {totales.vencidas}
           </Text>
-          <Text style={[styles.badgeLabel, activeFilters.includes('vencidas') && styles.badgeLabelActive]}>
+          <Text style={[
+            styles.badgeLabel, 
+            { color: isDarkTheme ? '#D8BABA' : '#D32F2F' },
+            activeFilters.includes('vencidas') && styles.badgeLabelActive
+          ]}>
             Vencidas
           </Text>
         </TouchableOpacity>
@@ -323,20 +449,30 @@ export const Actividades = () => {
         <TouchableOpacity 
           style={[
             styles.badge,
-            styles.badgeInfo,
-            activeFilters.includes('realizadas') && styles.badgeActiveBlue
+            { 
+              backgroundColor: isDarkTheme ? '#2A2F35' : '#E3F2FD',
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent'
+            },
+            activeFilters.includes('realizadas') && { 
+              backgroundColor: isDarkTheme ? '#4E5C6A' : '#1976D2', 
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.10)' : '#64B5F6' 
+            }
           ]}
           onPress={() => handleFilterPress('realizadas')}
           activeOpacity={0.7}
         >
           <Text style={[
             styles.badgeValue,
-            styles.infoText,
+            { color: isDarkTheme ? '#9DB4C8' : '#1976D2' },
             activeFilters.includes('realizadas') && styles.badgeValueActive
           ]}>
             {totales.realizadas}
           </Text>
-          <Text style={[styles.badgeLabel, activeFilters.includes('realizadas') && styles.badgeLabelActive]}>
+          <Text style={[
+            styles.badgeLabel, 
+            { color: isDarkTheme ? '#B0C4D8' : '#1976D2' },
+            activeFilters.includes('realizadas') && styles.badgeLabelActive
+          ]}>
             Realizadas
           </Text>
         </TouchableOpacity>
@@ -344,31 +480,48 @@ export const Actividades = () => {
         <TouchableOpacity 
           style={[
             styles.badge,
-            styles.badgeSuccess,
-            activeFilters.includes('calificadas') && styles.badgeActiveGreen
+            { 
+              backgroundColor: isDarkTheme ? '#2D352E' : '#E8F5E9',
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent'
+            },
+            activeFilters.includes('calificadas') && { 
+              backgroundColor: isDarkTheme ? '#50685A' : '#34C759', 
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.10)' : '#69F0AE' 
+            }
           ]}
           onPress={() => handleFilterPress('calificadas')}
           activeOpacity={0.7}
         >
           <Text style={[
             styles.badgeValue,
-            styles.successText,
+            { color: isDarkTheme ? '#A8C4A8' : '#34C759' },
             activeFilters.includes('calificadas') && styles.badgeValueActive
           ]}>
             {totales.calificadas}
           </Text>
-          <Text style={[styles.badgeLabel, activeFilters.includes('calificadas') && styles.badgeLabelActive]}>
+          <Text style={[
+            styles.badgeLabel, 
+            { color: isDarkTheme ? '#B8D4B8' : '#34C759' },
+            activeFilters.includes('calificadas') && styles.badgeLabelActive
+          ]}>
             Calificadas
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* TABLE */}
       {dataActTable.tableInfo.length > 0 ? (
-        <View style={styles.tableSection}>
+        <View style={[
+          styles.tableSection, 
+          { 
+            backgroundColor: themeColors.backgroundCard,
+            borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent'
+          }
+        ]}>
           <View style={styles.tableSectionHeader}>
             <View style={styles.titleRow}>
-              <Text style={styles.sectionTitle}>Historial de actividades</Text>
+              <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>
+                Historial de actividades
+              </Text>
               {activeFilters.length > 0 && (
                 <View style={styles.filterIndicatorsContainer}>
                   {activeFilters.map((filter) => {
@@ -389,25 +542,29 @@ export const Actividades = () => {
               )}
             </View>
             
-            {/* SEARCH BAR */}
-            <View style={styles.searchContainer}>
-              <Icon name="magnify" size={18} color="#666" style={styles.searchIcon} />
+            <View style={[
+              styles.searchContainer, 
+              { 
+                backgroundColor: isDarkTheme ? '#2A2A2A' : themeColors.backgroundGray,
+                borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent'
+              }
+            ]}>
+              <Icon name="magnify" size={18} color={themeColors.textSecondary} style={styles.searchIcon} />
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: themeColors.textPrimary }]}
                 placeholder="Buscar actividad, materia, bloque..."
-                placeholderTextColor="#999"
+                placeholderTextColor={themeColors.textTertiary}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
               {searchQuery !== '' && (
                 <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
-                  <Icon name="close-circle" size={18} color="#999" />
+                  <Icon name="close-circle" size={18} color={themeColors.textTertiary} />
                 </TouchableOpacity>
               )}
             </View>
           </View>
 
-          {/* SCROLL HORIZONTAL + VERTICAL */}
           <ScrollView 
             horizontal={true} 
             showsHorizontalScrollIndicator={true}
@@ -418,8 +575,14 @@ export const Actividades = () => {
                 <Row 
                   data={dataActTable.tableHead} 
                   widthArr={dataActTable.widthArr}
-                  style={styles.header}
-                  textStyle={styles.textTableTitle}
+                  style={{
+                    ...styles.header,
+                    backgroundColor: isDarkTheme ? '#2A2A2A' : themeColors.textPrimary
+                  }}
+                  textStyle={{
+                    ...styles.textTableTitle,
+                    color: isDarkTheme ? '#D0D0D0' : themeColors.backgroundCard
+                  }}
                 />
               </Table>
               <ScrollView 
@@ -434,42 +597,51 @@ export const Actividades = () => {
                     const estatusBadge = getEstatusBadgeStyle(estatus);
                     const tipoBadge = getTipoBadgeStyle(actividad.tipo);
                     
+                    console.log(`📋 Actividad ${index + 1}:`, actividad.actividad);
+                    console.log(`   Estatus Badge:`, estatusBadge);
+                    console.log(`   Tipo Badge:`, tipoBadge);
+                    
                     let rowData = [
-                      <Text style={styles.indexNumber}>{index+1}</Text>,
-                      // ESTATUS
+                      <Text style={[styles.indexNumber, { color: themeColors.textSecondary }]}>{index+1}</Text>,
                       <View style={[styles.estatusBadge, { backgroundColor: estatusBadge.bg }]}>
                         <Text style={[styles.estatusBadgeText, { color: estatusBadge.color }]}>
                           {estatusBadge.text}
                         </Text>
                       </View>,
-                      // TIPO
                       <View style={[styles.tipoBadge, { backgroundColor: tipoBadge.bg }]}>
                         <Text style={[styles.tipoBadgeText, { color: tipoBadge.color }]}>
                           {tipoBadge.text}
                         </Text>
                       </View>,
-                      // ACTIVIDAD
                       <TouchableOpacity onPress={() => handleActividadPress(actividad)} activeOpacity={0.7}>
-                        <Text style={styles.actividadLink}>{actividad.actividad}</Text>
+                        <Text style={[styles.actividadLink, { color: isDarkTheme ? '#9DB4C8' : '#1976D2' }]}>
+                          {actividad.actividad}
+                        </Text>
                       </TouchableOpacity>,
                       actividad.materia,
                       actividad.bloque,
                       formatDate(actividad.inicio,'/'),
                       formatDate(actividad.fin,'/'),
                       actividad.puntaje,
-                      actividad.calificacion ? actividad.calificacion : <Text style={styles.pendingText}>-</Text>,
-                      fecha && fecha !== '' ? formatDate(fecha,'/') : <Text style={styles.pendingText}>-</Text>
+                      actividad.calificacion ? actividad.calificacion : <Text style={[styles.pendingText, { color: themeColors.textTertiary }]}>-</Text>,
+                      fecha && fecha !== '' ? formatDate(fecha,'/') : <Text style={[styles.pendingText, { color: themeColors.textTertiary }]}>-</Text>
                     ];
                     return (
                       <Row
                         key={index+1}
                         data={rowData}
                         widthArr={dataActTable.widthArr}
-                        style={[
-                          styles.row, 
-                          { backgroundColor: index % 2 === 0 ? '#FAFAFA' : '#FFF' }
-                        ]}
-                        textStyle={styles.textTableBody}
+                        style={{
+                          ...styles.row,
+                          backgroundColor: index % 2 === 0 
+                            ? (isDarkTheme ? '#1E1E1E' : themeColors.backgroundGray)
+                            : themeColors.backgroundCard,
+                          borderBottomColor: isDarkTheme ? 'rgba(255, 255, 255, 0.04)' : '#F0F0F0'
+                        }}
+                        textStyle={{
+                          ...styles.textTableBody,
+                          color: themeColors.textPrimary
+                        }}
                       />
                     )
                   })}
@@ -480,8 +652,8 @@ export const Actividades = () => {
 
           {filteredActivities.length === 0 && (
             <View style={styles.noResults}>
-              <Icon name="file-search-outline" size={48} color="#E0E0E0" />
-              <Text style={styles.noResultsText}>
+              <Icon name="file-search-outline" size={48} color={isDarkTheme ? '#444' : themeColors.borderGray} />
+              <Text style={[styles.noResultsText, { color: themeColors.textTertiary }]}>
                 {searchQuery !== '' ? 'No se encontraron resultados' : 'No hay actividades con este filtro'}
               </Text>
             </View>
@@ -489,8 +661,10 @@ export const Actividades = () => {
         </View>
       ) : (
         <View style={styles.emptyState}>
-          <Icon name="clipboard-text-outline" size={64} color="#E0E0E0" />
-          <Text style={styles.emptyStateText}>No hay actividades registradas</Text>
+          <Icon name="clipboard-text-outline" size={64} color={isDarkTheme ? '#444' : themeColors.borderGray} />
+          <Text style={[styles.emptyStateText, { color: themeColors.textTertiary }]}>
+            No hay actividades registradas
+          </Text>
         </View>
       )}
     </ScrollView>
@@ -500,11 +674,9 @@ export const Actividades = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   summaryContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFF',
     marginHorizontal: 16,
     marginTop: 16,
     marginBottom: 12,
@@ -512,10 +684,11 @@ const styles = StyleSheet.create({
     padding: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.15,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
     alignItems: 'center',
+    borderWidth: 1,
   },
   summaryItem: {
     flex: 1,
@@ -524,19 +697,16 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#666',
     marginBottom: 4,
     textAlign: 'center',
   },
   summaryValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#000',
   },
   summaryDivider: {
     width: 1,
     height: 30,
-    backgroundColor: '#E0E0E0',
   },
   badgesContainer: {
     flexDirection: 'row',
@@ -546,52 +716,25 @@ const styles = StyleSheet.create({
   },
   badge: {
     flex: 1,
-    backgroundColor: '#FFF',
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 8,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    borderWidth: 1,
   },
-  badgeSuccess: {
-    backgroundColor: '#E8F5E9',
-  },
-  badgeDanger: {
-    backgroundColor: '#FFEBEE',
-  },
-  badgeInfo: {
-    backgroundColor: '#E3F2FD',
-  },
-  badgeActivePending: {
-    backgroundColor: '#666',
-  },
-  badgeActiveRed: {
-    backgroundColor: '#D32F2F',
-  },
-  badgeActiveBlue: {
-    backgroundColor: '#1976D2',
-  },
-  badgeActiveGreen: {
-    backgroundColor: '#34C759',
+  badgeActive: {
+    shadowOpacity: 0.2,
+    elevation: 4,
   },
   badgeValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#000',
     marginBottom: 4,
-  },
-  successText: {
-    color: '#34C759',
-  },
-  dangerText: {
-    color: '#D32F2F',
-  },
-  infoText: {
-    color: '#1976D2',
   },
   badgeValueActive: {
     color: '#FFF',
@@ -599,23 +742,22 @@ const styles = StyleSheet.create({
   badgeLabel: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#666',
     textAlign: 'center',
   },
   badgeLabelActive: {
     color: '#FFF',
   },
   tableSection: {
-    backgroundColor: '#FFF',
     marginHorizontal: 16,
     marginBottom: 20,
     borderRadius: 12,
     padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.15,
     shadowRadius: 6,
-    elevation: 2,
+    elevation: 3,
+    borderWidth: 1,
   },
   tableSectionHeader: {
     marginBottom: 16,
@@ -631,7 +773,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#000',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -656,10 +797,10 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
     borderRadius: 10,
     paddingHorizontal: 12,
     height: 44,
+    borderWidth: 1,
   },
   searchIcon: {
     marginRight: 8,
@@ -667,7 +808,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#000',
     paddingVertical: 0,
   },
   horizontalScroll: {
@@ -675,7 +815,6 @@ const styles = StyleSheet.create({
   },
   header: {
     height: 48,
-    backgroundColor: '#000',
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
   },
@@ -683,7 +822,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
     fontSize: 11,
-    color: '#FFF',
     textTransform: 'uppercase',
     letterSpacing: 0.3,
     paddingVertical: 8,
@@ -692,7 +830,6 @@ const styles = StyleSheet.create({
   textTableBody: {
     textAlign: 'center',
     fontSize: 13,
-    color: '#000',
     paddingVertical: 12,
     paddingHorizontal: 8,
   },
@@ -703,14 +840,12 @@ const styles = StyleSheet.create({
   },
   row: {
     minHeight: 48,
-    borderBottomColor: '#F0F0F0',
     borderBottomWidth: 1,
     justifyContent: 'center',
   },
   indexNumber: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#666',
   },
   estatusBadge: {
     paddingHorizontal: 10,
@@ -733,12 +868,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   actividadLink: {
-    color: '#000',
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
   pendingText: {
-    color: '#999',
     fontSize: 12,
   },
   noResults: {
@@ -747,7 +880,6 @@ const styles = StyleSheet.create({
   },
   noResultsText: {
     fontSize: 14,
-    color: '#999',
     marginTop: 12,
   },
   emptyState: {
@@ -757,7 +889,6 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#999',
     marginTop: 16,
   },
 });

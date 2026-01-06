@@ -10,6 +10,7 @@ import { getNotificationsService, updateStatusNotificationService } from '../ser
 import { useAppDispatch } from '../app/hooks';
 import { AuthContext } from '../context/AuthContext';
 import { addNotifications } from '../features/notifications/dataNotificationsSlice';
+import { useTheme } from '../context/ThemeContext'; // 👈 IMPORTAR
 
 const getStatusData = (status: 'Pendiente' | 'Enviada' | 'Recibida' | 'Leida') => {
   switch (status) {
@@ -27,10 +28,17 @@ const getStatusData = (status: 'Pendiente' | 'Enviada' | 'Recibida' | 'Leida') =
 };
 
 export const NotificationDetailScreen = ({ route, navigation }: PropsNotificationDetail) => {
+  const { colors: themeColors } = useTheme(); // 👈 HOOK
   const dispatch = useAppDispatch();
   const { data_alumno } = useContext(AuthContext);
   const { notification } = route.params;
-  const statusData = getStatusData(notification.est_not);
+  
+  // Ajustar el color del ícono para "Leída" según el tema
+  const statusDataBase = getStatusData(notification.est_not);
+  const statusData = {
+    ...statusDataBase,
+    color: notification.est_not === 'Leida' ? themeColors.textPrimary : statusDataBase.color
+  };
 
   useEffect(() => {
     updateStatusNotification();
@@ -44,15 +52,15 @@ export const NotificationDetailScreen = ({ route, navigation }: PropsNotificatio
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.backgroundCard }]}>
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: themeColors.backgroundCard }]}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: themeColors.backgroundGray }]}
           onPress={() => navigation.pop()}
           activeOpacity={0.7}
         >
-          <Icon name="arrow-left" size={24} color="#000" />
+          <Icon name="arrow-left" size={24} color={themeColors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerSpacer} />
       </View>
@@ -63,26 +71,34 @@ export const NotificationDetailScreen = ({ route, navigation }: PropsNotificatio
       >
         {/* ICON HERO */}
         <View style={styles.iconHero}>
-          <View style={styles.iconCircle}>
+          <View style={[styles.iconCircle, { backgroundColor: themeColors.backgroundGray }]}>
             <Icon name={statusData.icon} size={40} color={statusData.color} />
           </View>
         </View>
 
         {/* TITLE */}
-        <Text style={styles.title}>{notification.tit_not}</Text>
+        <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+          {notification.tit_not}
+        </Text>
 
         {/* STATUS + DATE */}
         <View style={styles.metaContainer}>
-          <View style={styles.statusPill}>
+          <View style={[styles.statusPill, { backgroundColor: themeColors.backgroundGray }]}>
             <View style={[styles.statusDot, { backgroundColor: statusData.color }]} />
-            <Text style={styles.statusLabel}>{statusData.label}</Text>
+            <Text style={[styles.statusLabel, { color: themeColors.textPrimary }]}>
+              {statusData.label}
+            </Text>
           </View>
-          <Text style={styles.date}>{formatDateHour(notification.fec_not)}</Text>
+          <Text style={[styles.date, { color: themeColors.textSecondary }]}>
+            {formatDateHour(notification.fec_not)}
+          </Text>
         </View>
 
         {/* MESSAGE CARD */}
-        <View style={styles.messageCard}>
-          <Text style={styles.message}>{notification.men_not}</Text>
+        <View style={[styles.messageCard, { backgroundColor: themeColors.backgroundGray }]}>
+          <Text style={[styles.message, { color: themeColors.textPrimary }]}>
+            {notification.men_not}
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -92,7 +108,6 @@ export const NotificationDetailScreen = ({ route, navigation }: PropsNotificatio
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -100,13 +115,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 8,
-    backgroundColor: '#FFFFFF',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -126,14 +139,12 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: '#F8F8F8',
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
     fontSize: 26,
     fontWeight: '700',
-    color: '#000',
     textAlign: 'center',
     marginBottom: 16,
     lineHeight: 34,
@@ -151,7 +162,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     gap: 6,
   },
@@ -163,20 +173,16 @@ const styles = StyleSheet.create({
   statusLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#000',
   },
   date: {
     fontSize: 13,
-    color: '#666',
   },
   messageCard: {
-    backgroundColor: '#F8F8F8',
     borderRadius: 16,
     padding: 20,
   },
   message: {
     fontSize: 16,
-    color: '#000',
     lineHeight: 24,
   },
 });

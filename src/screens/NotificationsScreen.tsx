@@ -8,8 +8,10 @@ import { AuthContext } from '../context/AuthContext';
 import endeApi from '../api/estudianteAPI';
 import { updateInfoNotifications } from '../features/notifications/dataNotificationsSlice';
 import { CardNotification } from '../components/CardNotification';
+import { useTheme } from '../context/ThemeContext'; // 👈 IMPORTAR
 
 export const NotificationsScreen = ({route, navigation}: any) => {
+  const { colors: themeColors } = useTheme(); // 👈 HOOK
   const { data_alumno } = useContext(AuthContext);
   const dispatch = useAppDispatch();
   const notifications: Notification[] = useAppSelector(state => state.datanotifications);
@@ -53,15 +55,15 @@ export const NotificationsScreen = ({route, navigation}: any) => {
 
   const renderEmpty = () => (
     <View style={styles.emptyState}>
-      <Icon name="bell-outline" size={64} color="#E0E0E0" />
-      <Text style={styles.emptyStateTitle}>
+      <Icon name="bell-outline" size={64} color={themeColors.borderGray} />
+      <Text style={[styles.emptyStateTitle, { color: themeColors.textPrimary }]}>
         {filtroActivo === 'leidas' 
           ? 'No hay notificaciones leídas' 
           : filtroActivo === 'no_leidas' 
           ? 'No hay notificaciones nuevas' 
           : 'No hay notificaciones'}
       </Text>
-      <Text style={styles.emptyStateSubtitle}>
+      <Text style={[styles.emptyStateSubtitle, { color: themeColors.textSecondary }]}>
         {filtroActivo === 'todas' 
           ? 'Las notificaciones que recibas aparecerán aquí'
           : 'Cambia el filtro para ver otras notificaciones'}
@@ -70,21 +72,28 @@ export const NotificationsScreen = ({route, navigation}: any) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.backgroundCard }]}>
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { 
+        backgroundColor: themeColors.backgroundCard,
+        borderBottomColor: themeColors.borderGray 
+      }]}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: themeColors.backgroundGray }]}
           onPress={() => navigation.pop()}
           activeOpacity={0.7}
         >
-          <Icon name="arrow-left" size={24} color="#000" />
+          <Icon name="arrow-left" size={24} color={themeColors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>Notificaciones</Text>
+          <Text style={[styles.headerTitle, { color: themeColors.textPrimary }]}>
+            Notificaciones
+          </Text>
           {totalNoLeidas > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{totalNoLeidas}</Text>
+            <View style={[styles.badge, { backgroundColor: themeColors.textPrimary }]}>
+              <Text style={[styles.badgeText, { color: themeColors.backgroundCard }]}>
+                {totalNoLeidas}
+              </Text>
             </View>
           )}
         </View>
@@ -92,44 +101,83 @@ export const NotificationsScreen = ({route, navigation}: any) => {
       </View>
 
       {/* PILLS FILTER */}
-      <View style={styles.filterContainer}>
+      <View style={[styles.filterContainer, { 
+        backgroundColor: themeColors.backgroundCard,
+        borderBottomColor: themeColors.borderGray 
+      }]}>
         <TouchableOpacity
-          style={[styles.filterPill, filtroActivo === 'todas' && styles.filterPillActive]}
+          style={[
+            styles.filterPill, 
+            { backgroundColor: themeColors.backgroundGray },
+            filtroActivo === 'todas' && { backgroundColor: themeColors.textPrimary }
+          ]}
           onPress={() => setFiltroActivo('todas')}
           activeOpacity={0.7}
         >
-          <Text style={[styles.filterText, filtroActivo === 'todas' && styles.filterTextActive]}>
+          <Text style={[
+            styles.filterText, 
+            { color: themeColors.textSecondary },
+            filtroActivo === 'todas' && { color: themeColors.backgroundCard }
+          ]}>
             Todas
           </Text>
-          <Text style={[styles.filterCount, filtroActivo === 'todas' && styles.filterCountActive]}>
+          <Text style={[
+            styles.filterCount, 
+            { color: themeColors.textTertiary },
+            filtroActivo === 'todas' && { color: themeColors.backgroundCard }
+          ]}>
             {notifications.length}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.filterPill, filtroActivo === 'no_leidas' && styles.filterPillActive]}
+          style={[
+            styles.filterPill, 
+            { backgroundColor: themeColors.backgroundGray },
+            filtroActivo === 'no_leidas' && { backgroundColor: themeColors.textPrimary }
+          ]}
           onPress={() => setFiltroActivo('no_leidas')}
           activeOpacity={0.7}
         >
-          <Text style={[styles.filterText, filtroActivo === 'no_leidas' && styles.filterTextActive]}>
+          <Text style={[
+            styles.filterText, 
+            { color: themeColors.textSecondary },
+            filtroActivo === 'no_leidas' && { color: themeColors.backgroundCard }
+          ]}>
             Nuevas
           </Text>
           {totalNoLeidas > 0 && (
-            <Text style={[styles.filterCount, filtroActivo === 'no_leidas' && styles.filterCountActive]}>
+            <Text style={[
+              styles.filterCount, 
+              { color: themeColors.textTertiary },
+              filtroActivo === 'no_leidas' && { color: themeColors.backgroundCard }
+            ]}>
               {totalNoLeidas}
             </Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.filterPill, filtroActivo === 'leidas' && styles.filterPillActive]}
+          style={[
+            styles.filterPill, 
+            { backgroundColor: themeColors.backgroundGray },
+            filtroActivo === 'leidas' && { backgroundColor: themeColors.textPrimary }
+          ]}
           onPress={() => setFiltroActivo('leidas')}
           activeOpacity={0.7}
         >
-          <Text style={[styles.filterText, filtroActivo === 'leidas' && styles.filterTextActive]}>
+          <Text style={[
+            styles.filterText, 
+            { color: themeColors.textSecondary },
+            filtroActivo === 'leidas' && { color: themeColors.backgroundCard }
+          ]}>
             Leídas
           </Text>
-          <Text style={[styles.filterCount, filtroActivo === 'leidas' && styles.filterCountActive]}>
+          <Text style={[
+            styles.filterCount, 
+            { color: themeColors.textTertiary },
+            filtroActivo === 'leidas' && { color: themeColors.backgroundCard }
+          ]}>
             {totalLeidas}
           </Text>
         </TouchableOpacity>
@@ -147,8 +195,8 @@ export const NotificationsScreen = ({route, navigation}: any) => {
           <RefreshControl 
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#000"
-            colors={['#000']}
+            tintColor={themeColors.textPrimary}
+            colors={[themeColors.textPrimary]}
           />
         }
       />
@@ -159,22 +207,18 @@ export const NotificationsScreen = ({route, navigation}: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -188,10 +232,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#000',
   },
   badge: {
-    backgroundColor: '#000',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -201,7 +243,6 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#FFF',
   },
   headerSpacer: {
     width: 40,
@@ -211,9 +252,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     gap: 8,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   filterPill: {
     flexDirection: 'row',
@@ -221,27 +260,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: '#F5F5F5',
     gap: 6,
-  },
-  filterPillActive: {
-    backgroundColor: '#000',
   },
   filterText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
-  },
-  filterTextActive: {
-    color: '#FFF',
   },
   filterCount: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#999',
-  },
-  filterCountActive: {
-    color: '#FFF',
   },
   listEmpty: {
     flexGrow: 1,
@@ -255,14 +282,12 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#000',
     marginTop: 16,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptyStateSubtitle: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
     paddingHorizontal: 40,
   },

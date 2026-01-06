@@ -10,6 +10,7 @@ import { useAppDispatch } from '../app/hooks';
 import { updateInfoPagos } from '../features/pagos/dataPagosSlice';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ActivityIndicator } from 'react-native-paper';
+import { useTheme } from '../context/ThemeContext';
 
 interface PropsPaymentStripe {
   data_pagos: Pagos;
@@ -17,11 +18,32 @@ interface PropsPaymentStripe {
 }
 
 export const PaymentStripe = ({data_pagos, onPaySuccess}:PropsPaymentStripe) => {
+  const { colors: themeColors, theme } = useTheme();
   const [paying, setPaying] = useState(false);
   const clientSecret = useRef('')
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const { data_alumno, stripeAccountId } = useContext( AuthContext );
   const dispatch = useAppDispatch();
+
+  // Detectar tema oscuro
+  const isDarkTheme = (() => {
+    const bg = themeColors.background?.toLowerCase() || '';
+    const cardBg = themeColors.backgroundCard?.toLowerCase() || '';
+    const textPrimary = themeColors.textPrimary?.toLowerCase() || '';
+    
+    return bg === '#000' || 
+           bg === '#000000' ||
+           bg === '#121212' || 
+           bg === '#1a1a1a' ||
+           cardBg === '#000' ||
+           cardBg === '#000000' ||
+           cardBg === '#121212' ||
+           cardBg === '#1e1e1e' ||
+           cardBg === '#1a1a1a' ||
+           textPrimary === '#fff' ||
+           textPrimary === '#ffffff' ||
+           textPrimary === '#f5f5f5';
+  })();
 
   const MONTO_MINIMO = 10;
   const montoAPagar = parseFloat(data_pagos.mon_pag || '0');
@@ -70,7 +92,14 @@ export const PaymentStripe = ({data_pagos, onPaySuccess}:PropsPaymentStripe) => 
           paymentIntentClientSecret: data.clientSecret,
           appearance: {
             colors: {
-              primary: '#000000',
+              primary: isDarkTheme ? '#9DB4C8' : '#000000',  // Azul pastel para modo oscuro
+              background: isDarkTheme ? '#1C1C1E' : '#FFFFFF',
+              componentBackground: isDarkTheme ? '#2C2C2E' : '#F6F6F6',
+              componentBorder: isDarkTheme ? '#38383A' : '#E0E0E0',
+              componentText: isDarkTheme ? '#FFFFFF' : '#000000',
+              primaryText: isDarkTheme ? '#FFFFFF' : '#000000',
+              secondaryText: isDarkTheme ? '#EBEBF5' : '#666666',
+              placeholderText: isDarkTheme ? '#8E8E93' : '#999999',
             },
           },
           defaultBillingDetails: {
@@ -195,16 +224,30 @@ export const PaymentStripe = ({data_pagos, onPaySuccess}:PropsPaymentStripe) => 
   return (
     <View style={styles.container}>
       {esMontoBajo && (
-        <View style={styles.warningCard}>
-          <Icon name="information-outline" size={18} color="#FF9500" />
-          <Text style={styles.warningText}>
+        <View style={[
+          styles.warningCard,
+          { backgroundColor: isDarkTheme ? '#3A3632' : '#FFF5E6' }
+        ]}>
+          <Icon 
+            name="information-outline" 
+            size={18} 
+            color={isDarkTheme ? '#D4BDA0' : '#FF9500'} 
+          />
+          <Text style={[
+            styles.warningText,
+            { color: isDarkTheme ? '#D4BDA0' : '#FF9500' }
+          ]}>
             El monto mínimo para procesar un pago es de ${MONTO_MINIMO} MXN
           </Text>
         </View>
       )}
 
       <TouchableOpacity
-        style={[styles.payButton, (paying || esMontoBajo) && styles.payButtonDisabled]}
+        style={[
+          styles.payButton, 
+          { backgroundColor: isDarkTheme ? '#4A4A4A' : '#000' },
+          (paying || esMontoBajo) && styles.payButtonDisabled
+        ]}
         onPress={initializePaymentSheet}
         disabled={paying || esMontoBajo}
         activeOpacity={0.7}
@@ -212,19 +255,34 @@ export const PaymentStripe = ({data_pagos, onPaySuccess}:PropsPaymentStripe) => 
         {paying ? (
           <>
             <ActivityIndicator size={20} color="#FFF" />
-            <Text style={styles.payButtonText}>Procesando pago...</Text>
+            <Text style={styles.payButtonText}>
+              Procesando pago...
+            </Text>
           </>
         ) : (
           <>
-            <Icon name="lock-outline" size={20} color="#FFF" />
-            <Text style={styles.payButtonText}>Pagar ahora</Text>
+            <Icon 
+              name="lock-outline" 
+              size={20} 
+              color="#FFF" 
+            />
+            <Text style={styles.payButtonText}>
+              Pagar ahora
+            </Text>
           </>
         )}
       </TouchableOpacity>
 
       <View style={styles.securityNote}>
-        <Icon name="shield-check-outline" size={14} color="#666" />
-        <Text style={styles.securityNoteText}>
+        <Icon 
+          name="shield-check-outline" 
+          size={14} 
+          color={isDarkTheme ? '#A8C4A8' : '#666'} 
+        />
+        <Text style={[
+          styles.securityNoteText,
+          { color: isDarkTheme ? themeColors.textTertiary : '#666' }
+        ]}>
           Tus datos están protegidos
         </Text>
       </View>
@@ -239,16 +297,14 @@ const styles = StyleSheet.create({
   warningCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF5E6',
-    padding: 12,
-    borderRadius: 8,
+    padding: 14,
+    borderRadius: 10,
     marginBottom: 16,
     gap: 10,
   },
   warningText: {
     flex: 1,
     fontSize: 13,
-    color: '#FF9500',
     fontWeight: '600',
     lineHeight: 18,
   },
@@ -256,10 +312,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
     paddingVertical: 16,
     borderRadius: 12,
     gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   payButtonDisabled: {
     opacity: 0.4,
@@ -279,6 +339,6 @@ const styles = StyleSheet.create({
   },
   securityNoteText: {
     fontSize: 12,
-    color: '#666',
+    fontWeight: '500',
   },
 });

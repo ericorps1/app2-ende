@@ -15,9 +15,40 @@ import { colors, platformTheme } from '../theme/platformTheme';
 import PaperMessages from './PaperMessages';
 import { LoadingScreen } from '../screens/LoadingScreen';
 import endeApi from '../api/estudianteAPI';
+import { useTheme } from '../context/ThemeContext';
 
 const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) => {
+  const { colors: themeColors, theme } = useTheme();
   const params = route.params;
+
+  // Detección robusta del tema oscuro (propagado desde Actividades)
+  const isDarkTheme = (() => {
+    const bg = themeColors.background?.toLowerCase() || '';
+    const cardBg = themeColors.backgroundCard?.toLowerCase() || '';
+    const textPrimary = themeColors.textPrimary?.toLowerCase() || '';
+    
+    console.log('🌓 DOCUMENTATION_DETAILS - themeColors.background:', themeColors.background);
+    console.log('🌓 DOCUMENTATION_DETAILS - themeColors.backgroundCard:', themeColors.backgroundCard);
+    
+    const isDark = bg === '#000' || 
+                   bg === '#000000' ||
+                   bg === '#121212' || 
+                   bg === '#1a1a1a' ||
+                   cardBg === '#000' ||
+                   cardBg === '#000000' ||
+                   cardBg === '#121212' ||
+                   cardBg === '#1e1e1e' ||
+                   cardBg === '#1a1a1a' ||
+                   textPrimary === '#fff' ||
+                   textPrimary === '#ffffff' ||
+                   textPrimary === '#f5f5f5' ||
+                   bg.includes('black') ||
+                   (bg.startsWith('#') && parseInt(bg.replace('#', ''), 16) < 3355443);
+    
+    console.log('🌓 DOCUMENTATION_DETAILS - isDarkTheme resultado:', isDark);
+    
+    return isDark;
+  })();
 
   const initialStateObFile = { fileCopyUri: null, name: "", size: 0, type: "", uri: "" };
   const [obFile, setObFile] = useState<FilePick>(initialStateObFile);
@@ -38,7 +69,7 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
     try {
       const file:any = await DocumentPicker.pickSingle();
       const [fileName, fileSize, fileType] = [file.name, file.size, file.type];
-      if(fileSize > 5242880) { // 5MB
+      if(fileSize > 5242880) {
         setAlerts({ 'type': 'error', 'title': 'Error', 'message': 'El archivo no debe superar los 5MB.' });
         return
       }
@@ -126,8 +157,47 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
     return <LoadingScreen text={`${uploading ? 'Subiendo' : 'Eliminando'} archivo...`} />;
   }
 
+  // Estilos de info card con colores pastel
+  const getInfoCardStyle = () => {
+    if (isDarkTheme) {
+      return {
+        bg: '#2A2F35', // Azul muy oscuro
+        iconColor: '#9DB4C8', // Azul pastel
+        textColor: '#9DB4C8' // Azul pastel
+      };
+    } else {
+      return {
+        bg: '#E3F2FD',
+        iconColor: '#1976D2',
+        textColor: '#1976D2'
+      };
+    }
+  };
+
+  // Estilos de iconos con colores pastel
+  const getIconColors = () => {
+    if (isDarkTheme) {
+      return {
+        success: '#A8C4A8', // Verde pastel
+        error: '#D0A8A0', // Rosa salmón pastel
+        document: '#9DB4C8', // Azul pastel
+        upload: '#666' // Gris suave
+      };
+    } else {
+      return {
+        success: '#34C759',
+        error: '#E53935',
+        document: '#1976D2',
+        upload: themeColors.borderGray
+      };
+    }
+  };
+
+  const infoStyle = getInfoCardStyle();
+  const iconColors = getIconColors();
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <BackButtonNavigation onPressBack={() => navigation.pop()} title={documentation.nom_doc_ram}/>
         
@@ -137,54 +207,89 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
 
         {documentation.est_doc_alu_ram === 'Pendiente' ? (
           <View style={styles.uploadSection}>
-            <View style={styles.infoCard}>
-              <Icon name="information-outline" size={20} color="#1976D2" />
-              <Text style={styles.infoText}>
+            <View style={[styles.infoCard, { backgroundColor: infoStyle.bg }]}>
+              <Icon name="information-outline" size={20} color={infoStyle.iconColor} />
+              <Text style={[styles.infoText, { color: infoStyle.textColor }]}>
                 Formatos válidos: <Text style={styles.infoBold}>PDF, JPEG, JPG, PNG</Text> (máx. 5MB)
               </Text>
             </View>
 
             {obFile.name !== "" ? (
-              <View style={styles.fileSelectedCard}>
+              <View style={[
+                styles.fileSelectedCard, 
+                { 
+                  backgroundColor: themeColors.backgroundCard,
+                  borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
+                  borderWidth: isDarkTheme ? 1 : 0
+                }
+              ]}>
                 <View style={styles.fileSelectedHeader}>
-                  <Icon name="file-check-outline" size={24} color="#34C759" />
+                  <Icon name="file-check-outline" size={24} color={iconColors.success} />
                   <View style={styles.fileSelectedInfo}>
-                    <Text style={styles.fileSelectedName} numberOfLines={1}>{obFile.name}</Text>
-                    <Text style={styles.fileSelectedSize}>{(obFile.size / 1024).toFixed(2)} KB</Text>
+                    <Text style={[styles.fileSelectedName, { color: themeColors.textPrimary }]} numberOfLines={1}>
+                      {obFile.name}
+                    </Text>
+                    <Text style={[styles.fileSelectedSize, { color: themeColors.textSecondary }]}>
+                      {(obFile.size / 1024).toFixed(2)} KB
+                    </Text>
                   </View>
                   <TouchableOpacity onPress={() => setObFile(initialStateObFile)} activeOpacity={0.7}>
-                    <Icon name="close-circle" size={24} color="#E53935" />
+                    <Icon name="close-circle" size={24} color={iconColors.error} />
                   </TouchableOpacity>
                 </View>
 
                 <View style={styles.actionButtons}>
                   <TouchableOpacity 
                     activeOpacity={0.7} 
-                    style={[styles.button, styles.buttonPrimary]} 
+                    style={[
+                      styles.button, 
+                      styles.buttonPrimary, 
+                      { 
+                        backgroundColor: isDarkTheme ? '#4E5C6A' : '#000000',
+                        borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.10)' : 'transparent',
+                        borderWidth: isDarkTheme ? 1 : 0
+                      }
+                    ]} 
                     onPress={uploadFile}
                   >
-                    <Icon name="cloud-upload-outline" size={20} color="#FFF" />
-                    <Text style={styles.buttonText}>Subir archivo</Text>
+                    <Icon name="cloud-upload-outline" size={20} color="#FFFFFF" />
+                    <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>Subir archivo</Text>
                   </TouchableOpacity>
                   <TouchableOpacity 
                     activeOpacity={0.7} 
-                    style={[styles.button, styles.buttonSecondary]} 
+                    style={[
+                      styles.button, 
+                      styles.buttonSecondary, 
+                      { 
+                        backgroundColor: isDarkTheme ? '#2A2A2A' : themeColors.backgroundGray,
+                        borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
+                        borderWidth: isDarkTheme ? 1 : 0
+                      }
+                    ]} 
                     onPress={() => setObFile(initialStateObFile)}
                   >
-                    <Icon name="close" size={20} color="#666" />
-                    <Text style={[styles.buttonText, {color: '#666'}]}>Cancelar</Text>
+                    <Icon name="close" size={20} color={themeColors.textSecondary} />
+                    <Text style={[styles.buttonText, { color: themeColors.textSecondary }]}>Cancelar</Text>
                   </TouchableOpacity>
                 </View>
               </View>
             ) : (
               <TouchableOpacity 
                 activeOpacity={0.7} 
-                style={styles.uploadCard} 
+                style={[
+                  styles.uploadCard, 
+                  { 
+                    backgroundColor: themeColors.backgroundCard,
+                    borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.10)' : themeColors.borderGray
+                  }
+                ]} 
                 onPress={loadFile}
               >
-                <Icon name="cloud-upload-outline" size={64} color="#D0D0D0" />
-                <Text style={styles.uploadTitle}>Seleccionar archivo</Text>
-                <Text style={styles.uploadSubtitle}>Toca para elegir un documento</Text>
+                <Icon name="cloud-upload-outline" size={64} color={iconColors.upload} />
+                <Text style={[styles.uploadTitle, { color: themeColors.textPrimary }]}>Seleccionar archivo</Text>
+                <Text style={[styles.uploadSubtitle, { color: themeColors.textSecondary }]}>
+                  Toca para elegir un documento
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -193,15 +298,22 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
           (documentation.est_doc_alu_ram === 'Aprobado' && documentation.arc_doc_alu_ram && documentation.arc_doc_alu_ram!=='')
         ) ? (
           <View style={styles.uploadSection}>
-            <View style={styles.fileCard}>
+            <View style={[
+              styles.fileCard, 
+              { 
+                backgroundColor: themeColors.backgroundCard,
+                borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
+                borderWidth: isDarkTheme ? 1 : 0
+              }
+            ]}>
               <View style={styles.fileHeader}>
-                <Icon name="file-document-outline" size={48} color="#1976D2" />
+                <Icon name="file-document-outline" size={48} color={iconColors.document} />
                 <View style={styles.fileInfo}>
-                  <Text style={styles.fileName} numberOfLines={2}>
+                  <Text style={[styles.fileName, { color: themeColors.textPrimary }]} numberOfLines={2}>
                     {documentation.arc_doc_alu_ram ?? 'Archivo sin nombre'}
                   </Text>
                   {documentation.fec_doc_alu_ram && (
-                    <Text style={styles.fileDate}>
+                    <Text style={[styles.fileDate, { color: themeColors.textSecondary }]}>
                       Entregado: {formatDate(documentation.fec_doc_alu_ram, '/')}
                     </Text>
                   )}
@@ -210,15 +322,31 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
 
               <View style={styles.actionButtons}>
                 <TouchableOpacity 
-                  style={[styles.button, styles.buttonPrimary]} 
+                  style={[
+                    styles.button, 
+                    styles.buttonPrimary, 
+                    { 
+                      backgroundColor: isDarkTheme ? '#4E5C6A' : '#000000',
+                      borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.10)' : 'transparent',
+                      borderWidth: isDarkTheme ? 1 : 0
+                    }
+                  ]} 
                   onPress={downloadFileFunc}
                   activeOpacity={0.7}
                 >
-                  <Icon name="download-outline" size={20} color="#FFF" />
-                  <Text style={styles.buttonText}>Descargar</Text>
+                  <Icon name="download-outline" size={20} color="#FFFFFF" />
+                  <Text style={[styles.buttonText, { color: '#FFFFFF' }]}>Descargar</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={[styles.button, styles.buttonDanger]} 
+                  style={[
+                    styles.button, 
+                    styles.buttonDanger,
+                    { 
+                      backgroundColor: isDarkTheme ? '#7A5E5B' : '#E53935',
+                      borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
+                      borderWidth: isDarkTheme ? 1 : 0
+                    }
+                  ]} 
                   onPress={confirmDeleteFile}
                   activeOpacity={0.7}
                 >
@@ -258,7 +386,6 @@ const DocumentationDetails = ({ route, navigation }: PropsDocumentationDetails) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   cardContainer: {
     paddingHorizontal: 16,
@@ -272,7 +399,6 @@ const styles = StyleSheet.create({
   infoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E3F2FD',
     padding: 12,
     borderRadius: 10,
     marginBottom: 16,
@@ -281,39 +407,33 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 13,
-    color: '#1976D2',
   },
   infoBold: {
     fontWeight: '700',
   },
   uploadCard: {
-    backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 40,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#E0E0E0',
     borderStyle: 'dashed',
   },
   uploadTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginTop: 16,
     marginBottom: 4,
   },
   uploadSubtitle: {
     fontSize: 13,
-    color: '#666',
   },
   fileSelectedCard: {
-    backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 2,
   },
@@ -329,20 +449,17 @@ const styles = StyleSheet.create({
   fileSelectedName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 2,
   },
   fileSelectedSize: {
     fontSize: 12,
-    color: '#666',
   },
   fileCard: {
-    backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 2,
   },
@@ -358,12 +475,10 @@ const styles = StyleSheet.create({
   fileName: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 4,
   },
   fileDate: {
     fontSize: 13,
-    color: '#666',
   },
   actionButtons: {
     flexDirection: 'row',
@@ -380,18 +495,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   buttonPrimary: {
-    backgroundColor: '#000',
   },
   buttonSecondary: {
-    backgroundColor: '#F5F5F5',
   },
   buttonDanger: {
-    backgroundColor: '#E53935',
   },
   buttonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFF',
   },
 });
 

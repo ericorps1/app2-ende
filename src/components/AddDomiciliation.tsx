@@ -7,6 +7,7 @@ import endeApi from '../api/estudianteAPI';
 import stripeApi from '../api/stripeAPI';
 import PaperMessages from './PaperMessages';
 import { AuthContext } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 interface AddDomiciliationProps {
   domiciliation: {
@@ -23,6 +24,7 @@ export const AddDomiciliation = ({
   domiciliation,
   updateDomiciliation,
 }: AddDomiciliationProps) => {
+  const { colors: themeColors, theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [alerts, setAlerts] = useState({
     type: '',
@@ -33,7 +35,26 @@ export const AddDomiciliation = ({
   const { data_alumno, stripeAccountId } = useContext(AuthContext);
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
-  // ========== OBTENER ICONO DE LA TARJETA ==========
+  // Detectar tema oscuro
+  const isDarkTheme = (() => {
+    const bg = themeColors.background?.toLowerCase() || '';
+    const cardBg = themeColors.backgroundCard?.toLowerCase() || '';
+    const textPrimary = themeColors.textPrimary?.toLowerCase() || '';
+    
+    return bg === '#000' || 
+           bg === '#000000' ||
+           bg === '#121212' || 
+           bg === '#1a1a1a' ||
+           cardBg === '#000' ||
+           cardBg === '#000000' ||
+           cardBg === '#121212' ||
+           cardBg === '#1e1e1e' ||
+           cardBg === '#1a1a1a' ||
+           textPrimary === '#fff' ||
+           textPrimary === '#ffffff' ||
+           textPrimary === '#f5f5f5';
+  })();
+
   const getCardIcon = (brand: string) => {
     const icons: { [key: string]: string } = {
       visa: 'credit-card',
@@ -45,19 +66,29 @@ export const AddDomiciliation = ({
     return icons[(brand || '').toLowerCase()] || icons.default;
   };
 
-  // ========== OBTENER COLOR DE LA TARJETA ==========
   const getCardColor = (brand: string) => {
-    const colors: { [key: string]: string } = {
-      visa: '#1A1F71',
-      mastercard: '#EB001B',
-      amex: '#006FCF',
-      discover: '#FF6000',
-      default: '#000'
-    };
-    return colors[(brand || '').toLowerCase()] || colors.default;
+    if (isDarkTheme) {
+      // Colores pastel apagados para modo oscuro
+      const colors: { [key: string]: string } = {
+        visa: '#9DB4C8',
+        mastercard: '#D0A8A0',
+        amex: '#A8C5D0',
+        discover: '#D4BDA0',
+        default: '#B0B0B0'
+      };
+      return colors[(brand || '').toLowerCase()] || colors.default;
+    } else {
+      const colors: { [key: string]: string } = {
+        visa: '#1A1F71',
+        mastercard: '#EB001B',
+        amex: '#006FCF',
+        discover: '#FF6000',
+        default: '#000'
+      };
+      return colors[(brand || '').toLowerCase()] || colors.default;
+    }
   };
 
-  // ========== FORMATEAR NOMBRE DE LA MARCA ==========
   const formatBrand = (brand?: string) => {
     if (!brand) return 'Tarjeta';
     const brandUpper = brand.toUpperCase();
@@ -72,19 +103,16 @@ export const AddDomiciliation = ({
     return names[brandUpper] || brand.charAt(0).toUpperCase() + brand.slice(1).toLowerCase();
   };
 
-  // ========== FORMATEAR FECHA DE EXPIRACIÓN ==========
   const formatExpiry = (m?: string, y?: string) => {
     if (!m || !y) return '';
     return `${m.padStart(2, '0')}/${String(y).slice(-2)}`;
   };
 
-  // ========== NÚMERO ENMASCARADO ==========
   const maskedNumber = (last4?: string) => {
     if (!last4) return '•••• •••• •••• ••••';
     return `•••• •••• •••• ${last4}`;
   };
 
-  // ========== GUARDAR DOMICILIACIÓN ==========
   const saveDomiciliation = async () => {
     if (!stripeAccountId) {
       setAlerts({
@@ -118,6 +146,7 @@ export const AddDomiciliation = ({
       }
 
       const customerId = setupData.customer;
+      const isDark = theme === 'dark';
 
       const { error: initError } = await initPaymentSheet({
         merchantDisplayName: data_alumno?.nom_ram || 'ENDE Universidad',
@@ -127,7 +156,14 @@ export const AddDomiciliation = ({
         allowsDelayedPaymentMethods: false,
         appearance: {
           colors: {
-            primary: '#000000',
+            primary: isDark ? '#9DB4C8' : '#000000',  // Azul pastel para modo oscuro
+            background: isDark ? '#1C1C1E' : '#FFFFFF',
+            componentBackground: isDark ? '#2C2C2E' : '#F6F6F6',
+            componentBorder: isDark ? '#38383A' : '#E0E0E0',
+            componentText: isDark ? '#FFFFFF' : '#000000',
+            primaryText: isDark ? '#FFFFFF' : '#000000',
+            secondaryText: isDark ? '#EBEBF5' : '#666666',
+            placeholderText: isDark ? '#8E8E93' : '#999999',
           },
           shapes: {
             borderRadius: 8,
@@ -229,7 +265,6 @@ export const AddDomiciliation = ({
     }
   };
 
-  // ========== ELIMINAR DOMICILIACIÓN ==========
   const deleteDomiciliation = async () => {
     try {
       setLoading(true);
@@ -261,82 +296,127 @@ export const AddDomiciliation = ({
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Métodos de pago</Text>
+    <View style={[styles.container, { backgroundColor: themeColors.backgroundCard }]}>
+      <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>Métodos de pago</Text>
 
       {!domiciliation?.isSaved ? (
-        // ========== SIN TARJETA GUARDADA ==========
         <TouchableOpacity 
-          style={styles.addCard} 
+          style={[styles.addCard, { 
+            backgroundColor: isDarkTheme ? '#2A2A2A' : themeColors.backgroundGray, 
+            borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.08)' : themeColors.borderGray 
+          }]} 
           onPress={saveDomiciliation}
           activeOpacity={0.7}
           disabled={loading}
         >
-          <View style={styles.addCardIcon}>
-            <Icon name="plus" size={20} color="#000" />
+          <View style={[
+            styles.addCardIcon, 
+            { backgroundColor: isDarkTheme ? '#2A2F35' : themeColors.backgroundCard }
+          ]}>
+            <Icon 
+              name="plus" 
+              size={20} 
+              color={isDarkTheme ? '#9DB4C8' : themeColors.textPrimary} 
+            />
           </View>
           <View style={styles.addCardContent}>
-            <Text style={styles.addCardTitle}>
+            <Text style={[styles.addCardTitle, { color: themeColors.textPrimary }]}>
               {loading ? 'Preparando formulario...' : 'Agregar método de pago'}
             </Text>
-            <Text style={styles.addCardSubtitle}>
+            <Text style={[styles.addCardSubtitle, { color: themeColors.textSecondary }]}>
               Configura pagos automáticos de forma segura
             </Text>
           </View>
-          <Icon name="chevron-right" size={18} color="#D0D0D0" />
+          <Icon name="chevron-right" size={18} color={themeColors.borderGray} />
         </TouchableOpacity>
       ) : (
-        // ========== TARJETA GUARDADA ==========
-        <View style={styles.savedCard}>
-          {/* HEADER DE LA TARJETA */}
+        <View style={[styles.savedCard, { 
+          backgroundColor: isDarkTheme ? '#2A2A2A' : themeColors.backgroundGray, 
+          borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : themeColors.borderGray 
+        }]}>
           <View style={styles.cardHeader}>
-            <View style={[styles.cardIconWrapper, { backgroundColor: getCardColor(domiciliation.brand) + '15' }]}>
+            <View style={[
+              styles.cardIconWrapper, 
+              { backgroundColor: getCardColor(domiciliation.brand) + (isDarkTheme ? '25' : '15') }
+            ]}>
               <Icon 
                 name={getCardIcon(domiciliation.brand)} 
                 size={28} 
                 color={getCardColor(domiciliation.brand)}
               />
             </View>
-            <View style={styles.activeBadge}>
-              <Icon name="check-circle" size={12} color="#34C759" />
-              <Text style={styles.activeBadgeText}>Activo</Text>
+            <View style={[
+              styles.activeBadge,
+              { backgroundColor: isDarkTheme ? '#2D352E' : '#E8F5E9' }
+            ]}>
+              <Icon 
+                name="check-circle" 
+                size={12} 
+                color={isDarkTheme ? '#A8C4A8' : '#34C759'} 
+              />
+              <Text style={[
+                styles.activeBadgeText,
+                { color: isDarkTheme ? '#A8C4A8' : '#34C759' }
+              ]}>
+                Activo
+              </Text>
             </View>
           </View>
           
-          {/* INFO DE LA TARJETA */}
           <View style={styles.cardInfo}>
-            <Text style={styles.cardBrand}>{formatBrand(domiciliation.brand)}</Text>
-            <Text style={styles.cardNumber}>{maskedNumber(domiciliation.card_no)}</Text>
+            <Text style={[styles.cardBrand, { color: themeColors.textSecondary }]}>
+              {formatBrand(domiciliation.brand)}
+            </Text>
+            <Text style={[styles.cardNumber, { color: themeColors.textPrimary }]}>
+              {maskedNumber(domiciliation.card_no)}
+            </Text>
             
             <View style={styles.cardMeta}>
               <View style={styles.metaItem}>
-                <Icon name="calendar-outline" size={14} color="#999" />
-                <Text style={styles.cardExpiry}>
+                <Icon name="calendar-outline" size={14} color={themeColors.textTertiary} />
+                <Text style={[styles.cardExpiry, { color: themeColors.textTertiary }]}>
                   {formatExpiry(domiciliation.exp_month, domiciliation.exp_year)}
                 </Text>
               </View>
               <View style={styles.metaItem}>
-                <Icon name="shield-check-outline" size={14} color="#34C759" />
-                <Text style={styles.verifiedText}>Verificada</Text>
+                <Icon 
+                  name="shield-check-outline" 
+                  size={14} 
+                  color={isDarkTheme ? '#A8C4A8' : '#34C759'} 
+                />
+                <Text style={[
+                  styles.verifiedText,
+                  { color: isDarkTheme ? '#A8C4A8' : '#34C759' }
+                ]}>
+                  Verificada
+                </Text>
               </View>
             </View>
           </View>
 
-          {/* ACCIONES */}
           <View style={styles.cardActions}>
             <TouchableOpacity 
-              style={styles.actionButton}
+              style={[styles.actionButton, { 
+                backgroundColor: isDarkTheme ? '#4A4A4A' : themeColors.textPrimary 
+              }]}
               onPress={saveDomiciliation}
               disabled={loading}
               activeOpacity={0.7}
             >
-              <Icon name="credit-card-refresh-outline" size={16} color="#FFF" />
-              <Text style={styles.actionButtonText}>
+              <Icon 
+                name="credit-card-refresh-outline" 
+                size={16} 
+                color="#FFF"
+              />
+              <Text style={[styles.actionButtonText, { color: '#FFF' }]}>
                 {loading ? 'Cargando...' : 'Cambiar'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity 
-              style={[styles.actionButton, styles.deleteButton]}
+              style={[styles.actionButton, styles.deleteButton, { 
+                backgroundColor: themeColors.backgroundCard,
+                borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.08)' : '#FFE5E5' 
+              }]}
               onPress={() => setAlerts({
                 type: 'confirmDelete',
                 title: 'Eliminar método de pago',
@@ -345,8 +425,16 @@ export const AddDomiciliation = ({
               disabled={loading}
               activeOpacity={0.7}
             >
-              <Icon name="delete-outline" size={16} color="#FF6B6B" />
-              <Text style={[styles.actionButtonText, styles.deleteButtonText]}>
+              <Icon 
+                name="delete-outline" 
+                size={16} 
+                color={isDarkTheme ? '#D0A8A0' : '#FF6B6B'} 
+              />
+              <Text style={[
+                styles.actionButtonText, 
+                styles.deleteButtonText,
+                { color: isDarkTheme ? '#D0A8A0' : '#FF6B6B' }
+              ]}>
                 Eliminar
               </Text>
             </TouchableOpacity>
@@ -354,15 +442,13 @@ export const AddDomiciliation = ({
         </View>
       )}
 
-      {/* FOOTER DE SEGURIDAD */}
       <View style={styles.footer}>
-        <Icon name="lock-outline" size={14} color="#999" />
-        <Text style={styles.footerText}>
+        <Icon name="lock-outline" size={14} color={themeColors.textTertiary} />
+        <Text style={[styles.footerText, { color: themeColors.textTertiary }]}>
           Tus datos están protegidos
         </Text>
       </View>
 
-      {/* MODAL DE MENSAJES */}
       <PaperMessages
         visible={alerts.type !== ''}
         title={alerts.title}
@@ -390,7 +476,6 @@ export const AddDomiciliation = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFF',
     marginTop: 12,
     paddingHorizontal: 20,
     paddingVertical: 20,
@@ -398,30 +483,24 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#000',
     marginBottom: 16,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  
-  // ===== ADD CARD =====
   addCard: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 18,
     paddingHorizontal: 16,
-    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
     borderStyle: 'dashed',
   },
   addCardIcon: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
@@ -437,21 +516,15 @@ const styles = StyleSheet.create({
   addCardTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 3,
   },
   addCardSubtitle: {
     fontSize: 12,
-    color: '#666',
   },
-  
-  // ===== SAVED CARD =====
   savedCard: {
-    backgroundColor: '#FAFAFA',
     borderRadius: 14,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
     marginBottom: 12,
   },
   cardHeader: {
@@ -470,7 +543,6 @@ const styles = StyleSheet.create({
   activeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E8F5E9',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -479,7 +551,6 @@ const styles = StyleSheet.create({
   activeBadgeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#34C759',
   },
   cardInfo: {
     marginBottom: 18,
@@ -487,7 +558,6 @@ const styles = StyleSheet.create({
   cardBrand: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#666',
     marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -495,7 +565,6 @@ const styles = StyleSheet.create({
   cardNumber: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
     letterSpacing: 2,
     marginBottom: 12,
   },
@@ -510,16 +579,12 @@ const styles = StyleSheet.create({
   },
   cardExpiry: {
     fontSize: 13,
-    color: '#999',
     fontWeight: '500',
   },
   verifiedText: {
     fontSize: 13,
-    color: '#34C759',
     fontWeight: '600',
   },
-  
-  // ===== ACTIONS =====
   cardActions: {
     flexDirection: 'row',
     gap: 10,
@@ -527,7 +592,6 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     height: 44,
-    backgroundColor: '#000',
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -535,20 +599,15 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   actionButtonText: {
-    color: '#FFF',
     fontSize: 14,
     fontWeight: '600',
   },
   deleteButton: {
-    backgroundColor: '#FFF',
     borderWidth: 1,
-    borderColor: '#FFE5E5',
   },
   deleteButtonText: {
-    color: '#FF6B6B',
+    // Color se aplica dinámicamente
   },
-  
-  // ===== FOOTER =====
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -558,7 +617,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: '#999',
     fontWeight: '500',
   },
 });

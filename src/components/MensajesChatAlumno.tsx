@@ -8,6 +8,7 @@ import endeApi from '../api/estudianteAPI';
 import { AuthContext } from '../context/AuthContext';
 import { formatDateHour } from '../hooks/useFormats';
 import { LoadingScreen } from '../screens/LoadingScreen';
+import { useTheme } from '../context/ThemeContext';
 
 interface MensajesChatAlumnoProps {
     id_sal: number;
@@ -31,6 +32,7 @@ interface respMsg {
 }
 
 export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=300,placeHolderInputTxt='Escribe un mensaje...'}:MensajesChatAlumnoProps) => {
+  const { colors: themeColors, theme } = useTheme();
   const [mensajes, setMensajes] = useState([]);
   const [enviando, setEnviando] = useState(false);
   const [msgChat, setMsgChat] = useState('');
@@ -42,6 +44,11 @@ export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=3
   
   let titleDate = '';
   let viewTitleDate = false;
+
+  const msgSentBg = theme === 'dark' ? '#FFFFFF' : '#000000';
+  const msgSentText = theme === 'dark' ? '#000000' : '#FFFFFF';
+  const msgReceivedBg = themeColors.backgroundCard;
+  const msgReceivedText = themeColors.textPrimary;
 
   useEffect(() => {
     loadMessages();
@@ -100,7 +107,7 @@ export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=3
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <ScrollView 
         style={[styles.chatHistory, {height: heightChatHistory as number || undefined}]}
         contentContainerStyle={styles.chatContent}
@@ -111,8 +118,8 @@ export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=3
           <RefreshControl 
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#000"
-            colors={['#000']}
+            tintColor={themeColors.textPrimary}
+            colors={[themeColors.textPrimary]}
           />
         }
       >
@@ -139,46 +146,104 @@ export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=3
               <View key={mensaje.id_men} style={[styles.messageContainer, msgAlumn && styles.messageContainerRight]}>
                 {viewTitleDate && (
                   <View style={styles.dateDivider}>
-                    <View style={styles.dateLine} />
-                    <Text style={styles.dateText}>{fecha}</Text>
-                    <View style={styles.dateLine} />
+                    <View style={[styles.dateLine, { backgroundColor: themeColors.borderGray }]} />
+                    <Text style={[styles.dateText, { color: themeColors.textSecondary }]}>{fecha}</Text>
+                    <View style={[styles.dateLine, { backgroundColor: themeColors.borderGray }]} />
                   </View>
                 )}
                 
                 {mensaje.men_men ? (
-                  <View style={[styles.messageBubble, msgAlumn ? styles.messageBubbleSent : styles.messageBubbleReceived]}>
+                  <View style={[
+                    styles.messageBubble, 
+                    msgAlumn 
+                      ? [styles.messageBubbleSent, { backgroundColor: msgSentBg }]
+                      : [styles.messageBubbleReceived, { backgroundColor: msgReceivedBg }]
+                  ]}>
                     <View style={styles.messageHeader}>
-                      <View style={[styles.typeBadge, msgAlumn ? styles.typeBadgeSent : styles.typeBadgeReceived]}>
-                        <Text style={[styles.typeText, msgAlumn && styles.typeTextSent]}>{mensaje.tip_men}</Text>
+                      <View style={[
+                        styles.typeBadge, 
+                        msgAlumn 
+                          ? { backgroundColor: 'rgba(0,0,0,0.1)' }
+                          : [styles.typeBadgeReceived, { backgroundColor: themeColors.backgroundGray }]
+                      ]}>
+                        <Text style={[
+                          styles.typeText, 
+                          msgAlumn 
+                            ? { color: msgSentText }
+                            : { color: themeColors.textSecondary }
+                        ]}>
+                          {mensaje.tip_men}
+                        </Text>
                       </View>
-                      <Text style={[styles.userName, msgAlumn && styles.userNameSent]}>{mensaje.nom_usu_men}</Text>
+                      <Text style={[
+                        styles.userName, 
+                        msgAlumn 
+                          ? { color: msgSentText, opacity: 0.7 }
+                          : { color: themeColors.textSecondary }
+                      ]}>
+                        {mensaje.nom_usu_men}
+                      </Text>
                     </View>
                     
-                    <Text style={[styles.messageText, msgAlumn && styles.messageTextSent]}>
+                    <Text style={[
+                      styles.messageText, 
+                      msgAlumn 
+                        ? { color: msgSentText }
+                        : { color: msgReceivedText }
+                    ]}>
                       {mensaje.men_men}
                     </Text>
                     
                     <View style={styles.messageFooter}>
-                      <Text style={[styles.timeText, msgAlumn && styles.timeTextSent]}>
+                      <Text style={[
+                        styles.timeText, 
+                        msgAlumn 
+                          ? { color: msgSentText, opacity: 0.6 }
+                          : { color: themeColors.textTertiary }
+                      ]}>
                         {`${hor}:${min} ${amPm}`}
                       </Text>
                       {msgAlumn && (
                         <Icon 
                           name={mensaje.est_men_dest === 'Visto' ? 'check-all' : 'check'} 
                           size={14} 
-                          color={mensaje.est_men_dest === 'Visto' ? '#34C759' : '#999'} 
+                          color={mensaje.est_men_dest === 'Visto' ? '#34C759' : (theme === 'dark' ? '#666' : '#999')} 
                           style={styles.checkIcon}
                         />
                       )}
                     </View>
                   </View>
                 ) : mensaje.arc_men && (
-                  <View style={[styles.fileBubble, msgAlumn ? styles.fileBubbleSent : styles.fileBubbleReceived]}>
+                  <View style={[
+                    styles.fileBubble, 
+                    msgAlumn 
+                      ? [styles.fileBubbleSent, { backgroundColor: msgSentBg }]
+                      : [styles.fileBubbleReceived, { backgroundColor: msgReceivedBg }]
+                  ]}>
                     <View style={styles.messageHeader}>
-                      <View style={[styles.typeBadge, msgAlumn ? styles.typeBadgeSent : styles.typeBadgeReceived]}>
-                        <Text style={[styles.typeText, msgAlumn && styles.typeTextSent]}>{mensaje.tip_men}</Text>
+                      <View style={[
+                        styles.typeBadge, 
+                        msgAlumn 
+                          ? { backgroundColor: 'rgba(0,0,0,0.1)' }
+                          : [styles.typeBadgeReceived, { backgroundColor: themeColors.backgroundGray }]
+                      ]}>
+                        <Text style={[
+                          styles.typeText, 
+                          msgAlumn 
+                            ? { color: msgSentText }
+                            : { color: themeColors.textSecondary }
+                        ]}>
+                          {mensaje.tip_men}
+                        </Text>
                       </View>
-                      <Text style={[styles.userName, msgAlumn && styles.userNameSent]}>{mensaje.nom_usu_men}</Text>
+                      <Text style={[
+                        styles.userName, 
+                        msgAlumn 
+                          ? { color: msgSentText, opacity: 0.7 }
+                          : { color: themeColors.textSecondary }
+                      ]}>
+                        {mensaje.nom_usu_men}
+                      </Text>
                     </View>
                     
                     {isImg && (
@@ -191,23 +256,41 @@ export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=3
                     )}
                     
                     <TouchableOpacity 
-                      style={styles.downloadButton}
+                      style={[styles.downloadButton, { 
+                        backgroundColor: msgAlumn 
+                          ? 'rgba(0,0,0,0.1)' 
+                          : themeColors.backgroundGray 
+                      }]}
                       onPress={()=>fnDownloadFile('https://plataforma.ahjende.com/archivos/'+mensaje.arc_men,mensaje.arc_men ?? '')}
                       activeOpacity={0.7}
                     >
-                      <Icon name="download" size={18} color="#666" />
-                      <Text style={styles.downloadText} numberOfLines={1}>{mensaje.arc_men}</Text>
+                      <Icon 
+                        name="download" 
+                        size={18} 
+                        color={msgAlumn ? msgSentText : themeColors.textSecondary} 
+                      />
+                      <Text style={[
+                        styles.downloadText, 
+                        { color: msgAlumn ? msgSentText : themeColors.textSecondary }
+                      ]} numberOfLines={1}>
+                        {mensaje.arc_men}
+                      </Text>
                     </TouchableOpacity>
                     
                     <View style={styles.messageFooter}>
-                      <Text style={[styles.timeText, msgAlumn && styles.timeTextSent]}>
+                      <Text style={[
+                        styles.timeText, 
+                        msgAlumn 
+                          ? { color: msgSentText, opacity: 0.6 }
+                          : { color: themeColors.textTertiary }
+                      ]}>
                         {`${hor}:${min} ${amPm}`}
                       </Text>
                       {msgAlumn && (
                         <Icon 
                           name={mensaje.est_men_dest === 'Visto' ? 'check-all' : 'check'} 
                           size={14} 
-                          color={mensaje.est_men_dest === 'Visto' ? '#34C759' : '#999'} 
+                          color={mensaje.est_men_dest === 'Visto' ? '#34C759' : (theme === 'dark' ? '#666' : '#999')} 
                           style={styles.checkIcon}
                         />
                       )}
@@ -219,38 +302,44 @@ export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=3
           })
         ) : (
           <View style={styles.emptyState}>
-            <Icon name="message-outline" size={64} color="#E0E0E0" />
-            <Text style={styles.emptyStateText}>No hay mensajes</Text>
-            <Text style={styles.emptyStateSubtext}>Inicia la conversación</Text>
+            <Icon name="message-outline" size={64} color={themeColors.borderGray} />
+            <Text style={[styles.emptyStateText, { color: themeColors.textSecondary }]}>No hay mensajes</Text>
+            <Text style={[styles.emptyStateSubtext, { color: themeColors.textTertiary }]}>Inicia la conversación</Text>
           </View>
         )}
       </ScrollView>
 
-      {/* INPUT DE MENSAJE */}
-      <View style={styles.inputContainer}>
-        <View style={styles.inputWrapper}>
+      <View style={[styles.inputContainer, { 
+        backgroundColor: themeColors.backgroundCard,
+        borderTopColor: themeColors.borderGray 
+      }]}>
+        <View style={[styles.inputWrapper, { backgroundColor: themeColors.backgroundGray }]}>
           <TextInput
             multiline
             numberOfLines={2}
             editable={!enviando}
             onChangeText={text => setMsgChat(text)}
-            style={styles.textInput}
+            style={[styles.textInput, { color: themeColors.textPrimary }]}
             placeholder={placeHolderInputTxt}
-            placeholderTextColor="#999"
+            placeholderTextColor={themeColors.textTertiary}
             value={msgChat}
           />
         </View>
         
         <TouchableOpacity 
-          style={[styles.sendButton, enviando && styles.sendButtonDisabled]}
+          style={[
+            styles.sendButton, 
+            { backgroundColor: theme === 'dark' ? '#FFFFFF' : '#000000' },
+            enviando && styles.sendButtonDisabled
+          ]}
           onPress={validarMensaje}
           disabled={enviando || msgChat.trim() === ''}
           activeOpacity={0.7}
         >
           {enviando ? (
-            <Icon name="loading" size={22} color="#FFF" />
+            <Icon name="loading" size={22} color={theme === 'dark' ? '#000000' : '#FFFFFF'} />
           ) : (
-            <Icon name="send" size={22} color="#FFF" />
+            <Icon name="send" size={22} color={theme === 'dark' ? '#000000' : '#FFFFFF'} />
           )}
         </TouchableOpacity>
       </View>
@@ -261,7 +350,6 @@ export const MensajesChatAlumno = ({id_sal,welcomeMsg,id_pro,heightChatHistory=3
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   chatHistory: {
     flex: 1,
@@ -287,12 +375,10 @@ const styles = StyleSheet.create({
   dateLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#E0E0E0',
   },
   dateText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#666',
     paddingHorizontal: 12,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -308,11 +394,9 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   messageBubbleReceived: {
-    backgroundColor: '#FFF',
     borderBottomLeftRadius: 4,
   },
   messageBubbleSent: {
-    backgroundColor: '#000',
     borderBottomRightRadius: 4,
   },
   messageHeader: {
@@ -327,38 +411,21 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   typeBadgeReceived: {
-    backgroundColor: '#F5F5F5',
-  },
-  typeBadgeSent: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   typeText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#666',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-  },
-  typeTextSent: {
-    color: '#FFF',
   },
   userName: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#666',
-  },
-  userNameSent: {
-    color: 'rgba(255,255,255,0.8)',
   },
   messageText: {
     fontSize: 15,
-    color: '#000',
     lineHeight: 20,
     marginBottom: 4,
-    fontFamily: 'NotoColorEmoji',
-  },
-  messageTextSent: {
-    color: '#FFF',
     fontFamily: 'NotoColorEmoji',
   },
   messageFooter: {
@@ -369,11 +436,7 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 11,
-    color: '#999',
     fontWeight: '500',
-  },
-  timeTextSent: {
-    color: 'rgba(255,255,255,0.7)',
   },
   checkIcon: {
     marginLeft: 4,
@@ -389,11 +452,9 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   fileBubbleReceived: {
-    backgroundColor: '#FFF',
     borderBottomLeftRadius: 4,
   },
   fileBubbleSent: {
-    backgroundColor: '#000',
     borderBottomRightRadius: 4,
   },
   messageImage: {
@@ -405,7 +466,6 @@ const styles = StyleSheet.create({
   downloadButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
     padding: 10,
     borderRadius: 8,
     marginVertical: 6,
@@ -414,7 +474,6 @@ const styles = StyleSheet.create({
   downloadText: {
     flex: 1,
     fontSize: 13,
-    color: '#666',
     fontWeight: '500',
   },
   emptyState: {
@@ -425,12 +484,10 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#666',
     marginTop: 16,
   },
   emptyStateSubtext: {
     fontSize: 14,
-    color: '#999',
     marginTop: 8,
   },
   inputContainer: {
@@ -438,14 +495,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFF',
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
     gap: 10,
   },
   inputWrapper: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -454,7 +508,6 @@ const styles = StyleSheet.create({
   },
   textInput: {
     fontSize: 15,
-    color: '#000',
     maxHeight: 100,
     paddingVertical: 0,
     fontFamily: 'NotoColorEmoji',
@@ -463,7 +516,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

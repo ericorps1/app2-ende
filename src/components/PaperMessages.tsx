@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { View, Text, Modal, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, Modal, StyleSheet, TouchableOpacity, ActivityIndicator, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext';
 
 interface PropsPaperMessages {
     visible: boolean;
@@ -25,14 +26,23 @@ const PaperMessages = ({
   message,
   buttonText,
   dismissable,
-  colorTitle = '#000',
-  colorBody = '#666',
+  colorTitle,
+  colorBody,
   onDismiss = () => {},
   pressButton = () => {},
   btnTxtCancel = '',
   evtBtnCancel = () => {},
   loading = false
 }: PropsPaperMessages) => {
+  const { theme, colors: themeColors } = useTheme();
+  const colorScheme = useColorScheme();
+  
+  // 🌙 Detectar dark mode
+  const isDarkMode = theme === 'dark' || colorScheme === 'dark';
+  
+  // 🎨 Colores con fallback al tema
+  const finalColorTitle = colorTitle || themeColors.textPrimary;
+  const finalColorBody = colorBody || themeColors.textSecondary;
   
   const getIconByType = () => {
     if (title.toLowerCase().includes('error') || title.toLowerCase().includes('sin intentos')) {
@@ -62,7 +72,7 @@ const PaperMessages = ({
         onPress={dismissable && !loading ? onDismiss : undefined}
       >
         <TouchableOpacity 
-          style={styles.container}
+          style={[styles.container, { backgroundColor: themeColors.backgroundCard }]}
           activeOpacity={1}
           onPress={(e) => e.stopPropagation()}
         >
@@ -72,24 +82,30 @@ const PaperMessages = ({
           </View>
 
           {/* TITLE */}
-          <Text style={[styles.title, { color: colorTitle }]}>{title}</Text>
+          <Text style={[styles.title, { color: finalColorTitle }]}>{title}</Text>
 
           {/* MESSAGE */}
-          <Text style={[styles.message, { color: colorBody }]}>{message}</Text>
+          <Text style={[styles.message, { color: finalColorBody }]}>{message}</Text>
 
           {/* BUTTONS */}
           <View style={styles.buttonsContainer}>
             {btnTxtCancel !== '' && (
               <TouchableOpacity
-                style={[styles.button, styles.buttonSecondary]}
+                style={[styles.button, styles.buttonSecondary, { 
+                  backgroundColor: themeColors.backgroundGray 
+                }]}
                 onPress={evtBtnCancel}
                 disabled={loading}
                 activeOpacity={0.7}
               >
                 {loading ? (
-                  <ActivityIndicator size="small" color="#666" />
+                  <ActivityIndicator size="small" color={themeColors.textSecondary} />
                 ) : (
-                  <Text style={styles.buttonSecondaryText}>{btnTxtCancel}</Text>
+                  <Text style={[styles.buttonSecondaryText, { 
+                    color: themeColors.textSecondary 
+                  }]}>
+                    {btnTxtCancel}
+                  </Text>
                 )}
               </TouchableOpacity>
             )}
@@ -97,6 +113,7 @@ const PaperMessages = ({
               style={[
                 styles.button,
                 styles.buttonPrimary,
+                { backgroundColor: themeColors.textPrimary },
                 btnTxtCancel === '' && styles.buttonFull
               ]}
               onPress={pressButton}
@@ -104,9 +121,13 @@ const PaperMessages = ({
               activeOpacity={0.7}
             >
               {loading ? (
-                <ActivityIndicator size="small" color="#FFF" />
+                <ActivityIndicator size="small" color={themeColors.backgroundCard} />
               ) : (
-                <Text style={styles.buttonPrimaryText}>{buttonText}</Text>
+                <Text style={[styles.buttonPrimaryText, { 
+                  color: themeColors.backgroundCard 
+                }]}>
+                  {buttonText}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -125,7 +146,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   container: {
-    backgroundColor: '#FFF',
     borderRadius: 16,
     padding: 24,
     width: '100%',
@@ -174,20 +194,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   buttonPrimary: {
-    backgroundColor: '#000',
+    // Color dinámico aplicado inline
   },
   buttonSecondary: {
-    backgroundColor: '#F5F5F5',
+    // Color dinámico aplicado inline
   },
   buttonPrimaryText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#FFF',
   },
   buttonSecondaryText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#666',
   },
 });
 

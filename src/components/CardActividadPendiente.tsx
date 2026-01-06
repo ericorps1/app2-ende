@@ -7,6 +7,7 @@ import { updateInfo } from '../features/chatBloque/dataChatSlice';
 import { useAppDispatch } from '../app/hooks';
 import endeApi from '../api/estudianteAPI';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext';
 
 interface PropsCardActividadPendiente {
   actividadPendiente: ActividadPendiente;
@@ -14,6 +15,7 @@ interface PropsCardActividadPendiente {
 }
 
 export const CardActividadPendiente = ({actividadPendiente, viewType}:PropsCardActividadPendiente) => {
+  const { colors: themeColors } = useTheme();
   const dispatch = useAppDispatch();
   
   const getIconData = (tipo: string) => {
@@ -61,29 +63,32 @@ export const CardActividadPendiente = ({actividadPendiente, viewType}:PropsCardA
   return (
     <TouchableOpacity
       activeOpacity={0.7}
-      style={styles.container}
+      style={[styles.container, { 
+        backgroundColor: themeColors.backgroundCard,
+        borderBottomColor: themeColors.borderGray
+      }]}
       onPress={pressActPendiente}
     >
       <View style={styles.leftSection}>
-        <View style={styles.iconWrapper}>
-          <Icon name={iconData.icon} size={20} color="#000" />
+        <View style={[styles.iconWrapper, { backgroundColor: themeColors.backgroundGray }]}>
+          <Icon name={iconData.icon} size={20} color={themeColors.textPrimary} />
         </View>
         <View style={styles.pendingDot} />
       </View>
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={[styles.title, { color: themeColors.textPrimary }]} numberOfLines={1}>
           {iconData.label}
         </Text>
-        <Text style={styles.subtitle} numberOfLines={2}>
+        <Text style={[styles.subtitle, { color: themeColors.textSecondary }]} numberOfLines={2}>
           {actividadPendiente.actividad}
         </Text>
         {viewType === 'normal' && (
-          <Text style={styles.dateText}>
+          <Text style={[styles.dateText, { color: themeColors.textTertiary }]}>
             Hasta: {formatDateActividades(actividadPendiente.fin)}
           </Text>
         )}
       </View>
-      <Icon name="chevron-right" size={20} color="#D0D0D0" />
+      <Icon name="chevron-right" size={20} color={themeColors.textTertiary} />
     </TouchableOpacity>
   )
 }
@@ -94,9 +99,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 20,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   leftSection: {
     flexDirection: 'row',
@@ -107,7 +110,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -125,17 +127,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#000',
     marginBottom: 3,
   },
   subtitle: {
     fontSize: 14,
-    color: '#666',
     lineHeight: 19,
     marginBottom: 4,
   },
   dateText: {
     fontSize: 13,
-    color: '#999',
   },
 });

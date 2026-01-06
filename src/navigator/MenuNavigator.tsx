@@ -20,10 +20,12 @@ import { useAppDispatch } from '../app/hooks';
 import { addNotifications } from '../features/notifications/dataNotificationsSlice';
 import { Documentacion } from '../screens/Documentacion';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext';
 
 const Drawer = createDrawerNavigator();
 
 export default function MenuNavigator() {
+  const { colors: themeColors } = useTheme();
   const { data_alumno, logOut } = useContext( AuthContext );
   const [modalInactiveUser, setmodalInactiveUser] = useState(data_alumno?.est_alu && data_alumno?.est_alu !== 'Activo');
 
@@ -49,9 +51,12 @@ export default function MenuNavigator() {
         <Drawer.Navigator
           drawerContent={ (props:any) => <ContenidoMenu { ...props }/> }
           screenOptions={{
-            drawerActiveBackgroundColor: '#000',
-            drawerActiveTintColor: '#FFF',
-            drawerInactiveTintColor: '#666',
+            drawerStyle: {
+              backgroundColor: themeColors.background,
+            },
+            drawerActiveBackgroundColor: themeColors.textPrimary,
+            drawerActiveTintColor: themeColors.backgroundCard,
+            drawerInactiveTintColor: themeColors.textSecondary,
             drawerLabelStyle: {
               fontSize: 14,
               fontWeight: '600',
@@ -63,17 +68,18 @@ export default function MenuNavigator() {
               paddingHorizontal: 8,
             },
             headerStyle: {
-              backgroundColor: '#FFF',
+              backgroundColor: themeColors.backgroundCard,
               elevation: 0,
               shadowOpacity: 0,
               borderBottomWidth: 1,
-              borderBottomColor: '#F0F0F0',
+              borderBottomColor: themeColors.borderGray,
             },
             headerTitleStyle: {
               fontSize: 18,
               fontWeight: '700',
-              color: '#000',
+              color: themeColors.textPrimary,
             },
+            headerTintColor: themeColors.textPrimary,
             headerRight: () => <HeaderRight/>,
           }}
         >
@@ -155,6 +161,7 @@ export default function MenuNavigator() {
 }
 
 const ContenidoMenu = (props: DrawerContentComponentProps) => {
+  const { theme, toggleTheme, colors: themeColors } = useTheme();
   const navigation = props.navigation;
   const { logOut, data_alumno } = useContext( AuthContext );
   const [materiasAlumno, setMateriasAlumno] = useState([])
@@ -178,40 +185,50 @@ const ContenidoMenu = (props: DrawerContentComponentProps) => {
   }
 
   return (
-    <View style={styles.drawerContainer}>
+    <View style={[styles.drawerContainer, { backgroundColor: themeColors.background }]}>
       <DrawerContentScrollView showsVerticalScrollIndicator={false}>
         {/* HEADER PROFILE */}
-        <TouchableOpacity 
-          style={styles.profileSection}
-          onPress={() => navigation.navigate('Cuenta')}
-          activeOpacity={0.7}
-        >
-          <View style={styles.profileContent}>
+        <View style={[styles.profileSection, { backgroundColor: themeColors.backgroundCard }]}>
+          <TouchableOpacity 
+            style={styles.profileContent}
+            onPress={() => navigation.navigate('Cuenta')}
+            activeOpacity={0.7}
+          >
             {data_alumno?.fot_alu ? (
               <Image 
                 source={{ uri: 'https://plataforma.ahjende.com/uploads/'+data_alumno?.fot_alu}}
                 style={styles.avatar}
               />
             ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarText}>
+              <View style={[styles.avatarPlaceholder, { backgroundColor: themeColors.textPrimary }]}>
+                <Text style={[styles.avatarText, { color: themeColors.backgroundCard }]}>
                   {FormatNameAvatar(data_alumno?.nom_alu)}
                 </Text>
               </View>
             )}
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName} numberOfLines={2}>
+              <Text style={[styles.profileName, { color: themeColors.textPrimary }]} numberOfLines={2}>
                 {data_alumno?.nom_alu}
               </Text>
-              <View style={styles.profileBadge}>
-                <Icon name="chevron-right" size={16} color="#999" />
-              </View>
             </View>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+          
+          {/* THEME TOGGLE BUTTON - COMO EN LOGIN */}
+          <TouchableOpacity 
+            style={[styles.themeToggleButton, { backgroundColor: themeColors.backgroundCard }]}
+            onPress={toggleTheme}
+            activeOpacity={0.7}
+          >
+            <Icon 
+              name={theme === 'dark' ? 'weather-night' : 'white-balance-sunny'} 
+              size={20} 
+              color={themeColors.textPrimary} 
+            />
+          </TouchableOpacity>
+        </View>
 
         {/* DIVIDER */}
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: themeColors.borderGray }]} />
 
         {/* MAIN MENU */}
         <DrawerItemList {...props} />
@@ -220,15 +237,17 @@ const ContenidoMenu = (props: DrawerContentComponentProps) => {
         {materiasAlumno.length > 0 && (
           <>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>MIS MATERIAS</Text>
+              <Text style={[styles.sectionTitle, { color: themeColors.textTertiary }]}>
+                MIS MATERIAS
+              </Text>
             </View>
             {materiasAlumno.map(({nom_mat, nom_gru, id_sub_hor}) => (
               <DrawerItem
                 key={nom_mat+'/'+nom_gru}
                 label={`${nom_mat} / ${nom_gru}`}
-                labelStyle={styles.materiaLabel}
+                labelStyle={[styles.materiaLabel, { color: themeColors.textSecondary }]}
                 icon={({ color, size }) => (
-                  <Icon name="book-outline" size={20} color="#999" />
+                  <Icon name="book-outline" size={20} color={themeColors.textTertiary} />
                 )}
                 onPress={() => navigation.navigate('Materias', {id_sub_hor, nom_mat})}
                 style={styles.materiaItem}
@@ -238,14 +257,14 @@ const ContenidoMenu = (props: DrawerContentComponentProps) => {
         )}
 
         {/* DIVIDER */}
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: themeColors.borderGray }]} />
 
         {/* LOGOUT */}
         <DrawerItem
           label="Cerrar sesión"
-          labelStyle={styles.logoutLabel}
+          labelStyle={[styles.logoutLabel, { color: themeColors.textPrimary }]}
           icon={({ color, size }) => (
-            <Icon name="logout" size={22} color="#E53935" />
+            <Icon name="logout" size={22} color={themeColors.textPrimary} />
           )}
           onPress={closeSession}
           style={styles.logoutItem}
@@ -256,13 +275,18 @@ const ContenidoMenu = (props: DrawerContentComponentProps) => {
       <TouchableOpacity 
         onPress={() => Linking.openURL('https://www.ahjende.com')} 
         activeOpacity={0.7}
-        style={styles.footer}
+        style={[styles.footer, { 
+          backgroundColor: themeColors.backgroundCard,
+          borderTopColor: themeColors.borderGray 
+        }]}
       >
         <Image
           source={require('../assets/ende-icon.png')}
           style={styles.footerLogo}
         />
-        <Text style={styles.footerText}>www.ahjende.com</Text>
+        <Text style={[styles.footerText, { color: themeColors.textSecondary }]}>
+          www.ahjende.com
+        </Text>
       </TouchableOpacity>
     </View>
   )
@@ -271,17 +295,19 @@ const ContenidoMenu = (props: DrawerContentComponentProps) => {
 const styles = StyleSheet.create({
   drawerContainer: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
   },
   profileSection: {
-    backgroundColor: '#FFF',
     marginBottom: 8,
     paddingVertical: 20,
     paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   profileContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   avatar: {
     width: 56,
@@ -292,39 +318,36 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFF',
   },
   profileInfo: {
     flex: 1,
     marginLeft: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
   },
   profileName: {
-    flex: 1,
     fontSize: 15,
     fontWeight: '700',
-    color: '#000',
   },
-  profileBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#F5F5F5',
+  // THEME TOGGLE BUTTON - EXACTO COMO EN LOGIN
+  themeToggleButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F0F0F0',
     marginVertical: 8,
   },
   sectionHeader: {
@@ -335,7 +358,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#999',
     letterSpacing: 0.5,
   },
   materiaItem: {
@@ -347,7 +369,6 @@ const styles = StyleSheet.create({
   materiaLabel: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#666',
   },
   logoutItem: {
     borderRadius: 8,
@@ -358,14 +379,11 @@ const styles = StyleSheet.create({
   logoutLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#E53935',
   },
   footer: {
     alignItems: 'center',
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    backgroundColor: '#FFF',
   },
   footerLogo: {
     width: 32,
@@ -375,6 +393,5 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#666',
   },
 });

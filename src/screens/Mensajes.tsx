@@ -7,6 +7,7 @@ import cafeApi from '../api/estudianteAPI';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext';
 
 interface listSala {
     id_sal: number;
@@ -20,6 +21,7 @@ interface listSala {
 }
 
 export const Mensajes = () => {
+    const { colors: themeColors } = useTheme();
     const { data_alumno } = useContext( AuthContext );
     const [allSalas, setAllSalas] = useState([]);
     const [salas, setSalas] = useState([]);
@@ -98,7 +100,7 @@ export const Mensajes = () => {
     const salasPrivadas = salas.filter((sala: listSala) => !sala.nom_sal);
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: themeColors.background }]}>
             <ScrollView 
                 style={styles.scrollView}
                 contentContainerStyle={styles.contentContainer}
@@ -108,13 +110,15 @@ export const Mensajes = () => {
                         refreshing={refreshing}
                         onRefresh={onRefresh}
                         progressViewOffset={10}
-                        tintColor="#000"
-                        colors={['#000']}
+                        tintColor={themeColors.textPrimary}
+                        colors={[themeColors.textPrimary]}
                     />
                 }
             >
-                {/* HERO HEADER */}
-                <View style={styles.heroSection}>
+                <View style={[styles.heroSection, { 
+                    backgroundColor: themeColors.backgroundCard,
+                    borderBottomColor: themeColors.borderGray 
+                }]}>
                     <View style={styles.heroContent}>
                         <FotoPerfil 
                             foto={data_alumno?.fot_alu ? data_alumno?.fot_alu : ''}
@@ -123,22 +127,23 @@ export const Mensajes = () => {
                             style={styles.heroAvatar}
                         />
                         <View style={styles.heroInfo}>
-                            <Text style={styles.heroGreeting}>Hola, {data_alumno?.nom_alu?.split(' ')[0]}</Text>
-                            <Text style={styles.heroSubtitle}>
+                            <Text style={[styles.heroGreeting, { color: themeColors.textPrimary }]}>
+                                Hola, {data_alumno?.nom_alu?.split(' ')[0]}
+                            </Text>
+                            <Text style={[styles.heroSubtitle, { color: themeColors.textSecondary }]}>
                                 {salas.length} {salas.length === 1 ? 'conversación activa' : 'conversaciones activas'}
                             </Text>
                         </View>
                     </View>
                 </View>
 
-                {/* SEARCH BAR */}
-                <View style={styles.searchSection}>
-                    <View style={styles.searchContainer}>
-                        <Icon name="magnify" size={20} color="#666" style={styles.searchIcon} />
+                <View style={[styles.searchSection, { backgroundColor: themeColors.backgroundCard }]}>
+                    <View style={[styles.searchContainer, { backgroundColor: themeColors.backgroundGray }]}>
+                        <Icon name="magnify" size={20} color={themeColors.textSecondary} style={styles.searchIcon} />
                         <TextInput
-                            style={styles.searchInput}
+                            style={[styles.searchInput, { color: themeColors.textPrimary }]}
                             placeholder="Buscar salas, mensajes..."
-                            placeholderTextColor="#999"
+                            placeholderTextColor={themeColors.textTertiary}
                             value={searchBarValue}
                             onChangeText={buscarSalas}
                         />
@@ -148,25 +153,23 @@ export const Mensajes = () => {
                                 activeOpacity={0.7}
                                 style={styles.clearButton}
                             >
-                                <Icon name="close-circle" size={20} color="#999" />
+                                <Icon name="close-circle" size={20} color={themeColors.textTertiary} />
                             </TouchableOpacity>
                         )}
                     </View>
                 </View>
 
-                {/* SALAS LIST */}
                 {salas.length > 0 ? (
                     <>
-                        {/* SALAS GRUPALES */}
                         {salasGrupales.length > 0 && (
-                            <View style={styles.section}>
+                            <View style={[styles.section, { backgroundColor: themeColors.backgroundCard }]}>
                                 <View style={styles.sectionHeader}>
                                     <View style={styles.sectionTitleContainer}>
-                                        <Icon name="account-group" size={16} color="#666" style={styles.sectionIcon} />
-                                        <Text style={styles.sectionTitle}>Salas grupales</Text>
+                                        <Icon name="account-group" size={16} color={themeColors.textSecondary} style={styles.sectionIcon} />
+                                        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>Salas grupales</Text>
                                     </View>
-                                    <View style={styles.countBadge}>
-                                        <Text style={styles.countBadgeText}>{salasGrupales.length}</Text>
+                                    <View style={[styles.countBadge, { backgroundColor: themeColors.backgroundGray }]}>
+                                        <Text style={[styles.countBadgeText, { color: themeColors.textSecondary }]}>{salasGrupales.length}</Text>
                                     </View>
                                 </View>
                                 {salasGrupales.map((sala: listSala) => 
@@ -186,16 +189,15 @@ export const Mensajes = () => {
                             </View>
                         )}
 
-                        {/* SALAS PRIVADAS (PROFESORES) */}
                         {salasPrivadas.length > 0 && (
-                            <View style={styles.section}>
+                            <View style={[styles.section, { backgroundColor: themeColors.backgroundCard }]}>
                                 <View style={styles.sectionHeader}>
                                     <View style={styles.sectionTitleContainer}>
-                                        <Icon name="account" size={16} color="#666" style={styles.sectionIcon} />
-                                        <Text style={styles.sectionTitle}>Profesores</Text>
+                                        <Icon name="account" size={16} color={themeColors.textSecondary} style={styles.sectionIcon} />
+                                        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>Profesores</Text>
                                     </View>
-                                    <View style={styles.countBadge}>
-                                        <Text style={styles.countBadgeText}>{salasPrivadas.length}</Text>
+                                    <View style={[styles.countBadge, { backgroundColor: themeColors.backgroundGray }]}>
+                                        <Text style={[styles.countBadgeText, { color: themeColors.textSecondary }]}>{salasPrivadas.length}</Text>
                                     </View>
                                 </View>
                                 {salasPrivadas.map((sala: listSala) => 
@@ -220,12 +222,12 @@ export const Mensajes = () => {
                         <Icon 
                             name={searchBarValue ? "message-off-outline" : "message-outline"} 
                             size={64} 
-                            color="#E0E0E0" 
+                            color={themeColors.borderGray}
                         />
-                        <Text style={styles.emptyStateText}>
+                        <Text style={[styles.emptyStateText, { color: themeColors.textSecondary }]}>
                             {searchBarValue ? 'No se encontraron salas' : 'No tienes conversaciones'}
                         </Text>
-                        <Text style={styles.emptyStateSubtext}>
+                        <Text style={[styles.emptyStateSubtext, { color: themeColors.textTertiary }]}>
                             {searchBarValue ? 'Intenta con otro término de búsqueda' : 'Tus mensajes aparecerán aquí'}
                         </Text>
                     </View>
@@ -238,7 +240,6 @@ export const Mensajes = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
     },
     scrollView: {
         flex: 1,
@@ -247,12 +248,10 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
     },
     heroSection: {
-        backgroundColor: '#FFF',
         paddingHorizontal: 20,
         paddingTop: 60,
         paddingBottom: 24,
         borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
     },
     heroContent: {
         flexDirection: 'row',
@@ -275,17 +274,14 @@ const styles = StyleSheet.create({
     heroGreeting: {
         fontSize: 24,
         fontWeight: '700',
-        color: '#000',
         marginBottom: 4,
         fontFamily: 'NotoColorEmoji',
     },
     heroSubtitle: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#666',
     },
     searchSection: {
-        backgroundColor: '#FFF',
         paddingHorizontal: 20,
         paddingTop: 16,
         paddingBottom: 20,
@@ -293,7 +289,6 @@ const styles = StyleSheet.create({
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F5F5F5',
         paddingHorizontal: 14,
         height: 44,
         borderRadius: 10,
@@ -304,7 +299,6 @@ const styles = StyleSheet.create({
     searchInput: {
         flex: 1,
         fontSize: 15,
-        color: '#000',
         paddingVertical: 0,
         fontFamily: 'NotoColorEmoji',
     },
@@ -312,7 +306,6 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     section: {
-        backgroundColor: '#FFF',
         marginTop: 12,
         paddingHorizontal: 20,
         paddingVertical: 16,
@@ -333,12 +326,10 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 13,
         fontWeight: '700',
-        color: '#000',
         textTransform: 'uppercase',
         letterSpacing: 0.5,
     },
     countBadge: {
-        backgroundColor: '#F5F5F5',
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 12,
@@ -346,7 +337,6 @@ const styles = StyleSheet.create({
     countBadgeText: {
         fontSize: 12,
         fontWeight: '700',
-        color: '#666',
     },
     imgSala: {
         width: 50,
@@ -366,13 +356,11 @@ const styles = StyleSheet.create({
     emptyStateText: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#666',
         marginTop: 16,
         textAlign: 'center',
     },
     emptyStateSubtext: {
         fontSize: 14,
-        color: '#999',
         marginTop: 8,
         textAlign: 'center',
     },

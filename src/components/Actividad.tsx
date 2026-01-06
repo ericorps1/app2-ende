@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { formatDateActividades } from '../hooks/useFormats';
 import { useIsFocused } from '@react-navigation/core';
 import cafeApi from '../api/estudianteAPI';
+import { useTheme } from '../context/ThemeContext'; // 👈 IMPORTAR
 
 interface ActividadProps {
   actividad: ActividadData;
@@ -13,6 +14,7 @@ interface ActividadProps {
 }
 
 export const Actividad = ({ actividad, onPress }: ActividadProps) => {
+  const { colors: themeColors } = useTheme(); // 👈 HOOK
   const [calAct, setCalAct] = useState({ pun_cal_act: 0, fec_cal_act: '', int_cal_act: 0 });
   const isFocused = useIsFocused();
 
@@ -59,19 +61,24 @@ export const Actividad = ({ actividad, onPress }: ActividadProps) => {
 
   return (
     <TouchableOpacity 
-      style={styles.container} 
+      style={[styles.container, { 
+        backgroundColor: themeColors.backgroundCard,
+        borderColor: themeColors.borderGray 
+      }]} 
       onPress={onPress}
       activeOpacity={0.7}
     >
       {/* HEADER CON ÍCONO Y STATUS */}
       <View style={styles.header}>
-        <View style={styles.iconContainer}>
-          <Icon name={iconName} size={24} color="#666" />
+        <View style={[styles.iconContainer, { backgroundColor: themeColors.backgroundGray }]}>
+          <Icon name={iconName} size={24} color={themeColors.textSecondary} />
         </View>
         
         <View style={styles.headerContent}>
-          <View style={styles.typeBadge}>
-            <Text style={styles.typeText}>{actividad.tipo}</Text>
+          <View style={[styles.typeBadge, { backgroundColor: themeColors.backgroundGray }]}>
+            <Text style={[styles.typeText, { color: themeColors.textSecondary }]}>
+              {actividad.tipo}
+            </Text>
           </View>
         </View>
 
@@ -81,23 +88,31 @@ export const Actividad = ({ actividad, onPress }: ActividadProps) => {
       </View>
 
       {/* TÍTULO */}
-      <Text style={styles.title} numberOfLines={2}>{actividad.titulo}</Text>
+      <Text style={[styles.title, { color: themeColors.textPrimary }]} numberOfLines={2}>
+        {actividad.titulo}
+      </Text>
 
       {/* PUNTOS */}
       <View style={styles.pointsSection}>
-        <View style={styles.pointCard}>
-          <Icon name="star-outline" size={14} color="#666" />
+        <View style={[styles.pointCard, { backgroundColor: themeColors.backgroundGray }]}>
+          <Icon name="star-outline" size={14} color={themeColors.textSecondary} />
           <View style={styles.pointInfo}>
-            <Text style={styles.pointLabel}>Puntos totales</Text>
-            <Text style={styles.pointValue}>{actividad.puntaje}</Text>
+            <Text style={[styles.pointLabel, { color: themeColors.textSecondary }]}>
+              Puntos totales
+            </Text>
+            <Text style={[styles.pointValue, { color: themeColors.textPrimary }]}>
+              {actividad.puntaje}
+            </Text>
           </View>
         </View>
 
-        <View style={styles.pointCard}>
-          <Icon name="star" size={14} color="#666" />
+        <View style={[styles.pointCard, { backgroundColor: themeColors.backgroundGray }]}>
+          <Icon name="star" size={14} color={themeColors.textSecondary} />
           <View style={styles.pointInfo}>
-            <Text style={styles.pointLabel}>Puntos obtenidos</Text>
-            <Text style={styles.pointValue}>
+            <Text style={[styles.pointLabel, { color: themeColors.textSecondary }]}>
+              Puntos obtenidos
+            </Text>
+            <Text style={[styles.pointValue, { color: themeColors.textPrimary }]}>
               {calAct.pun_cal_act || 'Sin calificar'}
             </Text>
           </View>
@@ -105,14 +120,18 @@ export const Actividad = ({ actividad, onPress }: ActividadProps) => {
       </View>
 
       {/* FECHAS */}
-      <View style={styles.datesSection}>
+      <View style={[styles.datesSection, { borderColor: themeColors.borderGray }]}>
         <View style={styles.dateRow}>
-          <Icon name="calendar-start" size={13} color="#999" />
-          <Text style={styles.dateText}>{formatDateActividades(actividad.inicio)}</Text>
+          <Icon name="calendar-start" size={13} color={themeColors.textTertiary} />
+          <Text style={[styles.dateText, { color: themeColors.textSecondary }]}>
+            {formatDateActividades(actividad.inicio)}
+          </Text>
         </View>
         <View style={styles.dateRow}>
-          <Icon name="calendar-end" size={13} color="#999" />
-          <Text style={styles.dateText}>{formatDateActividades(actividad.fin)}</Text>
+          <Icon name="calendar-end" size={13} color={themeColors.textTertiary} />
+          <Text style={[styles.dateText, { color: themeColors.textSecondary }]}>
+            {formatDateActividades(actividad.fin)}
+          </Text>
         </View>
       </View>
 
@@ -121,7 +140,7 @@ export const Actividad = ({ actividad, onPress }: ActividadProps) => {
         <View style={[styles.statusLabel, { backgroundColor: colorStatus + '15' }]}>
           <Text style={[styles.statusText, { color: colorStatus }]}>{statusAct}</Text>
         </View>
-        <Icon name="chevron-right" size={18} color="#D0D0D0" />
+        <Icon name="chevron-right" size={18} color={themeColors.borderGray} />
       </View>
     </TouchableOpacity>
   );
@@ -129,7 +148,6 @@ export const Actividad = ({ actividad, onPress }: ActividadProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFF',
     borderRadius: 14,
     marginVertical: 6,
     padding: 14,
@@ -139,7 +157,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
   },
   header: {
     flexDirection: 'row',
@@ -150,7 +167,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -160,7 +176,6 @@ const styles = StyleSheet.create({
   },
   typeBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#F5F5F5',
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 7,
@@ -168,7 +183,6 @@ const styles = StyleSheet.create({
   typeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#666',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -182,7 +196,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#000',
     marginBottom: 12,
     lineHeight: 20,
   },
@@ -195,7 +208,6 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FAFAFA',
     padding: 10,
     borderRadius: 9,
     gap: 8,
@@ -205,21 +217,18 @@ const styles = StyleSheet.create({
   },
   pointLabel: {
     fontSize: 10,
-    color: '#666',
     marginBottom: 2,
     fontWeight: '500',
   },
   pointValue: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#000',
   },
   datesSection: {
     gap: 6,
     paddingVertical: 10,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#F0F0F0',
     marginBottom: 10,
   },
   dateRow: {
@@ -229,7 +238,6 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 11,
-    color: '#666',
     fontWeight: '500',
   },
   bottomBar: {

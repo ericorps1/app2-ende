@@ -6,12 +6,14 @@ import { ActividadPendiente } from '../interfaces/appInterfaces';
 import { CardActividadPendiente } from './CardActividadPendiente';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext';
 
 export const ActividadesPendientes = () => {
+  const { colors: themeColors } = useTheme();
   const [loadingAct, setLoadingAct] = useState(false);
   const [actividadesPendientes, setActividadesPendientes] = useState([]);
   const { data_alumno } = useContext(AuthContext);
-  const [viewContent, setViewContent] = useState(true); // Cambiar de false a true
+  const [viewContent, setViewContent] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
@@ -38,7 +40,10 @@ export const ActividadesPendientes = () => {
   const totalActividades = actividadesPendientes.length;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { 
+      backgroundColor: themeColors.backgroundCard,
+      borderColor: themeColors.borderGray 
+    }]}>
       {/* HEADER */}
       <TouchableOpacity
         style={styles.header}
@@ -46,13 +51,15 @@ export const ActividadesPendientes = () => {
         onPress={() => setViewContent(!viewContent)}
       >
         <View style={styles.headerLeft}>
-          <View style={styles.iconContainer}>
-            <Icon name="clipboard-list-outline" size={22} color="#000" />
+          <View style={[styles.iconContainer, { backgroundColor: themeColors.backgroundGray }]}>
+            <Icon name="clipboard-list-outline" size={22} color={themeColors.textPrimary} />
           </View>
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>Actividades pendientes</Text>
+            <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+              Actividades pendientes
+            </Text>
             {totalActividades > 0 && (
-              <Text style={styles.subtitle}>
+              <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
                 {totalActividades} {totalActividades === 1 ? 'actividad' : 'actividades'}
               </Text>
             )}
@@ -68,18 +75,20 @@ export const ActividadesPendientes = () => {
           <Icon
             name={viewContent ? 'chevron-up' : 'chevron-down'}
             size={24}
-            color="#666"
+            color={themeColors.textSecondary}
           />
         </View>
       </TouchableOpacity>
 
       {/* CONTENT */}
       {viewContent && (
-        <View style={styles.content}>
+        <View style={[styles.content, { borderTopColor: themeColors.borderGray }]}>
           {loadingAct ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size={32} color="#000" />
-              <Text style={styles.loadingText}>Cargando actividades...</Text>
+              <ActivityIndicator size={32} color={themeColors.textPrimary} />
+              <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
+                Cargando actividades...
+              </Text>
             </View>
           ) : totalActividades > 0 ? (
             <View style={styles.actividadesContainer}>
@@ -94,8 +103,10 @@ export const ActividadesPendientes = () => {
           ) : (
             <View style={styles.emptyContainer}>
               <Icon name="check-circle-outline" size={48} color="#4CAF50" />
-              <Text style={styles.emptyTitle}>¡Todo completado!</Text>
-              <Text style={styles.emptyMessage}>
+              <Text style={[styles.emptyTitle, { color: themeColors.textPrimary }]}>
+                ¡Todo completado!
+              </Text>
+              <Text style={[styles.emptyMessage, { color: themeColors.textSecondary }]}>
                 No tienes actividades pendientes
               </Text>
             </View>
@@ -108,12 +119,10 @@ export const ActividadesPendientes = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFF',
     marginHorizontal: 16,
     marginVertical: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
     overflow: 'hidden',
   },
   header: {
@@ -132,7 +141,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -143,12 +151,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#000',
     marginBottom: 2,
   },
   subtitle: {
     fontSize: 13,
-    color: '#666',
   },
   headerRight: {
     flexDirection: 'row',
@@ -171,7 +177,6 @@ const styles = StyleSheet.create({
   },
   content: {
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
   },
   loadingContainer: {
     paddingVertical: 40,
@@ -180,7 +185,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#666',
   },
   actividadesContainer: {
     padding: 12,
@@ -193,13 +197,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#000',
     marginTop: 16,
     marginBottom: 8,
   },
   emptyMessage: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
     lineHeight: 20,
   },

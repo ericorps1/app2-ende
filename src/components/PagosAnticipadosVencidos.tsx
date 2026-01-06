@@ -7,8 +7,10 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { updateInfoPagos } from '../features/pagos/dataPagosSlice';
 import { Pagos } from '../interfaces/appInterfaces';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext'; // 👈 IMPORTAR
 
 export const PagosAnticipadosVencidos = () => {
+  const { colors: themeColors } = useTheme(); // 👈 HOOK
   const [loadingPayExp, setLoadingPayExp] = useState(false);
   const { data_alumno } = useContext(AuthContext);
   const [viewContent, setViewContent] = useState(false);
@@ -41,7 +43,7 @@ export const PagosAnticipadosVencidos = () => {
     
     const fechaVencimiento = new Date(pago.fin_pag);
     const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
+    hoy.setHours(0, 0, 0, 0);
     
     return fechaVencimiento < hoy;
   });
@@ -49,7 +51,10 @@ export const PagosAnticipadosVencidos = () => {
   const totalPagos = paysExpired.length;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { 
+      backgroundColor: themeColors.backgroundCard,
+      borderColor: themeColors.borderGray 
+    }]}>
       {/* HEADER */}
       <TouchableOpacity
         style={styles.header}
@@ -57,13 +62,15 @@ export const PagosAnticipadosVencidos = () => {
         onPress={() => setViewContent(!viewContent)}
       >
         <View style={styles.headerLeft}>
-          <View style={styles.iconContainer}>
-            <Icon name="credit-card-outline" size={22} color="#000" />
+          <View style={[styles.iconContainer, { backgroundColor: themeColors.backgroundGray }]}>
+            <Icon name="credit-card-outline" size={22} color={themeColors.textPrimary} />
           </View>
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>Pagos pendientes</Text>
+            <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+              Pagos pendientes
+            </Text>
             {totalPagos > 0 && (
-              <Text style={styles.subtitle}>
+              <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
                 {totalPagos} {totalPagos === 1 ? 'pago pendiente' : 'pagos pendientes'}
               </Text>
             )}
@@ -72,17 +79,19 @@ export const PagosAnticipadosVencidos = () => {
         <Icon
           name={viewContent ? 'chevron-up' : 'chevron-down'}
           size={24}
-          color="#666"
+          color={themeColors.textSecondary}
         />
       </TouchableOpacity>
 
       {/* CONTENT */}
       {viewContent && (
-        <View style={styles.content}>
+        <View style={[styles.content, { borderTopColor: themeColors.borderGray }]}>
           {loadingPayExp ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size={32} color="#000" />
-              <Text style={styles.loadingText}>Cargando pagos...</Text>
+              <ActivityIndicator size={32} color={themeColors.textPrimary} />
+              <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
+                Cargando pagos...
+              </Text>
             </View>
           ) : paysExpired.length > 0 ? (
             <View style={styles.paymentsContainer}>
@@ -93,8 +102,10 @@ export const PagosAnticipadosVencidos = () => {
           ) : (
             <View style={styles.emptyContainer}>
               <Icon name="check-circle-outline" size={48} color="#4CAF50" />
-              <Text style={styles.emptyTitle}>¡Todo al corriente!</Text>
-              <Text style={styles.emptyMessage}>
+              <Text style={[styles.emptyTitle, { color: themeColors.textPrimary }]}>
+                ¡Todo al corriente!
+              </Text>
+              <Text style={[styles.emptyMessage, { color: themeColors.textSecondary }]}>
                 No tienes pagos pendientes
               </Text>
             </View>
@@ -107,12 +118,10 @@ export const PagosAnticipadosVencidos = () => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFF',
     marginHorizontal: 16,
     marginVertical: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
     overflow: 'hidden',
   },
   header: {
@@ -131,7 +140,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -142,16 +150,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#000',
     marginBottom: 2,
   },
   subtitle: {
     fontSize: 13,
-    color: '#666',
   },
   content: {
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
   },
   loadingContainer: {
     paddingVertical: 40,
@@ -160,7 +165,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: '#666',
   },
   paymentsContainer: {
     padding: 12,
@@ -173,13 +177,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#000',
     marginTop: 16,
     marginBottom: 8,
   },
   emptyMessage: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
     lineHeight: 20,
   },

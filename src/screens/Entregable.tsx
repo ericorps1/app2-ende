@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, Platform, useColorScheme } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 import { FilePick, PropsActividad, TypesMsgModalType } from '../interfaces/appInterfaces';
 import DocumentPicker from 'react-native-document-picker';
@@ -13,12 +13,16 @@ import { baseUrlFiles } from '../hooks/useGlobal';
 import { fnDownloadFile } from '../hooks/useDownloads';
 import { PaperConfirmEliminar } from '../components/PaperConfirmEliminar';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-import { HtmlToJsx } from '../components/HtmlToJsx';
 import { ChatAlumno } from '../components/ChatAlumno';
 import { requestCameraPermission } from '../hooks/usePermisions';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext';
+import { WebView } from 'react-native-webview';
 
 export const Entregable = ({route, navigation}: PropsActividad) => {
+  const { theme, colors: themeColors } = useTheme();
+  const colorScheme = useColorScheme();
+  
   const initialStateObFile = { fileCopyUri: null, name: "", size: 0, type: "", uri: "" };
   const { data_alumno } = useContext(AuthContext);
   const {identificador, titulo, descripcion, identificador_copia, nom_blo, nom_mat} = route.params.data_actividad;
@@ -31,6 +35,10 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
   const [typeMsg, setTypeMsg] = useState<TypesMsgModalType>('success');
   const [titleEliminar, setTitleEliminar] = useState('');
   const [textEliminar, setTextEliminar] = useState('');
+  const [webViewHeight, setWebViewHeight] = useState(200);
+  
+  // 🌙 Detectar dark mode
+  const isDarkMode = theme === 'dark' || colorScheme === 'dark';
 
   useEffect(() => {
     getEntregableAlu();
@@ -104,7 +112,7 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
   const loadFile = async () => {
     try {
       const file: any = await DocumentPicker.pickSingle({
-        copyTo: 'cachesDirectory', // 🔥 CLAVE: Copiar a cache (Android)
+        copyTo: 'cachesDirectory',
       });
       
       console.log('═══════════════════════════════════════');
@@ -117,14 +125,13 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
       console.log('Tamaño:', file.size, 'bytes');
       console.log('═══════════════════════════════════════\n');
       
-      // 🔥 Usar fileCopyUri en lugar de uri para Android
       const realUri = Platform.OS === 'android' 
         ? file.fileCopyUri || file.uri 
         : file.uri;
       
       setObFile({
         ...file,
-        uri: realUri, // 🔥 Usar el URI copiado
+        uri: realUri,
       });
       
     } catch (error) {
@@ -150,7 +157,7 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
         maxWidth: 1024,
         maxHeight: 1024,
         quality: 0.8,
-        saveToPhotos: false, // 🔥 No guardar en galería
+        saveToPhotos: false,
       });
     } else {
       result = await launchImageLibrary({
@@ -175,7 +182,7 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
       
       setObFile({
         name: asset.fileName || `photo_${Date.now()}.jpg`,
-        uri: asset.uri, // 🔥 Este URI ya es válido desde la cámara/galería
+        uri: asset.uri,
         type: asset.type || 'image/jpeg',
         size: asset.fileSize || 0,
         fileCopyUri: asset.uri,
@@ -202,7 +209,6 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
     console.log('═══════════════════════════════════════\n');
     
     try {
-      // ========== VALIDACIONES ESTRICTAS ==========
       console.log('🔍 Ejecutando validaciones...');
       
       if (!obFile.name || obFile.name === "") {
@@ -221,7 +227,6 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
       }
       console.log('✅ Validación 2/3: URI OK');
       
-      // Validar tipo de archivo
       if (!obFile.type) {
         console.warn('⚠️ Sin tipo MIME, asignando por defecto');
         obFile.type = 'application/octet-stream';
@@ -232,7 +237,6 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
       
       setLoading(true);
       
-      // ========== PREPARAR NOMBRE DEL ARCHIVO ==========
       const serverFileName = `${nombreGuionesMinus(
         data_alumno?.nom_gen + '-' + 
         data_alumno?.nom_alu + '-' + 
@@ -250,7 +254,6 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
       console.log('ID Alumno RAM:', data_alumno?.id_alu_ram);
       console.log('═══════════════════════════════════════\n');
       
-      // ========== PREPARAR DATOS ADICIONALES ==========
       const additionalData = {
         doc_tar: obFile.name,
         id_ent_cop: identificador_copia,
@@ -261,13 +264,12 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
       console.log('🌐 Endpoint: /tarea/');
       console.log('📤 Método: POST (multipart/form-data)\n');
       
-      // ========== UPLOAD ==========
       const resp = await useUploads(
         '/tarea/',
         {
           ...obFile,
           fileName: serverFileName,
-          name: serverFileName, // 🔥 Asegurar que el nombre sea correcto
+          name: serverFileName,
         },
         additionalData
       );
@@ -278,7 +280,6 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
       console.log(JSON.stringify(resp, null, 2));
       console.log('═══════════════════════════════════════\n');
       
-      // ========== PROCESAR RESPUESTA ==========
       if (resp.trans === true) {
         console.log('✅✅✅ UPLOAD EXITOSO ✅✅✅\n');
         setTypeMsg('success');
@@ -367,12 +368,11 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
     console.log('URL completa:', baseUrlFiles + fileName);
     console.log('═══════════════════════════════════════\n');
     
-    // 🔥 Decodificar el nombre del archivo para mostrar correctamente
     const decodedFileName = decodeURIComponent(fileName);
     
     fnDownloadFile(
-      baseUrlFiles + fileName, // URL con encoding (servidor lo espera así)
-      decodedFileName          // Nombre local sin encoding
+      baseUrlFiles + fileName,
+      decodedFileName
     );
   }
 
@@ -411,19 +411,26 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
   if (loading) return <LoadingScreen/>
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       {/* ========== HEADER ========== */}
-      <View style={styles.header}>
+      <View style={[styles.header, { 
+        backgroundColor: themeColors.backgroundCard,
+        borderBottomColor: themeColors.borderGray 
+      }]}>
         <TouchableOpacity 
           onPress={() => navigation.pop()} 
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: themeColors.backgroundGray }]}
           activeOpacity={0.7}
         >
-          <Icon name="arrow-left" size={24} color="#000" />
+          <Icon name="arrow-left" size={24} color={themeColors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle} numberOfLines={1}>{titulo}</Text>
-          <Text style={styles.headerSubtitle}>Actividad entregable</Text>
+          <Text style={[styles.headerTitle, { color: themeColors.textPrimary }]} numberOfLines={1}>
+            {titulo}
+          </Text>
+          <Text style={[styles.headerSubtitle, { color: themeColors.textSecondary }]}>
+            Actividad entregable
+          </Text>
         </View>
       </View>
 
@@ -436,37 +443,164 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
           <RefreshControl 
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#000"
-            colors={['#000']}
+            tintColor={themeColors.textPrimary}
+            colors={[themeColors.textPrimary]}
           />
         }
       >
-        {/* DESCRIPCIÓN */}
-        <View style={styles.descriptionCard}>
+        {/* 🔥 DESCRIPCIÓN CON WEBVIEW Y DARK MODE */}
+        <View style={[styles.descriptionCard, { 
+          backgroundColor: themeColors.backgroundCard,
+          borderColor: themeColors.borderGray 
+        }]}>
           <View style={styles.descriptionHeader}>
-            <Icon name="file-document-outline" size={20} color="#666" />
-            <Text style={styles.descriptionTitle}>Descripción</Text>
+            <Icon name="file-document-outline" size={20} color={themeColors.textSecondary} />
+            <Text style={[styles.descriptionTitle, { color: themeColors.textPrimary }]}>
+              Descripción
+            </Text>
           </View>
-          <View style={styles.descriptionContent}>
-            <HtmlToJsx strHtml={descripcion}/>
+          <View style={[styles.webViewContainer, {
+            backgroundColor: isDarkMode ? '#1a1a1a' : '#FFFFFF',
+            borderColor: themeColors.borderGray
+          }]}>
+            <WebView
+              source={{ html: `
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                    <style>
+                      * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                      }
+                      html, body {
+                        width: 100%;
+                        height: auto;
+                        overflow-x: hidden;
+                      }
+                      body { 
+                        padding: 12px;
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+                        font-size: 14px;
+                        line-height: 1.6;
+                        color: ${isDarkMode ? '#e0e0e0' : '#1a1a1a'};
+                        background-color: ${isDarkMode ? '#1a1a1a' : '#FFFFFF'};
+                      }
+                      img { 
+                        max-width: 100% !important; 
+                        width: auto !important;
+                        height: auto !important;
+                        display: block;
+                        margin: 8px 0;
+                        ${isDarkMode ? 'opacity: 0.9;' : ''}
+                      }
+                      table {
+                        max-width: 100% !important;
+                        width: 100% !important;
+                        border-collapse: collapse;
+                        display: block;
+                        overflow-x: auto;
+                      }
+                      p, div, span, li {
+                        max-width: 100% !important;
+                        word-wrap: break-word;
+                        overflow-wrap: break-word;
+                      }
+                      h1, h2, h3, h4, h5, h6 {
+                        color: ${isDarkMode ? '#ffffff' : '#1a1a1a'};
+                        margin-top: 1em;
+                        margin-bottom: 0.5em;
+                        word-wrap: break-word;
+                      }
+                      a {
+                        color: ${isDarkMode ? '#60a5fa' : '#2563eb'};
+                        word-wrap: break-word;
+                      }
+                      strong, b {
+                        color: ${isDarkMode ? '#ffffff' : '#000000'};
+                      }
+                      ul, ol {
+                        padding-left: 20px;
+                      }
+                    </style>
+                  </head>
+                  <body>
+                    ${descripcion}
+                    <script>
+                      function updateHeight() {
+                        const height = document.body.scrollHeight;
+                        window.ReactNativeWebView.postMessage(height);
+                      }
+                      
+                      const images = document.getElementsByTagName('img');
+                      let loadedImages = 0;
+                      
+                      if (images.length === 0) {
+                        updateHeight();
+                      } else {
+                        for (let img of images) {
+                          img.onload = () => {
+                            loadedImages++;
+                            if (loadedImages === images.length) {
+                              updateHeight();
+                            }
+                          };
+                          img.onerror = () => {
+                            loadedImages++;
+                            if (loadedImages === images.length) {
+                              updateHeight();
+                            }
+                          };
+                        }
+                      }
+                      
+                      setTimeout(updateHeight, 300);
+                    </script>
+                  </body>
+                </html>
+              `}}
+              style={{ height: webViewHeight }}
+              scalesPageToFit={false}
+              scrollEnabled={false}
+              showsVerticalScrollIndicator={false}
+              showsHorizontalScrollIndicator={false}
+              javaScriptEnabled={true}
+              domStorageEnabled={true}
+              bounces={false}
+              onMessage={(event) => {
+                const height = Number(event.nativeEvent.data);
+                if (height > 0 && height !== webViewHeight) {
+                  setWebViewHeight(height + 30);
+                }
+              }}
+            />
           </View>
         </View>
 
         {/* ÁREA DE ENTREGA */}
-        <View style={styles.uploadSection}>
+        <View style={[styles.uploadSection, { 
+          backgroundColor: themeColors.backgroundCard,
+          borderColor: themeColors.borderGray 
+        }]}>
           <View style={styles.uploadHeader}>
-            <Icon name="cloud-upload" size={20} color="#000" />
-            <Text style={styles.uploadTitle}>Tu entrega</Text>
+            <Icon name="cloud-upload" size={20} color={themeColors.textPrimary} />
+            <Text style={[styles.uploadTitle, { color: themeColors.textPrimary }]}>
+              Tu entrega
+            </Text>
           </View>
 
           {infoRespTarea.length ? (
             // ========== ARCHIVO YA SUBIDO ==========
             <View style={styles.uploadedFile}>
-              <View style={styles.fileInfo}>
+              <View style={[styles.fileInfo, { backgroundColor: themeColors.backgroundGray }]}>
                 <Icon name="file-check" size={40} color="#34C759" />
                 <View style={styles.fileDetails}>
-                  <Text style={styles.fileLabel}>Archivo entregado</Text>
-                  <Text style={styles.fileName} numberOfLines={2}>
+                  <Text style={[styles.fileLabel, { color: themeColors.textTertiary }]}>
+                    Archivo entregado
+                  </Text>
+                  <Text style={[styles.fileName, { color: themeColors.textPrimary }]} numberOfLines={2}>
                     {decodeURIComponent(infoRespTarea[0].doc_tar)}
                   </Text>
                 </View>
@@ -474,13 +608,15 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
 
               <View style={styles.fileActions}>
                 <TouchableOpacity 
-                  style={[styles.downloadButton, loading && styles.buttonDisabled]}
+                  style={[styles.downloadButton, { backgroundColor: themeColors.textPrimary }, loading && styles.buttonDisabled]}
                   onPress={downloadFileFunc}
                   disabled={loading}
                   activeOpacity={0.7}
                 >
-                  <Icon name="download" size={18} color="#FFF" />
-                  <Text style={styles.downloadButtonText}>Descargar</Text>
+                  <Icon name="download" size={18} color={themeColors.backgroundCard} />
+                  <Text style={[styles.downloadButtonText, { color: themeColors.backgroundCard }]}>
+                    Descargar
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
@@ -497,33 +633,35 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
           ) : obFile.uri ? (
             // ========== ARCHIVO SELECCIONADO ==========
             <View style={styles.selectedFile}>
-              <View style={styles.selectedFileInfo}>
-                <Icon name="file" size={32} color="#666" />
-                <Text style={styles.selectedFileName} numberOfLines={2}>
+              <View style={[styles.selectedFileInfo, { backgroundColor: themeColors.backgroundGray }]}>
+                <Icon name="file" size={32} color={themeColors.textSecondary} />
+                <Text style={[styles.selectedFileName, { color: themeColors.textPrimary }]} numberOfLines={2}>
                   {obFile.name}
                 </Text>
               </View>
 
               <View style={styles.selectedFileActions}>
                 <TouchableOpacity 
-                  style={[styles.uploadButton, loading && styles.buttonDisabled]}
+                  style={[styles.uploadButton, { backgroundColor: themeColors.textPrimary }, loading && styles.buttonDisabled]}
                   onPress={uploadFile}
                   disabled={loading}
                   activeOpacity={0.7}
                 >
-                  <Icon name="upload" size={18} color="#FFF" />
-                  <Text style={styles.uploadButtonText}>
+                  <Icon name="upload" size={18} color={themeColors.backgroundCard} />
+                  <Text style={[styles.uploadButtonText, { color: themeColors.backgroundCard }]}>
                     {loading ? 'Subiendo...' : 'Subir archivo'}
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
-                  style={[styles.cancelButton, loading && styles.buttonDisabled]}
+                  style={[styles.cancelButton, { backgroundColor: themeColors.backgroundGray }, loading && styles.buttonDisabled]}
                   onPress={() => setObFile(initialStateObFile)}
                   disabled={loading}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.cancelButtonText}>Cancelar</Text>
+                  <Text style={[styles.cancelButtonText, { color: themeColors.textPrimary }]}>
+                    Cancelar
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -532,34 +670,46 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
             <View style={styles.selectOptions}>
               <View style={styles.imageOptions}>
                 <TouchableOpacity 
-                  style={[styles.imageButton, loading && styles.buttonDisabled]}
+                  style={[styles.imageButton, { 
+                    backgroundColor: themeColors.backgroundGray,
+                    borderColor: themeColors.borderGray 
+                  }, loading && styles.buttonDisabled]}
                   onPress={() => getPhoto('photo')}
                   disabled={loading}
                   activeOpacity={0.7}
                 >
-                  <Icon name="camera" size={24} color="#666" />
-                  <Text style={styles.imageButtonText}>Cámara</Text>
+                  <Icon name="camera" size={24} color={themeColors.textSecondary} />
+                  <Text style={[styles.imageButtonText, { color: themeColors.textSecondary }]}>
+                    Cámara
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
-                  style={[styles.imageButton, loading && styles.buttonDisabled]}
+                  style={[styles.imageButton, { 
+                    backgroundColor: themeColors.backgroundGray,
+                    borderColor: themeColors.borderGray 
+                  }, loading && styles.buttonDisabled]}
                   onPress={() => getPhoto('img')}
                   disabled={loading}
                   activeOpacity={0.7}
                 >
-                  <Icon name="image" size={24} color="#666" />
-                  <Text style={styles.imageButtonText}>Galería</Text>
+                  <Icon name="image" size={24} color={themeColors.textSecondary} />
+                  <Text style={[styles.imageButtonText, { color: themeColors.textSecondary }]}>
+                    Galería
+                  </Text>
                 </TouchableOpacity>
               </View>
 
               <TouchableOpacity 
-                style={[styles.fileButton, loading && styles.buttonDisabled]}
+                style={[styles.fileButton, { backgroundColor: themeColors.textPrimary }, loading && styles.buttonDisabled]}
                 onPress={loadFile}
                 disabled={loading}
                 activeOpacity={0.7}
               >
-                <Icon name="folder-open" size={20} color="#FFF" />
-                <Text style={styles.fileButtonText}>Seleccionar archivo</Text>
+                <Icon name="folder-open" size={20} color={themeColors.backgroundCard} />
+                <Text style={[styles.fileButtonText, { color: themeColors.backgroundCard }]}>
+                  Seleccionar archivo
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -592,22 +742,18 @@ export const Entregable = ({route, navigation}: PropsActividad) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -618,12 +764,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#000',
     marginBottom: 2,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: '#666',
     fontWeight: '500',
   },
   scrollView: {
@@ -635,7 +779,6 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   descriptionCard: {
-    backgroundColor: '#FFF',
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
@@ -645,7 +788,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
   },
   descriptionHeader: {
     flexDirection: 'row',
@@ -655,14 +797,14 @@ const styles = StyleSheet.create({
   descriptionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#000',
     marginLeft: 8,
   },
-  descriptionContent: {
-    paddingLeft: 4,
+  webViewContainer: {
+    borderRadius: 10,
+    borderWidth: 1,
+    overflow: 'hidden',
   },
   uploadSection: {
-    backgroundColor: '#FFF',
     borderRadius: 14,
     padding: 16,
     shadowColor: '#000',
@@ -671,7 +813,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
   },
   uploadHeader: {
     flexDirection: 'row',
@@ -681,7 +822,6 @@ const styles = StyleSheet.create({
   uploadTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#000',
     marginLeft: 8,
   },
   uploadedFile: {
@@ -690,7 +830,6 @@ const styles = StyleSheet.create({
   fileInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9F9F9',
     padding: 16,
     borderRadius: 12,
     gap: 12,
@@ -700,14 +839,12 @@ const styles = StyleSheet.create({
   },
   fileLabel: {
     fontSize: 12,
-    color: '#999',
     fontWeight: '600',
     marginBottom: 4,
   },
   fileName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
   },
   fileActions: {
     flexDirection: 'row',
@@ -715,7 +852,6 @@ const styles = StyleSheet.create({
   },
   downloadButton: {
     flex: 1,
-    backgroundColor: '#000',
     borderRadius: 10,
     paddingVertical: 12,
     flexDirection: 'row',
@@ -724,7 +860,6 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   downloadButtonText: {
-    color: '#FFF',
     fontSize: 15,
     fontWeight: '600',
   },
@@ -749,7 +884,6 @@ const styles = StyleSheet.create({
   selectedFileInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9F9F9',
     padding: 16,
     borderRadius: 12,
     gap: 12,
@@ -758,13 +892,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
   },
   selectedFileActions: {
     gap: 10,
   },
   uploadButton: {
-    backgroundColor: '#000',
     borderRadius: 10,
     paddingVertical: 12,
     flexDirection: 'row',
@@ -773,19 +905,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   uploadButtonText: {
-    color: '#FFF',
     fontSize: 15,
     fontWeight: '600',
   },
   cancelButton: {
-    backgroundColor: '#F5F5F5',
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelButtonText: {
-    color: '#000',
     fontSize: 15,
     fontWeight: '600',
   },
@@ -798,22 +927,18 @@ const styles = StyleSheet.create({
   },
   imageButton: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
     borderRadius: 12,
     paddingVertical: 20,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   imageButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
   },
   fileButton: {
-    backgroundColor: '#000',
     borderRadius: 10,
     paddingVertical: 12,
     flexDirection: 'row',
@@ -822,7 +947,6 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   fileButtonText: {
-    color: '#FFF',
     fontSize: 15,
     fontWeight: '600',
   },

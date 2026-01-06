@@ -1,7 +1,8 @@
 import React from 'react'
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { FotoPerfil } from './FotoPerfil';
+import { useTheme } from '../context/ThemeContext';
 
 interface PropsForoComentarioReplica {
     id_com: number;
@@ -26,8 +27,17 @@ export const ForoComentarioReplica = ({
   eliminarReplica, 
   eliminarReplicaF 
 }: PropsForoComentarioReplica) => {
+  const { theme, colors: themeColors } = useTheme();
+  const colorScheme = useColorScheme();
+  
+  // 🌙 Detectar dark mode
+  const isDarkMode = theme === 'dark' || colorScheme === 'dark';
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { 
+      backgroundColor: themeColors.backgroundGray,
+      borderLeftColor: themeColors.borderGray
+    }]}>
       {/* HEADER DE LA RÉPLICA */}
       <View style={styles.header}>
         <FotoPerfil 
@@ -37,24 +47,28 @@ export const ForoComentarioReplica = ({
           size={32}
         />
         <View style={styles.headerInfo}>
-          <Text style={styles.userName}>{nombre}</Text>
-          <Text style={styles.date}>{fecha}</Text>
+          <Text style={[styles.userName, { color: themeColors.textPrimary }]}>
+            {nombre}
+          </Text>
+          <Text style={[styles.date, { color: themeColors.textTertiary }]}>
+            {fecha}
+          </Text>
         </View>
         
         {/* ACCIONES */}
         <View style={styles.actions}>
           <TouchableOpacity 
             onPress={() => onPressRespReplica({id_com, nomCom: nombre})}
-            style={styles.actionButton}
+            style={[styles.actionButton, { backgroundColor: themeColors.backgroundCard }]}
             activeOpacity={0.7}
           >
-            <Icon name="reply" size={16} color="#666" />
+            <Icon name="reply" size={16} color={themeColors.textSecondary} />
           </TouchableOpacity>
           
           {eliminarReplica && (
             <TouchableOpacity 
               onPress={() => eliminarReplicaF(id_rep)}
-              style={styles.actionButton}
+              style={[styles.actionButton, { backgroundColor: themeColors.backgroundCard }]}
               activeOpacity={0.7}
             >
               <Icon name="delete-outline" size={16} color="#FF3B30" />
@@ -65,7 +79,9 @@ export const ForoComentarioReplica = ({
 
       {/* CONTENIDO DE LA RÉPLICA */}
       <View style={styles.content}>
-        <Text style={styles.replyText}>{replica}</Text>
+        <Text style={[styles.replyText, { color: themeColors.textSecondary }]}>
+          {replica}
+        </Text>
       </View>
     </View>
   )
@@ -73,12 +89,10 @@ export const ForoComentarioReplica = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FAFAFA',
     borderRadius: 10,
     padding: 12,
     marginTop: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#E0E0E0',
   },
   header: {
     flexDirection: 'row',
@@ -97,12 +111,10 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#000',
     marginBottom: 2,
   },
   date: {
     fontSize: 10,
-    color: '#999',
     fontWeight: '500',
   },
   actions: {
@@ -113,7 +125,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -122,7 +133,6 @@ const styles = StyleSheet.create({
   },
   replyText: {
     fontSize: 13,
-    color: '#555',
     lineHeight: 18,
   },
 });

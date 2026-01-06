@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react'
-import { Animated, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import { Animated, StyleSheet, Text, useWindowDimensions, View, useColorScheme } from 'react-native'
 import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
 import { colors } from '../theme/platformTheme';
 import { PanelNotifications } from './PanelNotifications';
@@ -11,24 +11,34 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { getNotificationsService } from '../services/PushNotificationsService';
 import { ScrollView } from 'react-native-gesture-handler';
 import { useFocusEffect } from '@react-navigation/core';
+import { useTheme } from '../context/ThemeContext';
 
 export const HeaderRight = () => {
+  const { theme, colors: themeColors } = useTheme();
+  const colorScheme = useColorScheme();
   const dispatch = useAppDispatch();
   const { data_alumno } = useContext( AuthContext );
+  
   const [actividadesPendientes, setActividadesPendientes] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false)
   const [loading, setLoading] = useState(true)
   const width = useWindowDimensions().width-100;
   const notifications = useAppSelector(state => state.datanotifications);
+  
+  // 🌙 Detectar dark mode
+  const isDarkMode = theme === 'dark' || colorScheme === 'dark';
+  
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications);
   }
+  
   useFocusEffect(
     useCallback(() => {
       getActividadesPendientes();
       return () => {};
-    }, []) // Dependencias vacías si no necesitas recargar por cambios de estado
+    }, [])
   );
+  
   useEffect(() => {
     getNotifications();
     return () => {}
@@ -50,23 +60,38 @@ export const HeaderRight = () => {
   return (
     <View style={styles.container}>
       <View 
-        style={{...styles.iconContainer, backgroundColor: showNotifications ? colors.darkBlue : colors.softSilver}}
+        style={{
+          ...styles.iconContainer, 
+          backgroundColor: showNotifications 
+            ? themeColors.textPrimary 
+            : themeColors.backgroundGray
+        }}
         onTouchEnd={toggleNotifications}
       >
         <FontAwesome5Icon 
           name={'bell'}
-          style={{...styles.icon, color: showNotifications ? colors.softSilver : colors.darkBlue}}
+          style={{
+            ...styles.icon, 
+            color: showNotifications 
+              ? themeColors.backgroundCard 
+              : themeColors.textPrimary
+          }}
         />
         <NumberNotification pressed={toggleNotifications}/>
       </View>
       {showNotifications && (
-      <View style={{...styles.contentNotifications, width}}>
-        <PanelNotifications
-          actividadesPendientes={actividadesPendientes}
-          notifications={notifications}
-          loading={loading}
-        />
-      </View>
+        <View style={{
+          ...styles.contentNotifications, 
+          width,
+          backgroundColor: themeColors.backgroundCard,
+          borderColor: themeColors.borderGray
+        }}>
+          <PanelNotifications
+            actividadesPendientes={actividadesPendientes}
+            notifications={notifications}
+            loading={loading}
+          />
+        </View>
       )}
     </View>
   )
@@ -92,7 +117,6 @@ const styles = StyleSheet.create({
       fontSize: 25,
   },
   contentNotifications: {
-    backgroundColor: colors.white,
     borderRadius: 5,
     position: 'absolute',
     top: 40,

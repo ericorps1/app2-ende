@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, RefreshControl, useColorScheme } from 'react-native';
 import { ActividadData, Comentarios, ReplicasForo, PropsActividad } from '../interfaces/appInterfaces';
 import { colors } from '../theme/platformTheme';
 import { ForoComentario } from '../components/ForoComentario';
@@ -13,10 +13,14 @@ import { HtmlToJsx } from '../components/HtmlToJsx';
 import { ChatAlumno } from '../components/ChatAlumno';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { PaperConfirmEliminar } from '../components/PaperConfirmEliminar';
+import { useTheme } from '../context/ThemeContext';
 
 export const Foro = ({route,navigation}:PropsActividad) => {
+  const { theme, colors: themeColors } = useTheme();
+  const colorScheme = useColorScheme();
   const { data_alumno } = useContext( AuthContext );
   const {identificador,titulo,descripcion,identificador_copia} = route.params.data_actividad;
+  
   const [comentarios, setComentarios] = useState([])
   const [replicas, setReplicas] = useState<ReplicasForo|any>([])
   const [miComentario, setMiComentario] = useState('')
@@ -29,6 +33,9 @@ export const Foro = ({route,navigation}:PropsActividad) => {
   const initialDataRep = {id_com: 0, nomCom: ''};
   const [dataReplica, setDataReplica] = useState(initialDataRep)
   const [messageErrorReplica, setMessageErrorReplica] = useState('')
+  
+  // 🌙 Detectar dark mode
+  const isDarkMode = theme === 'dark' || colorScheme === 'dark';
 
   useEffect(() => {
     getComentarios();
@@ -131,19 +138,26 @@ export const Foro = ({route,navigation}:PropsActividad) => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { 
+        backgroundColor: themeColors.backgroundCard,
+        borderBottomColor: themeColors.borderGray
+      }]}>
         <TouchableOpacity 
           onPress={() => navigation.pop()} 
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: themeColors.backgroundGray }]}
           activeOpacity={0.7}
         >
-          <Icon name="arrow-left" size={24} color="#000" />
+          <Icon name="arrow-left" size={24} color={themeColors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerContent}>
-          <Text style={styles.headerTitle} numberOfLines={1}>{titulo}</Text>
-          <Text style={styles.headerSubtitle}>Foro de discusión</Text>
+          <Text style={[styles.headerTitle, { color: themeColors.textPrimary }]} numberOfLines={1}>
+            {titulo}
+          </Text>
+          <Text style={[styles.headerSubtitle, { color: themeColors.textSecondary }]}>
+            Foro de discusión
+          </Text>
         </View>
       </View>
 
@@ -155,18 +169,23 @@ export const Foro = ({route,navigation}:PropsActividad) => {
           <RefreshControl 
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#000"
-            colors={['#000']}
+            tintColor={themeColors.textPrimary}
+            colors={[themeColors.textPrimary]}
           />
         }
       >
         {/* PREGUNTA DEL FORO */}
-        <View style={styles.questionCard}>
+        <View style={[styles.questionCard, { 
+          backgroundColor: themeColors.backgroundCard,
+          borderColor: themeColors.borderGray
+        }]}>
           <View style={styles.questionHeader}>
-            <View style={styles.questionIconContainer}>
-              <Icon name="forum" size={20} color="#666" />
+            <View style={[styles.questionIconContainer, { backgroundColor: themeColors.backgroundGray }]}>
+              <Icon name="forum" size={20} color={themeColors.textSecondary} />
             </View>
-            <Text style={styles.questionTitle}>Pregunta del foro</Text>
+            <Text style={[styles.questionTitle, { color: themeColors.textPrimary }]}>
+              Pregunta del foro
+            </Text>
           </View>
           <View style={styles.questionContent}>
             <HtmlToJsx strHtml={descripcion} />
@@ -174,10 +193,15 @@ export const Foro = ({route,navigation}:PropsActividad) => {
         </View>
 
         {/* MI COMENTARIO */}
-        <View style={styles.myCommentCard}>
+        <View style={[styles.myCommentCard, { 
+          backgroundColor: themeColors.backgroundCard,
+          borderColor: themeColors.borderGray
+        }]}>
           <View style={styles.myCommentHeader}>
-            <Icon name="pencil" size={18} color="#666" />
-            <Text style={styles.myCommentTitle}>Tu comentario</Text>
+            <Icon name="pencil" size={18} color={themeColors.textSecondary} />
+            <Text style={[styles.myCommentTitle, { color: themeColors.textPrimary }]}>
+              Tu comentario
+            </Text>
           </View>
           <TextInput
             value={miComentario}
@@ -185,18 +209,26 @@ export const Foro = ({route,navigation}:PropsActividad) => {
             numberOfLines={5}
             editable
             onChangeText={text => setMiComentario(text)}
-            style={styles.commentInput}
+            style={[styles.commentInput, {
+              backgroundColor: themeColors.backgroundGray,
+              color: themeColors.textPrimary,
+              borderColor: themeColors.borderGray
+            }]}
             placeholder='Escribe tu comentario aquí (mínimo 15 caracteres)...'
-            placeholderTextColor="#999"
+            placeholderTextColor={themeColors.textTertiary}
           />
           <TouchableOpacity
-            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+            style={[
+              styles.submitButton, 
+              { backgroundColor: themeColors.textPrimary },
+              loading && styles.submitButtonDisabled
+            ]}
             onPress={guardarComentario}
             disabled={loading}
             activeOpacity={0.8}
           >
-            <Icon name="send" size={16} color="#FFF" style={styles.submitIcon} />
-            <Text style={styles.submitButtonText}>
+            <Icon name="send" size={16} color={themeColors.backgroundCard} style={styles.submitIcon} />
+            <Text style={[styles.submitButtonText, { color: themeColors.backgroundCard }]}>
               {loading ? 'Enviando...' : 'Publicar comentario'}
             </Text>
           </TouchableOpacity>
@@ -205,8 +237,8 @@ export const Foro = ({route,navigation}:PropsActividad) => {
         {/* COMENTARIOS */}
         <View style={styles.commentsSection}>
           <View style={styles.commentsSectionHeader}>
-            <Icon name="comment-multiple" size={18} color="#000" />
-            <Text style={styles.commentsSectionTitle}>
+            <Icon name="comment-multiple" size={18} color={themeColors.textPrimary} />
+            <Text style={[styles.commentsSectionTitle, { color: themeColors.textPrimary }]}>
               Comentarios ({comentarios.length})
             </Text>
           </View>
@@ -231,10 +263,17 @@ export const Foro = ({route,navigation}:PropsActividad) => {
               )
             })
           ) : (
-            <View style={styles.emptyState}>
-              <Icon name="comment-outline" size={48} color="#E0E0E0" />
-              <Text style={styles.emptyStateText}>Aún no hay comentarios</Text>
-              <Text style={styles.emptyStateSubtext}>Sé el primero en comentar</Text>
+            <View style={[styles.emptyState, { 
+              backgroundColor: themeColors.backgroundCard,
+              borderColor: themeColors.borderGray
+            }]}>
+              <Icon name="comment-outline" size={48} color={themeColors.borderGray} />
+              <Text style={[styles.emptyStateText, { color: themeColors.textTertiary }]}>
+                Aún no hay comentarios
+              </Text>
+              <Text style={[styles.emptyStateSubtext, { color: themeColors.textTertiary }]}>
+                Sé el primero en comentar
+              </Text>
             </View>
           )}
         </View>
@@ -292,22 +331,18 @@ export const Foro = ({route,navigation}:PropsActividad) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -318,12 +353,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#000',
     marginBottom: 2,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: '#666',
     fontWeight: '500',
   },
   scrollView: {
@@ -335,7 +368,6 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   questionCard: {
-    backgroundColor: '#FFF',
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
@@ -345,7 +377,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
   },
   questionHeader: {
     flexDirection: 'row',
@@ -356,7 +387,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -364,13 +394,11 @@ const styles = StyleSheet.create({
   questionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#000',
   },
   questionContent: {
     paddingLeft: 4,
   },
   myCommentCard: {
-    backgroundColor: '#FFF',
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
@@ -380,7 +408,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
   },
   myCommentHeader: {
     flexDirection: 'row',
@@ -390,26 +417,21 @@ const styles = StyleSheet.create({
   myCommentTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#000',
     marginLeft: 8,
   },
   commentInput: {
-    backgroundColor: '#FAFAFA',
     borderRadius: 10,
     padding: 12,
     fontSize: 14,
-    color: '#000',
     textAlignVertical: 'top',
     minHeight: 100,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -421,7 +443,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   submitButtonText: {
-    color: '#FFF',
     fontSize: 15,
     fontWeight: '600',
   },
@@ -436,27 +457,22 @@ const styles = StyleSheet.create({
   commentsSectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#000',
     marginLeft: 8,
   },
   emptyState: {
-    backgroundColor: '#FFF',
     borderRadius: 14,
     padding: 40,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#F0F0F0',
   },
   emptyStateText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#999',
     marginTop: 12,
   },
   emptyStateSubtext: {
     fontSize: 13,
-    color: '#BBB',
     marginTop: 4,
   },
 });

@@ -1,11 +1,12 @@
 import React, { useContext } from 'react'
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { FotoPerfil } from './FotoPerfil';
 import { ForoComentarioReplica } from './ForoComentarioReplica';
 import { formatDateComentarios } from '../hooks/useFormats';
 import { PropsForoComentario, ReplicasForo } from '../interfaces/appInterfaces';
 import { AuthContext } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 export const ForoComentario = ({ 
   id_com, 
@@ -19,10 +20,18 @@ export const ForoComentario = ({
   eliminarComentario = () => false, 
   funcEliminarReplica = () => false 
 }: PropsForoComentario) => {
+  const { theme, colors: themeColors } = useTheme();
+  const colorScheme = useColorScheme();
   const { data_alumno } = useContext(AuthContext);
   
+  // 🌙 Detectar dark mode
+  const isDarkMode = theme === 'dark' || colorScheme === 'dark';
+  
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { 
+      backgroundColor: themeColors.backgroundCard,
+      borderColor: themeColors.borderGray
+    }]}>
       {/* HEADER DEL COMENTARIO */}
       <View style={styles.header}>
         <FotoPerfil 
@@ -32,24 +41,28 @@ export const ForoComentario = ({
           size={40}
         />
         <View style={styles.headerInfo}>
-          <Text style={styles.userName}>{nombre}</Text>
-          <Text style={styles.date}>{fecha}</Text>
+          <Text style={[styles.userName, { color: themeColors.textPrimary }]}>
+            {nombre}
+          </Text>
+          <Text style={[styles.date, { color: themeColors.textTertiary }]}>
+            {fecha}
+          </Text>
         </View>
         
         {/* ACCIONES */}
         <View style={styles.actions}>
           <TouchableOpacity 
             onPress={() => onPressResp({id_com: id_com, nomCom: nombre})}
-            style={styles.actionButton}
+            style={[styles.actionButton, { backgroundColor: themeColors.backgroundGray }]}
             activeOpacity={0.7}
           >
-            <Icon name="reply" size={20} color="#666" />
+            <Icon name="reply" size={20} color={themeColors.textSecondary} />
           </TouchableOpacity>
           
           {eliminar && (
             <TouchableOpacity 
               onPress={eliminarComentario}
-              style={styles.actionButton}
+              style={[styles.actionButton, { backgroundColor: themeColors.backgroundGray }]}
               activeOpacity={0.7}
             >
               <Icon name="delete-outline" size={20} color="#FF3B30" />
@@ -60,15 +73,17 @@ export const ForoComentario = ({
 
       {/* CONTENIDO DEL COMENTARIO */}
       <View style={styles.content}>
-        <Text style={styles.commentText}>{comentario}</Text>
+        <Text style={[styles.commentText, { color: themeColors.textSecondary }]}>
+          {comentario}
+        </Text>
       </View>
 
       {/* RÉPLICAS */}
       {replicas.length > 0 && (
         <View style={styles.repliesContainer}>
           <View style={styles.repliesHeader}>
-            <Icon name="reply-all" size={14} color="#999" />
-            <Text style={styles.repliesCount}>
+            <Icon name="reply-all" size={14} color={themeColors.textTertiary} />
+            <Text style={[styles.repliesCount, { color: themeColors.textTertiary }]}>
               {replicas.length} {replicas.length === 1 ? 'réplica' : 'réplicas'}
             </Text>
           </View>
@@ -98,7 +113,6 @@ export const ForoComentario = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 14,
     marginBottom: 12,
@@ -108,7 +122,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
   },
   header: {
     flexDirection: 'row',
@@ -127,12 +140,10 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#000',
     marginBottom: 2,
   },
   date: {
     fontSize: 11,
-    color: '#999',
     fontWeight: '500',
   },
   actions: {
@@ -143,7 +154,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F5F5F5',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -152,7 +162,6 @@ const styles = StyleSheet.create({
   },
   commentText: {
     fontSize: 14,
-    color: '#333',
     lineHeight: 20,
   },
   repliesContainer: {
@@ -168,6 +177,5 @@ const styles = StyleSheet.create({
   repliesCount: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#999',
   },
 });

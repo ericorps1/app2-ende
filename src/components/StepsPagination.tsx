@@ -1,14 +1,17 @@
 import * as React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Swiper from 'react-native-swiper';
+import { useTheme } from '../context/ThemeContext';
 
 interface PropsStepsPagination {
     infoRenderSteps: any[]
 }
 
 export default function StepsPagination({infoRenderSteps}:PropsStepsPagination) {
+  const { colors: themeColors } = useTheme();
+  
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
       <Swiper
         loop={false}
         autoplay={false}
@@ -24,6 +27,5 @@ export default function StepsPagination({infoRenderSteps}:PropsStepsPagination) 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
 });

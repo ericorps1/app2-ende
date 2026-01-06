@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext';
 
 interface PropsFormReplica{
     loading: boolean;
@@ -13,16 +14,23 @@ interface PropsFormReplica{
 }
 
 export const FormReplica = ({loading, infoReplica, guardarReplica, msgError}: PropsFormReplica) => {
+    const { theme, colors: themeColors } = useTheme();
+    const colorScheme = useColorScheme();
     const [miReplica, setMiReplica] = useState(infoReplica.nomCom+':\n')
     
+    // 🌙 Detectar dark mode
+    const isDarkMode = theme === 'dark' || colorScheme === 'dark';
+    
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: themeColors.backgroundCard }]}>
             {/* HEADER */}
             <View style={styles.header}>
-                <View style={styles.iconContainer}>
-                    <Icon name="reply" size={20} color="#666" />
+                <View style={[styles.iconContainer, { backgroundColor: themeColors.backgroundGray }]}>
+                    <Icon name="reply" size={20} color={themeColors.textSecondary} />
                 </View>
-                <Text style={styles.headerTitle}>Responder a {infoReplica.nomCom}</Text>
+                <Text style={[styles.headerTitle, { color: themeColors.textPrimary }]}>
+                    Responder a {infoReplica.nomCom}
+                </Text>
             </View>
 
             {/* ERROR MESSAGE */}
@@ -40,21 +48,29 @@ export const FormReplica = ({loading, infoReplica, guardarReplica, msgError}: Pr
                 numberOfLines={6}
                 editable
                 onChangeText={text => setMiReplica(text)}
-                style={styles.input}
+                style={[styles.input, { 
+                    backgroundColor: themeColors.backgroundGray,
+                    color: themeColors.textPrimary,
+                    borderColor: themeColors.borderGray
+                }]}
                 placeholder={'Escribe tu réplica aquí...'}
-                placeholderTextColor="#999"
+                placeholderTextColor={themeColors.textTertiary}
             />
 
             {/* ACTIONS */}
             <View style={styles.actions}>
                 <TouchableOpacity
-                    style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+                    style={[
+                        styles.submitButton, 
+                        { backgroundColor: themeColors.textPrimary },
+                        loading && styles.submitButtonDisabled
+                    ]}
                     onPress={() => guardarReplica(infoReplica.id_com, miReplica)}
                     disabled={loading}
                     activeOpacity={0.8}
                 >
-                    <Icon name="send" size={16} color="#FFF" style={styles.submitIcon} />
-                    <Text style={styles.submitButtonText}>
+                    <Icon name="send" size={16} color={themeColors.backgroundCard} style={styles.submitIcon} />
+                    <Text style={[styles.submitButtonText, { color: themeColors.backgroundCard }]}>
                         {loading ? 'Enviando...' : 'Publicar réplica'}
                     </Text>
                 </TouchableOpacity>
@@ -65,7 +81,6 @@ export const FormReplica = ({loading, infoReplica, guardarReplica, msgError}: Pr
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#FFF',
         marginHorizontal: 20,
         borderRadius: 16,
         padding: 16,
@@ -84,7 +99,6 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: '#F5F5F5',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 10,
@@ -92,7 +106,6 @@ const styles = StyleSheet.create({
     headerTitle: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#000',
         flex: 1,
     },
     errorContainer: {
@@ -111,16 +124,13 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     input: {
-        backgroundColor: '#FAFAFA',
         borderRadius: 10,
         padding: 12,
         fontSize: 14,
-        color: '#000',
         textAlignVertical: 'top',
         minHeight: 120,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
     },
     actions: {
         alignItems: 'stretch',
@@ -129,7 +139,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#000',
         borderRadius: 10,
         paddingVertical: 12,
         paddingHorizontal: 16,
@@ -141,7 +150,6 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     submitButtonText: {
-        color: '#FFF',
         fontSize: 15,
         fontWeight: '600',
     },

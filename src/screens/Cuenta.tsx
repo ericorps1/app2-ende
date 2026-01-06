@@ -16,10 +16,12 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { requestCameraPermission } from '../hooks/usePermisions';
 import RenderPdf from '../components/RenderUrlPdf';
 import { AddDomiciliation } from '../components/AddDomiciliation';
+import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 export const Cuenta = () => {
+    const { theme, toggleTheme, colors: themeColors } = useTheme();
     const { data_alumno, checkToken } = useContext( AuthContext );
     const [infoAlumno, setInfoAlumno] = useState<DataProfileAlumno|any>([]);
     const [loadingAccount, setLoadingAccount] = useState(true);
@@ -49,23 +51,19 @@ export const Cuenta = () => {
         getDomiciliation();
     }, [])
 
-    // ========== HELPER: OBTENER COLOR Y ESTILO DEL ESTATUS ==========
     const getStatusStyle = (status: string | undefined) => {
         if (!status) return { color: '#999', dotColor: '#999' };
         
         const statusUpper = status.toUpperCase();
         
-        // Verde para activos
         if (statusUpper === 'ACTIVO' || statusUpper === 'REINGRESO') {
             return { color: '#34C759', dotColor: '#34C759' };
         }
         
-        // Rojo para bajas
         if (statusUpper === 'BAJA' || statusUpper === 'NP') {
             return { color: '#FF6B6B', dotColor: '#FF6B6B' };
         }
         
-        // Gris para cualquier otro caso
         return { color: '#999', dotColor: '#999' };
     };
 
@@ -298,7 +296,6 @@ export const Cuenta = () => {
         setLoadingActuCont(false);
     }
 
-    // 🔥 Obtener estilo del estatus
     const statusStyle = getStatusStyle(data_alumno?.estatus_general);
 
     return (
@@ -309,18 +306,17 @@ export const Cuenta = () => {
                 <ScrollView 
                     showsVerticalScrollIndicator={false} 
                     scrollEnabled={scrollEnabled}
-                    style={styles.container}
+                    style={[styles.container, { backgroundColor: themeColors.background }]}
                     refreshControl={
                         <RefreshControl 
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            tintColor="#000"
-                            colors={['#000']}
+                            tintColor={themeColors.textPrimary}
+                            colors={[themeColors.textPrimary]}
                         />
                     }
                 >
-                    {/* HERO HEADER */}
-                    <View style={styles.heroSection}>
+                    <View style={[styles.heroSection, { backgroundColor: themeColors.backgroundCard, borderBottomColor: themeColors.borderGray }]}>
                         <View style={styles.heroContent}>
                             <TouchableOpacity onPress={() => getPhoto('img')} activeOpacity={0.8}>
                                 { (data_alumno?.fot_alu || newProfilePic!=='') 
@@ -331,30 +327,32 @@ export const Cuenta = () => {
                                         />
                                     )
                                     : (
-                                        <View style={styles.heroAvatar}>
-                                            <Text style={styles.heroAvatarText}>{FormatNameAvatar(data_alumno?.nom_alu)}</Text>
+                                        <View style={[styles.heroAvatar, { backgroundColor: themeColors.textPrimary }]}>
+                                            <Text style={[styles.heroAvatarText, { color: themeColors.backgroundCard }]}>
+                                                {FormatNameAvatar(data_alumno?.nom_alu)}
+                                            </Text>
                                         </View>
                                     )
                                 }
-                                <View style={styles.cameraIconBadge}>
-                                    <Icon name="camera" size={16} color="#FFF" />
+                                <View style={[styles.cameraIconBadge, { backgroundColor: themeColors.textPrimary, borderColor: themeColors.backgroundCard }]}>
+                                    <Icon name="camera" size={16} color={themeColors.backgroundCard} />
                                 </View>
                             </TouchableOpacity>
                             
-                            <Text style={styles.heroName}>{data_alumno?.nom_alu}</Text>
+                            <Text style={[styles.heroName, { color: themeColors.textPrimary }]}>{data_alumno?.nom_alu}</Text>
                             
-                            {/* 🔥 STATUS BADGE CON COLOR DINÁMICO */}
-                            <View style={styles.statusBadge}>
+                            <View style={[styles.statusBadge, { backgroundColor: themeColors.backgroundGray }]}>
                                 <View style={[styles.statusDot, { backgroundColor: statusStyle.dotColor }]} />
                                 <Text style={[styles.statusText, { color: statusStyle.color }]}>
                                     {data_alumno?.estatus_general}
                                 </Text>
                             </View>
 
-                            {/* PLANTEL */}
                             <View style={styles.plantelBadge}>
-                                <Icon name="map-marker-outline" size={14} color="#666" />
-                                <Text style={styles.plantelText}>{data_alumno?.nom_pla}</Text>
+                                <Icon name="map-marker-outline" size={14} color={themeColors.textSecondary} />
+                                <Text style={[styles.plantelText, { color: themeColors.textSecondary }]}>
+                                    {data_alumno?.nom_pla}
+                                </Text>
                             </View>
                         </View>
                         
@@ -370,155 +368,243 @@ export const Cuenta = () => {
                                     <Text style={styles.photoActionText}>Guardar</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity 
-                                    style={[styles.photoActionButton, styles.cancelButton]}
+                                    style={[styles.photoActionButton, styles.cancelButton, { backgroundColor: themeColors.backgroundGray }]}
                                     onPress={() => setNewProfilePic('')}
                                     disabled={uploading}
                                     activeOpacity={0.7}
                                 >
-                                    <Icon name="close" size={18} color="#666" />
-                                    <Text style={[styles.photoActionText, styles.cancelText]}>Cancelar</Text>
+                                    <Icon name="close" size={18} color={themeColors.textSecondary} />
+                                    <Text style={[styles.photoActionText, styles.cancelText, { color: themeColors.textSecondary }]}>
+                                        Cancelar
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         )}
                     </View>
 
-                    {/* INFORMACIÓN PERSONAL */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Información personal</Text>
+                    <View style={[styles.section, { backgroundColor: themeColors.backgroundCard }]}>
+                        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>Información personal</Text>
                         
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Teléfono</Text>
+                            <Text style={[styles.label, { color: themeColors.textSecondary }]}>Teléfono</Text>
                             <TextInput
                                 keyboardType='phone-pad'
                                 mode="flat"
                                 placeholder="Ingresa tu número"
+                                placeholderTextColor={themeColors.textTertiary}
+                                textColor={themeColors.textPrimary}
                                 underlineColor="transparent"
                                 activeUnderlineColor="transparent"
                                 value={infoAlumno?.tel_alu}
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: themeColors.backgroundGray }]}
+                                theme={{
+                                    colors: {
+                                        text: themeColors.textPrimary,
+                                        placeholder: themeColors.textTertiary,
+                                    }
+                                }}
                                 onChangeText={(value) => setInfoAlumno({...infoAlumno, tel_alu: value})}
                             />
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Dirección</Text>
+                            <Text style={[styles.label, { color: themeColors.textSecondary }]}>Dirección</Text>
                             <TextInput
                                 mode="flat"
                                 placeholder="Calle y número"
+                                placeholderTextColor={themeColors.textTertiary}
+                                textColor={themeColors.textPrimary}
                                 underlineColor="transparent"
                                 activeUnderlineColor="transparent"
                                 value={infoAlumno?.dir_alu}
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: themeColors.backgroundGray }]}
+                                theme={{
+                                    colors: {
+                                        text: themeColors.textPrimary,
+                                        placeholder: themeColors.textTertiary,
+                                    }
+                                }}
                                 onChangeText={(value) => setInfoAlumno({...infoAlumno, dir_alu: value})}
                             />
                         </View>
 
                         <View style={styles.inputRow}>
                             <View style={[styles.inputContainer, styles.inputHalf]}>
-                                <Text style={styles.label}>Colonia</Text>
+                                <Text style={[styles.label, { color: themeColors.textSecondary }]}>Colonia</Text>
                                 <TextInput
                                     mode="flat"
                                     placeholder="Colonia"
+                                    placeholderTextColor={themeColors.textTertiary}
+                                    textColor={themeColors.textPrimary}
                                     underlineColor="transparent"
                                     activeUnderlineColor="transparent"
                                     value={infoAlumno?.col_alu}
-                                    style={styles.input}
+                                    style={[styles.input, { backgroundColor: themeColors.backgroundGray }]}
+                                    theme={{
+                                        colors: {
+                                            text: themeColors.textPrimary,
+                                            placeholder: themeColors.textTertiary,
+                                        }
+                                    }}
                                     onChangeText={(value) => setInfoAlumno({...infoAlumno, col_alu: value})}
                                 />
                             </View>
                             <View style={[styles.inputContainer, styles.inputHalf]}>
-                                <Text style={styles.label}>Delegación</Text>
+                                <Text style={[styles.label, { color: themeColors.textSecondary }]}>Delegación</Text>
                                 <TextInput
                                     mode="flat"
                                     placeholder="Delegación"
+                                    placeholderTextColor={themeColors.textTertiary}
+                                    textColor={themeColors.textPrimary}
                                     underlineColor="transparent"
                                     activeUnderlineColor="transparent"
                                     value={infoAlumno?.del_alu}
-                                    style={styles.input}
+                                    style={[styles.input, { backgroundColor: themeColors.backgroundGray }]}
+                                    theme={{
+                                        colors: {
+                                            text: themeColors.textPrimary,
+                                            placeholder: themeColors.textTertiary,
+                                        }
+                                    }}
                                     onChangeText={(value) => setInfoAlumno({...infoAlumno, del_alu: value})}
                                 />
                             </View>
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Entidad</Text>
+                            <Text style={[styles.label, { color: themeColors.textSecondary }]}>Entidad</Text>
                             <TextInput
                                 mode="flat"
                                 placeholder="Estado"
+                                placeholderTextColor={themeColors.textTertiary}
+                                textColor={themeColors.textPrimary}
                                 underlineColor="transparent"
                                 activeUnderlineColor="transparent"
                                 value={infoAlumno?.ent_alu}
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: themeColors.backgroundGray }]}
+                                theme={{
+                                    colors: {
+                                        text: themeColors.textPrimary,
+                                        placeholder: themeColors.textTertiary,
+                                    }
+                                }}
                                 onChangeText={(value) => setInfoAlumno({...infoAlumno, ent_alu: value})}
                             />
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Correo electrónico</Text>
+                            <Text style={[styles.label, { color: themeColors.textSecondary }]}>Correo electrónico</Text>
                             <TextInput
                                 mode="flat"
                                 placeholder="correo@ejemplo.com"
+                                placeholderTextColor={themeColors.textTertiary}
+                                textColor={themeColors.textPrimary}
                                 keyboardType="email-address"
                                 underlineColor="transparent"
                                 activeUnderlineColor="transparent"
                                 value={infoAlumno?.cor1_alu}
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: themeColors.backgroundGray }]}
+                                theme={{
+                                    colors: {
+                                        text: themeColors.textPrimary,
+                                        placeholder: themeColors.textTertiary,
+                                    }
+                                }}
                                 onChangeText={(value) => setInfoAlumno({...infoAlumno, cor1_alu: value})}
                             />
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>CURP</Text>
+                            <Text style={[styles.label, { color: themeColors.textSecondary }]}>CURP</Text>
                             <TextInput
                                 mode="flat"
                                 placeholder="18 caracteres"
+                                placeholderTextColor={themeColors.textTertiary}
+                                textColor={themeColors.textPrimary}
                                 underlineColor="transparent"
                                 activeUnderlineColor="transparent"
                                 value={infoAlumno?.cur_alu}
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: themeColors.backgroundGray }]}
+                                theme={{
+                                    colors: {
+                                        text: themeColors.textPrimary,
+                                        placeholder: themeColors.textTertiary,
+                                    }
+                                }}
                                 onChangeText={(value) => setInfoAlumno({...infoAlumno, cur_alu: value})}
                             />
                         </View>
 
                         <TouchableOpacity 
-                            style={styles.primaryButton}
+                            style={[styles.primaryButton, { backgroundColor: themeColors.textPrimary }]}
                             onPress={updateInfo}
                             disabled={loadingForm}
                             activeOpacity={0.7}
                         >
-                            {loadingForm && <Icon name="loading" size={18} color="#FFF" style={styles.buttonIcon} />}
-                            <Text style={styles.primaryButtonText}>
+                            {loadingForm && <Icon name="loading" size={18} color={themeColors.backgroundCard} style={styles.buttonIcon} />}
+                            <Text style={[styles.primaryButtonText, { color: themeColors.backgroundCard }]}>
                                 {loadingForm ? 'Guardando cambios' : 'Guardar cambios'}
                             </Text>
                         </TouchableOpacity>
                     </View>
 
-                    {/* SEGURIDAD */}
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Seguridad</Text>
+                    <View style={[styles.section, { backgroundColor: themeColors.backgroundCard }]}>
+                        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>Seguridad</Text>
+                        
                         <TouchableOpacity 
                             style={styles.menuItem}
                             onPress={() => setModalContrasena(true)}
                             activeOpacity={0.7}
                         >
-                            <View style={styles.menuItemIcon}>
-                                <Icon name="lock-outline" size={20} color="#000" />
+                            <View style={[styles.menuItemIcon, { backgroundColor: themeColors.backgroundGray }]}>
+                                <Icon name="lock-outline" size={20} color={themeColors.textPrimary} />
                             </View>
                             <View style={styles.menuItemContent}>
-                                <Text style={styles.menuItemTitle}>Contraseña</Text>
-                                <Text style={styles.menuItemSubtitle}>Cambiar contraseña de acceso</Text>
+                                <Text style={[styles.menuItemTitle, { color: themeColors.textPrimary }]}>Contraseña</Text>
+                                <Text style={[styles.menuItemSubtitle, { color: themeColors.textSecondary }]}>
+                                    Cambiar contraseña de acceso
+                                </Text>
                             </View>
-                            <Icon name="chevron-right" size={20} color="#D0D0D0" />
+                            <Icon name="chevron-right" size={20} color={themeColors.borderGray} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            style={styles.menuItem}
+                            onPress={toggleTheme}
+                            activeOpacity={0.7}
+                        >
+                            <View style={[styles.menuItemIcon, { backgroundColor: themeColors.backgroundGray }]}>
+                                <Icon 
+                                    name={theme === 'dark' ? 'weather-night' : 'white-balance-sunny'} 
+                                    size={20} 
+                                    color={themeColors.textPrimary} 
+                                />
+                            </View>
+                            <View style={styles.menuItemContent}>
+                                <Text style={[styles.menuItemTitle, { color: themeColors.textPrimary }]}>
+                                    Modo oscuro
+                                </Text>
+                                <Text style={[styles.menuItemSubtitle, { color: themeColors.textSecondary }]}>
+                                    {theme === 'dark' ? 'Activado' : 'Desactivado'}
+                                </Text>
+                            </View>
+                            <View style={[
+                                styles.switchToggle, 
+                                { backgroundColor: theme === 'dark' ? '#00BFA5' : '#E0E0E0' }
+                            ]}>
+                                <View style={[
+                                    styles.switchThumb,
+                                    theme === 'dark' && styles.switchThumbActive
+                                ]} />
+                            </View>
                         </TouchableOpacity>
                     </View>
 
-                    {/* DOMICILIACIÓN */}
                     <AddDomiciliation
                         domiciliation={domiciliation}
                         updateDomiciliation={getDomiciliation}
                     />
 
-                    {/* PDF */}
                     <RenderPdf
                         title="Solicitud de Inscripción"
                         patterScrollEnabled={setScrollEnabled}
@@ -527,58 +613,80 @@ export const Cuenta = () => {
                     />
                 </ScrollView>
                 
-                {/* MODAL CONTRASEÑA */}
-                <Modal visible={modalContrasena} onDismiss={()=>setModalContrasena(false)} contentContainerStyle={styles.modal}>
-                    <Text style={styles.modalTitle}>Cambiar contraseña</Text>
-                    <Text style={styles.modalSubtitle}>Ingresa tu contraseña actual y elige una nueva</Text>
+                <Modal visible={modalContrasena} onDismiss={()=>setModalContrasena(false)} contentContainerStyle={[styles.modal, { backgroundColor: themeColors.backgroundCard }]}>
+                    <Text style={[styles.modalTitle, { color: themeColors.textPrimary }]}>Cambiar contraseña</Text>
+                    <Text style={[styles.modalSubtitle, { color: themeColors.textSecondary }]}>
+                        Ingresa tu contraseña actual y elige una nueva
+                    </Text>
                     
                     <TextInput
                         secureTextEntry={true}
                         mode="flat"
                         label="Contraseña actual"
+                        textColor={themeColors.textPrimary}
                         underlineColor="transparent"
                         activeUnderlineColor="transparent"
                         value={infoContra.ante_con}
-                        style={styles.modalInput}
+                        style={[styles.modalInput, { backgroundColor: themeColors.backgroundGray }]}
+                        theme={{
+                            colors: {
+                                text: themeColors.textPrimary,
+                                placeholder: themeColors.textTertiary,
+                            }
+                        }}
                         onChangeText={(value) => setInfoContra({...infoContra, ante_con: value})}
                     />
                     <TextInput
                         secureTextEntry={true}
                         mode="flat"
                         label="Nueva contraseña"
+                        textColor={themeColors.textPrimary}
                         underlineColor="transparent"
                         activeUnderlineColor="transparent"
                         value={infoContra.nuev_con}
-                        style={styles.modalInput}
+                        style={[styles.modalInput, { backgroundColor: themeColors.backgroundGray }]}
+                        theme={{
+                            colors: {
+                                text: themeColors.textPrimary,
+                                placeholder: themeColors.textTertiary,
+                            }
+                        }}
                         onChangeText={(value) => setInfoContra({...infoContra, nuev_con: value})}
                     />
                     <TextInput
                         secureTextEntry={true}
                         mode="flat"
                         label="Confirmar contraseña"
+                        textColor={themeColors.textPrimary}
                         underlineColor="transparent"
                         activeUnderlineColor="transparent"
                         value={infoContra.conf_con}
-                        style={styles.modalInput}
+                        style={[styles.modalInput, { backgroundColor: themeColors.backgroundGray }]}
+                        theme={{
+                            colors: {
+                                text: themeColors.textPrimary,
+                                placeholder: themeColors.textTertiary,
+                            }
+                        }}
                         onChangeText={(value) => setInfoContra({...infoContra, conf_con: value})}
                     />
                     <TouchableOpacity 
-                        style={styles.primaryButton}
+                        style={[styles.primaryButton, { backgroundColor: themeColors.textPrimary }]}
                         onPress={cambiarContrasena}
                         disabled={loadingActuCont}
                         activeOpacity={0.7}
                     >
-                        <Text style={styles.primaryButtonText}>
+                        <Text style={[styles.primaryButtonText, { color: themeColors.backgroundCard }]}>
                             {loadingActuCont ? 'Actualizando...' : 'Actualizar contraseña'}
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
-                        style={styles.secondaryButton}
+                        style={[styles.secondaryButton, { backgroundColor: themeColors.backgroundGray }]}
                         onPress={() => setModalContrasena(false)}
                         disabled={loadingActuCont}
                         activeOpacity={0.7}
                     >
-                        <Text style={styles.secondaryButtonText}>Cancelar</Text>
+                        <Text style={[styles.secondaryButtonText, { color: themeColors.textPrimary }]}>Cancelar</Text>
                     </TouchableOpacity>
                 </Modal>
                 <ModalMessages visible={visible} typeMsgModal={typeMsgModal} modalText={modalText} onDismiss={()=>setVisible(false)}/>
@@ -590,15 +698,12 @@ export const Cuenta = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F5F5F5',
     },
     heroSection: {
-        backgroundColor: '#FFF',
         paddingTop: 60,
         paddingBottom: 32,
         alignItems: 'center',
         borderBottomWidth: 1,
-        borderBottomColor: '#F0F0F0',
     },
     heroContent: {
         alignItems: 'center',
@@ -608,7 +713,6 @@ const styles = StyleSheet.create({
         width: 90,
         height: 90,
         borderRadius: 45,
-        backgroundColor: '#000',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16,
@@ -619,7 +723,6 @@ const styles = StyleSheet.create({
         elevation: 8,
     },
     heroAvatarText: {
-        color: '#FFF',
         fontSize: 32,
         fontWeight: '700',
     },
@@ -627,19 +730,16 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 16,
         right: -2,
-        backgroundColor: '#000',
         width: 30,
         height: 30,
         borderRadius: 15,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 3,
-        borderColor: '#FFF',
     },
     heroName: {
         fontSize: 24,
         fontWeight: '700',
-        color: '#000',
         marginBottom: 8,
         textAlign: 'center',
         paddingHorizontal: 20,
@@ -647,7 +747,6 @@ const styles = StyleSheet.create({
     statusBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F5F5F5',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 12,
@@ -658,12 +757,10 @@ const styles = StyleSheet.create({
         width: 6,
         height: 6,
         borderRadius: 3,
-        // 🔥 El color se asigna dinámicamente
     },
     statusText: {
         fontSize: 13,
         fontWeight: '600',
-        // 🔥 El color se asigna dinámicamente
     },
     plantelBadge: {
         flexDirection: 'row',
@@ -672,7 +769,6 @@ const styles = StyleSheet.create({
     },
     plantelText: {
         fontSize: 13,
-        color: '#666',
         fontWeight: '500',
     },
     photoActions: {
@@ -693,7 +789,6 @@ const styles = StyleSheet.create({
         gap: 6,
     },
     cancelButton: {
-        backgroundColor: '#F5F5F5',
     },
     photoActionText: {
         fontSize: 14,
@@ -701,10 +796,8 @@ const styles = StyleSheet.create({
         color: '#34C759',
     },
     cancelText: {
-        color: '#666',
     },
     section: {
-        backgroundColor: '#FFF',
         marginTop: 12,
         paddingHorizontal: 20,
         paddingVertical: 20,
@@ -712,7 +805,6 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 15,
         fontWeight: '700',
-        color: '#000',
         marginBottom: 20,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
@@ -730,13 +822,11 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 12,
         fontWeight: '600',
-        color: '#666',
         marginBottom: 8,
         textTransform: 'uppercase',
         letterSpacing: 0.3,
     },
     input: {
-        backgroundColor: '#F5F5F5',
         borderRadius: 10,
         fontSize: 15,
         height: 48,
@@ -744,7 +834,6 @@ const styles = StyleSheet.create({
     },
     primaryButton: {
         flexDirection: 'row',
-        backgroundColor: '#000',
         height: 48,
         borderRadius: 10,
         justifyContent: 'center',
@@ -756,12 +845,10 @@ const styles = StyleSheet.create({
         marginRight: -4,
     },
     primaryButtonText: {
-        color: '#FFF',
         fontSize: 15,
         fontWeight: '600',
     },
     secondaryButton: {
-        backgroundColor: '#F5F5F5',
         height: 48,
         borderRadius: 10,
         justifyContent: 'center',
@@ -769,7 +856,6 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     secondaryButtonText: {
-        color: '#000',
         fontSize: 15,
         fontWeight: '600',
     },
@@ -782,7 +868,6 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#F5F5F5',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 14,
@@ -793,15 +878,33 @@ const styles = StyleSheet.create({
     menuItemTitle: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#000',
         marginBottom: 2,
     },
     menuItemSubtitle: {
         fontSize: 13,
-        color: '#666',
+    },
+    switchToggle: {
+        width: 50,
+        height: 30,
+        borderRadius: 15,
+        padding: 2,
+        justifyContent: 'center',
+    },
+    switchThumb: {
+        width: 26,
+        height: 26,
+        borderRadius: 13,
+        backgroundColor: '#FFF',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 3,
+        elevation: 3,
+    },
+    switchThumbActive: {
+        alignSelf: 'flex-end',
     },
     modal: {
-        backgroundColor: '#FFF',
         marginHorizontal: 20,
         borderRadius: 16,
         padding: 24,
@@ -809,16 +912,13 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#000',
         marginBottom: 6,
     },
     modalSubtitle: {
         fontSize: 14,
-        color: '#666',
         marginBottom: 24,
     },
     modalInput: {
-        backgroundColor: '#F5F5F5',
         borderRadius: 10,
         marginBottom: 14,
         height: 48,

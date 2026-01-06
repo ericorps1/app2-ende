@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { obPregunta, obRespuesta } from '../interfaces/appInterfaces';
 import { colors } from '../theme/platformTheme';
 import { HtmlToJsx } from './HtmlToJsx';
+import { useTheme } from '../context/ThemeContext';
 
 interface PropsPreguntaRespuestas {
   pregunta: obPregunta;
@@ -24,43 +25,82 @@ export const PreguntaRespuestas = ({
   totalPreguntas,
   readonly,
 }: PropsPreguntaRespuestas) => {
+  const { theme, colors: themeColors } = useTheme();
+  const colorScheme = useColorScheme();
+  
+  const isDarkTheme = theme === 'dark' || colorScheme === 'dark';
+  
+  // console.log('🌓 PREGUNTA_RESPUESTAS - isDarkTheme:', isDarkTheme);
+  // console.log('🎨 PREGUNTA_RESPUESTAS - backgroundCard:', themeColors.backgroundCard);
+
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+      <View style={[
+        styles.card, 
+        { 
+          backgroundColor: themeColors.backgroundCard,
+          borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : themeColors.borderGray
+        }
+      ]}>
+        {/* QUESTION HEADER */}
         <View style={styles.questionHeader}>
-          <Text style={styles.questionNumber}>Pregunta {numPre} de {totalPreguntas}</Text>
+          <Text style={[styles.questionNumber, { color: themeColors.textPrimary }]}>
+            Pregunta {numPre} de {totalPreguntas}
+          </Text>
         </View>
 
+        {/* QUESTION CONTENT */}
         <View style={styles.questionContent}>
-          <HtmlToJsx strHtml={pregunta.pre_pre} styles={`font-size: 16px; color: #000;`} />
+          <HtmlToJsx 
+            strHtml={pregunta.pre_pre} 
+            styles={`font-size: 16px; color: ${isDarkTheme ? '#e0e0e0' : '#000'}; font-weight: 500;`}
+            isDarkMode={isDarkTheme}
+          />
         </View>
 
+        {/* ANSWERS */}
         <View style={styles.answersContainer}>
           {respuestasPreg.length > 0 &&
             respuestasPreg.map((respuesta: obRespuesta) => {
               const esSeleccionada = respuesta.id_pre2 === respuesta.id_pre && respuesta.id_res === respuesta.id_res1;
-              let backgroundColor = '#FFF';
-              let borderColor = '#E0E0E0';
-              let textColor = '#000';
+              
+              // 🎨 USA EL MISMO COLOR DEL CARD - NO HARDCODEADO
+              let backgroundColor = themeColors.backgroundCard; // 🔥 ARREGLADO
+              let textColor = isDarkTheme ? '#D0D0D0' : '#333333';
+              let borderColor = isDarkTheme ? 'rgba(255, 255, 255, 0.2)' : '#D0D0D0';
+              let borderWidth = 2;
               let icon = null;
 
+              // console.log('💡 Respuesta backgroundColor:', backgroundColor);
+
+              // 🎯 READONLY MODE (Resultados) - SOLO cambia el BORDE
               if (readonly && esSeleccionada) {
                 const esCorrecta = respuesta.val_res === 'Verdadero';
-                backgroundColor = esCorrecta ? '#E8F5E9' : '#FFEBEE';
-                borderColor = esCorrecta ? '#4CAF50' : '#F44336';
-                textColor = esCorrecta ? '#1B5E20' : '#B71C1C';
+                
+                if (isDarkTheme) {
+                  borderColor = esCorrecta ? '#4CAF50' : '#EF5350';
+                  borderWidth = 3;
+                  textColor = esCorrecta ? '#81C784' : '#EF9A9A';
+                } else {
+                  borderColor = esCorrecta ? '#4CAF50' : '#F44336';
+                  borderWidth = 3;
+                  textColor = esCorrecta ? '#2E7D32' : '#C62828';
+                }
+                
                 icon = (
                   <Icon
                     name={esCorrecta ? 'check-circle' : 'close-circle'}
-                    size={20}
-                    color={esCorrecta ? '#4CAF50' : '#F44336'}
+                    size={22}
+                    color={borderColor}
                   />
                 );
-              } else if (esSeleccionada) {
-                backgroundColor = '#000';
-                borderColor = '#000';
-                textColor = '#FFF';
-                icon = <Icon name="radiobox-marked" size={20} color="#FFF" />;
+              } 
+              // ✅ SELECTED MODE (Durante el examen) - SOLO cambia el BORDE
+              else if (esSeleccionada) {
+                borderColor = '#1976D2';
+                borderWidth = 3;
+                icon = <Icon name="radiobox-marked" size={22} color="#1976D2" />;
+                // console.log('🔘 Respuesta seleccionada - SOLO BORDE:', { borderColor, borderWidth });
               }
 
               return (
@@ -71,6 +111,7 @@ export const PreguntaRespuestas = ({
                     { 
                       backgroundColor,
                       borderColor,
+                      borderWidth,
                       opacity: loadingResp ? 0.6 : 1,
                     }
                   ]}
@@ -85,7 +126,8 @@ export const PreguntaRespuestas = ({
                     <View style={styles.answerTextContainer}>
                       <HtmlToJsx 
                         strHtml={respuesta.res_res} 
-                        styles={`color: ${textColor}; font-size: 15px;`} 
+                        styles={`color: ${textColor}; font-size: 15px; font-weight: 500;`}
+                        isDarkMode={isDarkTheme}
                       />
                     </View>
                   </View>
@@ -100,10 +142,11 @@ export const PreguntaRespuestas = ({
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    paddingHorizontal: 16,
     marginBottom: 20,
   },
   card: {
-    backgroundColor: '#FFF',
     borderRadius: 14,
     padding: 16,
     shadowColor: '#000',
@@ -112,7 +155,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
   },
   questionHeader: {
     marginBottom: 12,
@@ -120,25 +162,25 @@ const styles = StyleSheet.create({
   questionNumber: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#000',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   questionContent: {
     marginBottom: 16,
     paddingHorizontal: 4,
   },
   answersContainer: {
-    gap: 10,
+    gap: 12,
   },
   answerButton: {
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
   },
   answerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
   iconContainer: {
     marginRight: 2,
