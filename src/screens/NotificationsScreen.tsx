@@ -1,63 +1,204 @@
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
-import { BackButtonNavigation } from '../components/BackButtonNavigation';
-import { useAppSelector } from '../app/hooks';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { Notification } from '../interfaces/appInterfaces';
-import { formatDateHour } from '../hooks/useFormats';
-import { colors } from '../theme/platformTheme';
+import { AuthContext } from '../context/AuthContext';
+import endeApi from '../api/estudianteAPI';
+import { updateInfoNotifications } from '../features/notifications/dataNotificationsSlice';
+import { CardNotification } from '../components/CardNotification';
+import { useTheme } from '../context/ThemeContext'; // 👈 IMPORTAR
 
-const getStatusIcon = (status: 'Pendiente' | 'Enviada' | 'Recibida' | 'Leida') => {
-  let icon = 'bell';
-  switch (status) {
-    case 'Leida':
-      icon = 'check';
-      break;
-    case 'Pendiente':
-      icon = 'clock';
-      break;
-    case 'Recibida':
-      icon = 'bell';
-      break;
-    case 'Enviada':
-      icon = 'paper-plane';
-      break;
-    default:
-      return 'bell';
-  }
-  return <FontAwesome5Icon name={icon} style={styles.icon}/>;
-};
+export const NotificationsScreen = ({route, navigation}: any) => {
+  const { colors: themeColors } = useTheme(); // 👈 HOOK
+  const { data_alumno } = useContext(AuthContext);
+  const dispatch = useAppDispatch();
+  const notifications: Notification[] = useAppSelector(state => state.datanotifications);
+  const [refreshing, setRefreshing] = useState(false);
+  const [filtroActivo, setFiltroActivo] = useState<'todas' | 'leidas' | 'no_leidas'>('todas');
 
-export const NotificationsScreen = ({route,navigation}:any) => {
-  const notifications:Notification[] = useAppSelector(state => state.datanotifications);
-
-  const renderItem = ({ item }:any) => {
-    const [date,_] = item.fec_not.split(' ');
-    return (
-      <TouchableOpacity 
-        onPress={() => navigation.navigate('DetalleNotificacion', { notification: item })}
-        style={[styles.card, {backgroundColor: item.est_not === 'Leida' ? colors.white : colors.softSilver}]}
-      >
-        <View style={styles.iconContainer}>{getStatusIcon(item.est_not)}</View>
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>{item.tit_not}</Text>
-          <Text style={styles.body}>{item.men_not.length > 90 ? `${item.men_not.substring(0, 90)}...` : item.men_not}</Text>
-          <Text style={styles.date}>{formatDateHour(item.fec_not)}</Text>
-        </View>
-      </TouchableOpacity>
-    )
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await obtener_notificaciones();
+    setRefreshing(false);
   };
 
+  const obtener_notificaciones = async() => {
+    try { 
+      const {data} = await endeApi.get('/notificaciones', { 
+        params: { 'id_alu_ram': data_alumno!.id_alu_ram } 
+      });
+      if(data.data.length > 0){
+        dispatch(updateInfoNotifications(data.data));
+      } else {
+        dispatch(updateInfoNotifications([]));
+      }
+    } catch (error: any) {
+      console.log('Error obteniendo notificaciones:', error);
+    }
+  };
+
+  const filtrarNotificaciones = () => {
+    if (filtroActivo === 'leidas') {
+      return notifications.filter(n => n.est_not === 'Leida');
+    }
+    if (filtroActivo === 'no_leidas') {
+      return notifications.filter(n => n.est_not !== 'Leida');
+    }
+    return notifications;
+  };
+
+  const notificacionesFiltradas = filtrarNotificaciones();
+  const totalNoLeidas = notifications.filter(n => n.est_not !== 'Leida').length;
+  const totalLeidas = notifications.filter(n => n.est_not === 'Leida').length;
+
+  const renderEmpty = () => (
+    <View style={styles.emptyState}>
+      <Icon name="bell-outline" size={64} color={themeColors.borderGray} />
+      <Text style={[styles.emptyStateTitle, { color: themeColors.textPrimary }]}>
+        {filtroActivo === 'leidas' 
+          ? 'No hay notificaciones leídas' 
+          : filtroActivo === 'no_leidas' 
+          ? 'No hay notificaciones nuevas' 
+          : 'No hay notificaciones'}
+      </Text>
+      <Text style={[styles.emptyStateSubtitle, { color: themeColors.textSecondary }]}>
+        {filtroActivo === 'todas' 
+          ? 'Las notificaciones que recibas aparecerán aquí'
+          : 'Cambia el filtro para ver otras notificaciones'}
+      </Text>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={styles.container}>
-      <BackButtonNavigation onPressBack={() => navigation.pop()} title={'Notificaciones'}/>
+    <SafeAreaView style={[styles.container, { backgroundColor: themeColors.backgroundCard }]}>
+      {/* HEADER */}
+      <View style={[styles.header, { 
+        backgroundColor: themeColors.backgroundCard,
+        borderBottomColor: themeColors.borderGray 
+      }]}>
+        <TouchableOpacity 
+          style={[styles.backButton, { backgroundColor: themeColors.backgroundGray }]}
+          onPress={() => navigation.pop()}
+          activeOpacity={0.7}
+        >
+          <Icon name="arrow-left" size={24} color={themeColors.textPrimary} />
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <Text style={[styles.headerTitle, { color: themeColors.textPrimary }]}>
+            Notificaciones
+          </Text>
+          {totalNoLeidas > 0 && (
+            <View style={[styles.badge, { backgroundColor: themeColors.textPrimary }]}>
+              <Text style={[styles.badgeText, { color: themeColors.backgroundCard }]}>
+                {totalNoLeidas}
+              </Text>
+            </View>
+          )}
+        </View>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      {/* PILLS FILTER */}
+      <View style={[styles.filterContainer, { 
+        backgroundColor: themeColors.backgroundCard,
+        borderBottomColor: themeColors.borderGray 
+      }]}>
+        <TouchableOpacity
+          style={[
+            styles.filterPill, 
+            { backgroundColor: themeColors.backgroundGray },
+            filtroActivo === 'todas' && { backgroundColor: themeColors.textPrimary }
+          ]}
+          onPress={() => setFiltroActivo('todas')}
+          activeOpacity={0.7}
+        >
+          <Text style={[
+            styles.filterText, 
+            { color: themeColors.textSecondary },
+            filtroActivo === 'todas' && { color: themeColors.backgroundCard }
+          ]}>
+            Todas
+          </Text>
+          <Text style={[
+            styles.filterCount, 
+            { color: themeColors.textTertiary },
+            filtroActivo === 'todas' && { color: themeColors.backgroundCard }
+          ]}>
+            {notifications.length}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.filterPill, 
+            { backgroundColor: themeColors.backgroundGray },
+            filtroActivo === 'no_leidas' && { backgroundColor: themeColors.textPrimary }
+          ]}
+          onPress={() => setFiltroActivo('no_leidas')}
+          activeOpacity={0.7}
+        >
+          <Text style={[
+            styles.filterText, 
+            { color: themeColors.textSecondary },
+            filtroActivo === 'no_leidas' && { color: themeColors.backgroundCard }
+          ]}>
+            Nuevas
+          </Text>
+          {totalNoLeidas > 0 && (
+            <Text style={[
+              styles.filterCount, 
+              { color: themeColors.textTertiary },
+              filtroActivo === 'no_leidas' && { color: themeColors.backgroundCard }
+            ]}>
+              {totalNoLeidas}
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.filterPill, 
+            { backgroundColor: themeColors.backgroundGray },
+            filtroActivo === 'leidas' && { backgroundColor: themeColors.textPrimary }
+          ]}
+          onPress={() => setFiltroActivo('leidas')}
+          activeOpacity={0.7}
+        >
+          <Text style={[
+            styles.filterText, 
+            { color: themeColors.textSecondary },
+            filtroActivo === 'leidas' && { color: themeColors.backgroundCard }
+          ]}>
+            Leídas
+          </Text>
+          <Text style={[
+            styles.filterCount, 
+            { color: themeColors.textTertiary },
+            filtroActivo === 'leidas' && { color: themeColors.backgroundCard }
+          ]}>
+            {totalLeidas}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* LIST */}
       <FlatList
-        data={notifications}
-        keyExtractor={(item) => 'notificationsScreen'+item.id_not.toString()}
-        renderItem={renderItem}
+        data={notificacionesFiltradas}
+        keyExtractor={(item) => 'notification_' + item.id_not.toString()}
+        renderItem={({ item }) => <CardNotification notification={item} />}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={notificacionesFiltradas.length === 0 && styles.listEmpty}
+        ListEmptyComponent={renderEmpty}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={themeColors.textPrimary}
+            colors={[themeColors.textPrimary]}
+          />
+        }
       />
     </SafeAreaView>
   );
@@ -66,54 +207,88 @@ export const NotificationsScreen = ({route,navigation}:any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 16,
-    paddingTop: 10,
   },
   header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-    marginBottom: 12,
-  },
-  icon: {
-    fontSize: 20,
-  },
-  listContent: {
-    paddingBottom: 20,
-  },
-  card: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    elevation: 2, // sombra Android
-    shadowColor: '#000', // sombra iOS
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
   },
-  iconContainer: {
-    marginRight: 12,
-    paddingTop: 4,
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  textContainer: {
+  headerContent: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 12,
+    gap: 8,
   },
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 4,
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
   },
-  body: {
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    minWidth: 20,
+    alignItems: 'center',
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    gap: 8,
+    borderBottomWidth: 1,
+  },
+  filterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
+    gap: 6,
+  },
+  filterText: {
     fontSize: 14,
-    color: '#4b5563',
-    marginBottom: 4,
+    fontWeight: '600',
   },
-  date: {
-    fontSize: 12,
-    color: '#9ca3af',
+  filterCount: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  listEmpty: {
+    flexGrow: 1,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 80,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    paddingHorizontal: 40,
   },
 });

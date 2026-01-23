@@ -1,14 +1,17 @@
 import React, { useEffect } from 'react'
 import { Animated, Pressable, StyleSheet, Text } from 'react-native';
 import { useAppSelector } from '../app/hooks';
+import { useTheme } from '../context/ThemeContext';
 
 export const NumberNotification = ({pressed=()=>{}}:any) => {
-  // Animación para el número
+  const { colors: themeColors } = useTheme();
   const bounceAnim = new Animated.Value(1);
   const notifications = useAppSelector(state => state.datanotifications);
+  
   useEffect(() => {
     startBounceLoop();
   }, [notifications]);
+  
   const startBounceLoop = () => {
     Animated.loop(
       Animated.sequence([
@@ -25,7 +28,9 @@ export const NumberNotification = ({pressed=()=>{}}:any) => {
       ])
     ).start();
   };
+  
   const countNot = notifications.filter((noti) => noti.est_not !== 'Leida').length;
+  
   return (
     <Animated.View style={[styles.badge, { transform: [{ scale: bounceAnim }] }]}>
       <Pressable onPress={pressed}>
@@ -40,7 +45,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 1,
     right: 1,
-    backgroundColor: 'red',
+    backgroundColor: '#FF3B30',
     borderRadius: 10,
     width: 20,
     height: 20,
@@ -49,9 +54,8 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   badgeText: {
-    color: 'white',
+    color: '#FFF',
     fontSize: 12,
     fontWeight: 'bold',
   },
 })
-  

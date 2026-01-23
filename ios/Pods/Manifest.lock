@@ -1323,6 +1323,8 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - react-native-pdf (7.0.3):
+    - React-Core
   - react-native-performance (5.0.0):
     - React-Core
   - react-native-render-html (6.3.4):
@@ -1910,6 +1912,7 @@ DEPENDENCIES:
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-orientation-locker (from `../node_modules/react-native-orientation-locker`)
   - react-native-pager-view (from `../node_modules/react-native-pager-view`)
+  - react-native-pdf (from `../node_modules/react-native-pdf`)
   - react-native-performance (from `../node_modules/react-native-performance`)
   - react-native-render-html (from `../node_modules/react-native-render-html`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
@@ -2068,6 +2071,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-orientation-locker"
   react-native-pager-view:
     :path: "../node_modules/react-native-pager-view"
+  react-native-pdf:
+    :path: "../node_modules/react-native-pdf"
   react-native-performance:
     :path: "../node_modules/react-native-performance"
   react-native-render-html:
@@ -2214,6 +2219,7 @@ SPEC CHECKSUMS:
   react-native-netinfo: 3aa5637c18834966e0c932de8ae1ae56fea20a97
   react-native-orientation-locker: 4409c5b12b65f942e75449872b4f078b6f27af81
   react-native-pager-view: c476f76d54f946df5147645e902d3d7173688187
+  react-native-pdf: d791024b3d3dad60b4f0152dbf32fa0db6539d4c
   react-native-performance: 47ac22ebf2aa24f324a96a5825581f6ce18c09e8
   react-native-render-html: 984dfe2294163d04bf5fe25d7c9f122e60e05ebe
   react-native-safe-area-context: 141eca0fd4e4191288dfc8b96a7c7e1c2983447a

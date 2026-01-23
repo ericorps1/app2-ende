@@ -6,6 +6,7 @@ import { LoadingScreen } from '../screens/LoadingScreen';
 import { CardNotification } from './CardNotification';
 import { useNavigation } from "@react-navigation/core";
 import { ScrollView } from 'react-native-gesture-handler';
+import { useTheme } from '../context/ThemeContext'; // 👈 IMPORTAR
 
 interface PropsPanelNotifications {
   actividadesPendientes: ActividadPendiente[];
@@ -14,7 +15,9 @@ interface PropsPanelNotifications {
 }
 
 export const PanelNotifications = ({actividadesPendientes, notifications, loading}:PropsPanelNotifications) => {
+  const { colors: themeColors } = useTheme(); // 👈 HOOK
   const navigation = useNavigation<any>();
+  
   if(loading)
     return (<View style={{marginVertical: 20}}>
       <LoadingScreen text='Cargando notificaciones...'/>
@@ -44,7 +47,9 @@ export const PanelNotifications = ({actividadesPendientes, notifications, loadin
       {//Si no hay notificaciones ni actividades pendientes
         actividadesPendientes.length === 0 && notifications.length === 0 &&
           <View>
-            <Text style={styles.noNotifications}>No tienes ninguna notificación</Text>
+            <Text style={[styles.noNotifications, { color: themeColors.textSecondary }]}>
+              No tienes ninguna notificación
+            </Text>
           </View>
       }
       {//Si hay alguna notificacion mostramos opcion para ver todas las notificaciones
@@ -52,7 +57,9 @@ export const PanelNotifications = ({actividadesPendientes, notifications, loadin
           <Pressable
             onPress={() => navigation.navigate('Notificaciones')}
           >
-            <Text style={styles.allNotifications}>Ver todas las notificaciones</Text>
+            <Text style={[styles.allNotifications, { color: themeColors.textPrimary }]}>
+              Ver todas las notificaciones
+            </Text>
           </Pressable>
       }
     </ScrollView>
@@ -64,14 +71,12 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     textAlign: 'center',
     fontSize: 16,
-    color: '#555',
     fontWeight: 'bold',
   },
   allNotifications: {
     marginVertical: 20,
     textAlign: 'center',
     fontSize: 16,
-    color: '#555',
     fontWeight: 'bold',
   }
 })

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { BackButtonNavigation } from '../components/BackButtonNavigation';
 import { MensajesChatAlumno } from '../components/MensajesChatAlumno';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '../context/ThemeContext';
 
 interface ChatSalaProps {
     route: {
@@ -15,9 +16,11 @@ interface ChatSalaProps {
 }
 
 export const ChatSala = ({ route, navigation }:ChatSalaProps) => {
+    const { colors: themeColors } = useTheme();
     const {id_sal,des_sal} = route.params;
+    
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: themeColors.background }]}>
             <BackButtonNavigation onPressBack={() => navigation.pop()} title={des_sal}/>
             <MensajesChatAlumno 
                 id_sal={id_sal}

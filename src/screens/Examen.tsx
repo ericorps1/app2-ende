@@ -1,18 +1,21 @@
 import React, { useContext, useEffect, useState } from 'react'
-import { View, SafeAreaView, ScrollView, StyleSheet, Text, TouchableHighlight, Dimensions } from 'react-native';
-import { BackButtonNavigation } from '../components/BackButtonNavigation';
+import { View, ScrollView, StyleSheet, Text, TouchableOpacity, RefreshControl, useColorScheme } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 import { PropsActividad } from '../interfaces/appInterfaces';
 import { colors, platformTheme } from '../theme/platformTheme';
 import { HtmlToJsx } from '../components/HtmlToJsx';
-import { Button, Divider } from 'react-native-paper';
 import PaperMessages from '../components/PaperMessages';
 import cafeApi from '../api/estudianteAPI';
 import moment from 'moment';
 import { useIsFocused } from '@react-navigation/core';
-import { ChatAlumno } from '../components/ChatAlumno';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const Examen = ({ route, navigation }: PropsActividad) => {
+  const { theme, colors: themeColors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme();
   const { data_alumno } = useContext(AuthContext);
   const { identificador_copia, titulo, descripcion, dur_exa, id_cal_act, inicio, fin, puntaje, estatus_fecha } = route.params.data_actividad;
 
@@ -20,12 +23,42 @@ export const Examen = ({ route, navigation }: PropsActividad) => {
   const [visibleAlertInicExa, setVisibleAlertInicExa] = useState(false);
   const [visibleAlertFinExamen, setVisibleAlertFinExamen] = useState(false);
   const [visibleAlertNoIntentos, setVisibleAlertNoIntentos] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const isDarkTheme = (() => {
+    const bg = themeColors.background?.toLowerCase() || '';
+    const cardBg = themeColors.backgroundCard?.toLowerCase() || '';
+    const textPrimary = themeColors.textPrimary?.toLowerCase() || '';
+    
+    const isDark = bg === '#000' || 
+                   bg === '#000000' ||
+                   bg === '#121212' || 
+                   bg === '#1a1a1a' ||
+                   cardBg === '#000' ||
+                   cardBg === '#000000' ||
+                   cardBg === '#121212' ||
+                   cardBg === '#1e1e1e' ||
+                   cardBg === '#1a1a1a' ||
+                   textPrimary === '#fff' ||
+                   textPrimary === '#ffffff' ||
+                   textPrimary === '#f5f5f5' ||
+                   bg.includes('black') ||
+                   (bg.startsWith('#') && parseInt(bg.replace('#', ''), 16) < 3355443);
+    
+    return isDark;
+  })();
 
   const isFocused = useIsFocused();
 
   useEffect(() => {
     if (isFocused) getIntentos();
   }, [isFocused]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await getIntentos();
+    setRefreshing(false);
+  };
 
   const getIntentos = async () => {
     const { data } = await cafeApi.get('cal_act/' + id_cal_act);
@@ -59,71 +92,283 @@ export const Examen = ({ route, navigation }: PropsActividad) => {
   }
 
   const estatus = calAct.fec_cal_act ? 'Calificada' : estatus_fecha === 'Vencida' ? 'Vencida' : 'Pendiente';
-  const estatusColor = {
-    Calificada: colors.success,
-    Pendiente: colors.warning,
-    Vencida: colors.error
+  
+  const estatusConfig = isDarkTheme ? {
+    Calificada: { color: '#A8C4A8', bg: '#2D352E' },
+    Pendiente: { color: '#D4BDA0', bg: '#352F2A' },
+    Vencida: { color: '#D0A8A0', bg: '#382E2D' }
+  } : {
+    Calificada: { color: '#34C759', bg: '#E8F5E9' },
+    Pendiente: { color: '#FF9500', bg: '#FFF3E0' },
+    Vencida: { color: '#FF3B30', bg: '#FFEBEE' }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <BackButtonNavigation onPressBack={() => navigation.pop()} title={titulo} />
-      <ScrollView style={styles.scroll} contentContainerStyle={{ paddingBottom: 100 }}>
-        <View style={styles.section}>
-          <TitleCard title="Detalles del Examen" />
-          <InfoRow label="Inicio" value={moment(inicio).format('DD/MMM/YYYY')} />
-          <InfoRow label="Fin" value={moment(fin).format('DD/MMM/YYYY')} />
-          <InfoRow label="Duración" value={`${dur_exa} minutos`} />
-          <InfoRow label="Puntaje total" value={puntaje} />
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+      {/* HEADER */}
+      <View style={[
+        styles.header, 
+        { 
+          paddingTop: insets.top + 20,
+          backgroundColor: themeColors.backgroundCard,
+          borderBottomColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : themeColors.borderGray
+        }
+      ]}>
+        <TouchableOpacity 
+          onPress={() => navigation.pop()} 
+          style={[
+            styles.backButton, 
+            { 
+              backgroundColor: isDarkTheme ? '#2A2A2A' : themeColors.backgroundGray 
+            }
+          ]}
+          activeOpacity={0.7}
+        >
+          <Icon name="arrow-left" size={24} color={themeColors.textPrimary} />
+        </TouchableOpacity>
+        <View style={styles.headerContent}>
+          <Text style={[styles.headerTitle, { color: themeColors.textPrimary }]} numberOfLines={1}>
+            {titulo}
+          </Text>
+          <Text style={[styles.headerSubtitle, { color: themeColors.textSecondary }]}>
+            Examen
+          </Text>
+        </View>
+      </View>
+
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.contentContainer,
+          { paddingBottom: 100 + insets.bottom } // 🔥 AJUSTADO: Espacio para el botón + safe area
+        ]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={themeColors.textPrimary}
+            colors={[themeColors.textPrimary]}
+          />
+        }
+      >
+        {/* STATUS BADGE */}
+        <View style={[
+          styles.statusBadge, 
+          { 
+            backgroundColor: estatusConfig[estatus].bg,
+            borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
+            borderWidth: isDarkTheme ? 1 : 0
+          }
+        ]}>
+          <Text style={[styles.statusText, { color: estatusConfig[estatus].color }]}>
+            {estatus}
+          </Text>
         </View>
 
-        <View style={styles.section}>
-          <TitleCard title="Tu Progreso" />
-          <InfoRow label="Calificación" value={calAct.pun_cal_act || 'Sin calificación'} />
-          <InfoRow label="Finalizado" value={calAct.fec_cal_act ? moment(calAct.fec_cal_act).format('DD/MMM/YYYY h:mm:ss a') : 'Pendiente'} />
-          <InfoRow label="Intentos disponibles" value={calAct.int_cal_act} />
-          <InfoRow label="Estatus" value={estatus} color={estatusColor[estatus]} />
+        {/* SCORE CARD */}
+        {calAct.pun_cal_act > 0 && (
+          <View style={[
+            styles.scoreCard, 
+            { 
+              backgroundColor: themeColors.backgroundCard,
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : themeColors.borderGray
+            }
+          ]}>
+            <Text style={[styles.scoreLabel, { color: themeColors.textTertiary }]}>
+              Calificación
+            </Text>
+            <Text style={[styles.scoreValue, { color: themeColors.textPrimary }]}>
+              {calAct.pun_cal_act}
+            </Text>
+            <Text style={[styles.scoreMax, { color: themeColors.textSecondary }]}>
+              de {puntaje} pts
+            </Text>
+          </View>
+        )}
+
+        {/* INFO GRID */}
+        <View style={styles.infoGrid}>
+          <View style={[
+            styles.infoItem, 
+            { 
+              backgroundColor: themeColors.backgroundCard,
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : themeColors.borderGray
+            }
+          ]}>
+            <Text style={[styles.infoLabel, { color: themeColors.textTertiary }]}>
+              Inicio
+            </Text>
+            <Text style={[styles.infoValue, { color: themeColors.textPrimary }]}>
+              {moment(inicio).format('DD/MM/YYYY')}
+            </Text>
+          </View>
+          <View style={[
+            styles.infoItem, 
+            { 
+              backgroundColor: themeColors.backgroundCard,
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : themeColors.borderGray
+            }
+          ]}>
+            <Text style={[styles.infoLabel, { color: themeColors.textTertiary }]}>
+              Fin
+            </Text>
+            <Text style={[styles.infoValue, { color: themeColors.textPrimary }]}>
+              {moment(fin).format('DD/MM/YYYY')}
+            </Text>
+          </View>
+          <View style={[
+            styles.infoItem, 
+            { 
+              backgroundColor: themeColors.backgroundCard,
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : themeColors.borderGray
+            }
+          ]}>
+            <Text style={[styles.infoLabel, { color: themeColors.textTertiary }]}>
+              Duración
+            </Text>
+            <Text style={[styles.infoValue, { color: themeColors.textPrimary }]}>
+              {dur_exa} min
+            </Text>
+          </View>
+          <View style={[
+            styles.infoItem, 
+            { 
+              backgroundColor: themeColors.backgroundCard,
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : themeColors.borderGray
+            }
+          ]}>
+            <Text style={[styles.infoLabel, { color: themeColors.textTertiary }]}>
+              Intentos
+            </Text>
+            <Text style={[styles.infoValue, { color: themeColors.textPrimary }]}>
+              {calAct.int_cal_act}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.section}>
-          <TitleCard title="Descripción" />
-          <View style={{ paddingHorizontal: 4 }}>
+        {/* FINALIZED DATE */}
+        {calAct.fec_cal_act && (
+          <View style={[
+            styles.dateCard, 
+            { 
+              backgroundColor: themeColors.backgroundCard,
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : themeColors.borderGray
+            }
+          ]}>
+            <Text style={[styles.dateLabel, { color: themeColors.textTertiary }]}>
+              Finalizado
+            </Text>
+            <Text style={[styles.dateValue, { color: themeColors.textPrimary }]}>
+              {moment(calAct.fec_cal_act).format('DD/MM/YYYY h:mm a')}
+            </Text>
+          </View>
+        )}
+
+        {/* DESCRIPTION */}
+        <View style={[
+          styles.descriptionCard, 
+          { 
+            backgroundColor: themeColors.backgroundCard,
+            borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : themeColors.borderGray
+          }
+        ]}>
+          <Text style={[styles.descriptionTitle, { color: themeColors.textPrimary }]}>
+            Descripción
+          </Text>
+          <View style={styles.descriptionContent}>
             <HtmlToJsx strHtml={descripcion} />
           </View>
         </View>
 
+        {/* RETRY NOTICE */}
         {estatus === 'Calificada' && calAct.int_cal_act > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.noticeText}>
-              Puedes volver a intentar el examen. Tu calificación actual es de {calAct.pun_cal_act} puntos.
+          <View style={[
+            styles.retryCard,
+            {
+              backgroundColor: isDarkTheme ? '#2A2F35' : '#E3F2FD',
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : '#90CAF9',
+            }
+          ]}>
+            <Text style={[
+              styles.retryTitle,
+              { color: isDarkTheme ? '#9DB4C8' : '#1976D2' }
+            ]}>
+              Puedes volver a intentar
             </Text>
-            <Button
-              icon="clock-end"
-              mode="contained"
-              style={[platformTheme.btnSuccess, platformTheme.shadowBox, { marginTop: 10 }]}
+            <Text style={[
+              styles.retryText,
+              { color: isDarkTheme ? '#9DB4C8' : '#1976D2' }
+            ]}>
+              Calificación actual: {calAct.pun_cal_act} pts
+            </Text>
+            <TouchableOpacity 
+              style={[
+                styles.retryButton,
+                { backgroundColor: isDarkTheme ? '#4E5C6A' : '#2196F3' }
+              ]}
               onPress={() => setVisibleAlertFinExamen(true)}
-            >FINALIZAR EXAMEN</Button>
+              activeOpacity={0.7}
+            >
+              <Text style={styles.retryButtonText}>Finalizar examen</Text>
+            </TouchableOpacity>
           </View>
         )}
 
-        <View style={styles.section}>
-          <Text style={styles.warningText}>
-            ⚠️ Si cierras la app o cambias de ventana durante el examen, perderás un intento.
+        {/* WARNING */}
+        <View style={[
+          styles.warningCard,
+          {
+            backgroundColor: isDarkTheme ? '#352F2A' : '#FFF3E0',
+            borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : '#FFE082',
+          }
+        ]}>
+          <Icon 
+            name="alert-circle-outline" 
+            size={20} 
+            color={isDarkTheme ? '#D4BDA0' : '#FF9500'} 
+          />
+          <Text style={[
+            styles.warningText,
+            { color: isDarkTheme ? '#D4BDA0' : '#E65100' }
+          ]}>
+            Si cierras la app o cambias de ventana durante el examen, perderás un intento
           </Text>
-          <Button
-            icon="file-document-edit"
-            mode="contained"
-            style={[platformTheme.btnPrimary, platformTheme.shadowBox, { marginTop: 10 }]}
-            onPress={calAct.int_cal_act > 0 ? nuevoIntentoExamen : verResultadoExamen}
-          >
-            {calAct.int_cal_act > 0 ? 'INICIAR EXAMEN' : 'VER RESULTADO'}
-          </Button>
         </View>
 
       </ScrollView>
-      <ChatAlumno />
 
-      {/* Modales */}
+      {/* BOTTOM BUTTON */}
+      <View style={[
+        styles.bottomContainer, 
+        { 
+          paddingBottom: Math.max(insets.bottom, 12) + 12, // 🔥 MÁS ESPACIO: mínimo 12px + 12px extra
+          backgroundColor: themeColors.backgroundCard,
+          borderTopColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : themeColors.borderGray
+        }
+      ]}>
+        <TouchableOpacity 
+          style={[
+            styles.mainButton, 
+            { 
+              backgroundColor: isDarkTheme ? '#2A2F35' : themeColors.textPrimary,
+              borderColor: isDarkTheme ? 'rgba(255, 255, 255, 0.06)' : 'transparent',
+              borderWidth: isDarkTheme ? 1 : 0
+            }
+          ]}
+          onPress={calAct.int_cal_act > 0 ? nuevoIntentoExamen : verResultadoExamen}
+          activeOpacity={0.8}
+        >
+          <Text style={[
+            styles.mainButtonText, 
+            { color: isDarkTheme ? '#9DB4C8' : themeColors.backgroundCard }
+          ]}>
+            {calAct.int_cal_act > 0 ? 'Iniciar examen' : 'Ver resultado'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* MODALES */}
       <PaperMessages
         visible={visibleAlertInicExa}
         onDismiss={() => setVisibleAlertInicExa(false)}
@@ -131,18 +376,22 @@ export const Examen = ({ route, navigation }: PropsActividad) => {
         message={`Se descontará 1 intento. Intentos disponibles: ${calAct.int_cal_act}`}
         buttonText="Iniciar"
         pressButton={iniciarExamen}
+        btnTxtCancel="Cancelar"
+        evtBtnCancel={() => setVisibleAlertInicExa(false)}
         dismissable
       />
+      
       <PaperMessages
         visible={visibleAlertNoIntentos}
         onDismiss={() => setVisibleAlertNoIntentos(false)}
         title="¡SIN INTENTOS!"
-        message={`No tienes más intentos para este examen.`}
+        message="No tienes más intentos para este examen."
         buttonText="Cerrar"
+        pressButton={() => setVisibleAlertNoIntentos(false)}
         colorTitle={colors.danger}
-        styleButton={platformTheme.btnDanger}
         dismissable
       />
+      
       <PaperMessages
         visible={visibleAlertFinExamen}
         onDismiss={() => setVisibleAlertFinExamen(false)}
@@ -150,70 +399,217 @@ export const Examen = ({ route, navigation }: PropsActividad) => {
         message="Esto guardará tu nota definitiva. No podrás volver a intentarlo."
         buttonText="Finalizar"
         pressButton={finalizarExamen}
+        btnTxtCancel="Cancelar"
+        evtBtnCancel={() => setVisibleAlertFinExamen(false)}
         dismissable
       />
-    </SafeAreaView>
+    </View>
   );
 };
-
-const TitleCard = ({ title }: { title: string }) => (
-  <Text style={styles.sectionTitle}>{title}</Text>
-);
-
-const InfoRow = ({ label, value, color }: { label: string, value: string | number, color?: string }) => (
-  <View style={styles.infoRow}>
-    <Text style={styles.label}>{label}</Text>
-    <Text style={[styles.value, color ? { color } : {}]}>{value}</Text>
-  </View>
-);
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white
   },
-  scroll: {
-    paddingHorizontal: 16,
-  },
-  section: {
-    ...platformTheme.shadowBox,
-    marginTop: 2,
-    marginBottom: 24,
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
-    color: colors.primary
-  },
-  infoRow: {
+  header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 6
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
   },
-  label: {
-    fontSize: 14,
-    color: '#555'
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
-  value: {
+  headerContent: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    // 🔥 paddingBottom ahora es dinámico arriba
+  },
+  statusBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  statusText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  scoreCard: {
+    borderRadius: 14,
+    padding: 24,
+    marginBottom: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 3,
+    borderWidth: 1,
+  },
+  scoreLabel: {
+    fontSize: 13,
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  scoreValue: {
+    fontSize: 48,
+    fontWeight: '700',
+    letterSpacing: -1,
+  },
+  scoreMax: {
+    fontSize: 15,
+    marginTop: 4,
+  },
+  infoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 16,
+  },
+  infoItem: {
+    flex: 1,
+    minWidth: '47%',
+    borderRadius: 14,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 3,
+    borderWidth: 1,
+  },
+  infoLabel: {
+    fontSize: 12,
+    marginBottom: 6,
+    fontWeight: '600',
+  },
+  infoValue: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  dateCard: {
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 3,
+    borderWidth: 1,
+  },
+  dateLabel: {
+    fontSize: 12,
+    marginBottom: 6,
+    fontWeight: '600',
+  },
+  dateValue: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  descriptionCard: {
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 3,
+    borderWidth: 1,
+  },
+  descriptionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  descriptionContent: {
+    paddingLeft: 4,
+  },
+  retryCard: {
+    borderRadius: 14,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  retryTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  retryText: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#222'
+    marginBottom: 16,
+  },
+  retryButton: {
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  retryButtonText: {
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  warningCard: {
+    flexDirection: 'row',
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
   },
   warningText: {
-    fontSize: 14,
-    color: colors.warning,
-    textAlign: 'center',
-    marginTop: 10
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
   },
-  noticeText: {
-    fontSize: 14,
-    color: '#444',
-    textAlign: 'center',
-    marginBottom: 10
-  }
+  bottomContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    // 🔥 paddingBottom ahora es dinámico arriba con Math.max
+    borderTopWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  mainButton: {
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mainButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

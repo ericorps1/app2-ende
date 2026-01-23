@@ -1,40 +1,89 @@
 import React from 'react'
-import { View, Text, StyleSheet, Button } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
-import { platformTheme, colors } from '../theme/platformTheme';
+import { useTheme } from '../context/ThemeContext';
 
 interface PropsBackButtonNavigation {
     onPressBack: () => void;
     title: string;
+    subtitle?: string;
 }
 
-export const BackButtonNavigation = ({onPressBack,title}:PropsBackButtonNavigation) => {
+export const BackButtonNavigation = ({onPressBack, title, subtitle}: PropsBackButtonNavigation) => {
+  const { colors: themeColors } = useTheme();
+  
   return (
-    <>
-        <View style={ { ...platformTheme.fila, marginBottom: 10 } }>
-            <FontAwesome5Icon 
-                style={ platformTheme.iconBack } 
-                onPress={ onPressBack } 
-                size={ 30 } 
-                name={'arrow-left'} 
-                color={colors.darkBlue} 
-            />
-            <Text 
-                style={{
-                    ...styles.title,
-                    flex: 8,
-                    fontSize: 20,
-                    marginRight: 10
-                } }
-            >{ title }</Text>
-        </View>
-    </>
+    <View style={[styles.header, { backgroundColor: themeColors.backgroundCard }]}>
+      <TouchableOpacity 
+        style={[styles.backButton, { backgroundColor: themeColors.backgroundGray }]} 
+        activeOpacity={0.7}
+        onPress={onPressBack}
+      >
+        <FontAwesome5Icon 
+          name="chevron-left" 
+          size={18} 
+          color={themeColors.textPrimary} 
+        />
+      </TouchableOpacity>
+      <View style={styles.headerContent}>
+      
+        <Text style={[styles.headerTitle, { color: themeColors.textPrimary }]} numberOfLines={1}>
+          {title}
+        </Text>
+
+        {subtitle ? (
+          <Text style={[styles.headerSubtitle, { color: themeColors.textSecondary }]}>
+            {subtitle}
+          </Text>
+        ) : null}
+      </View>
+      
+      <View style={styles.placeholder} />
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-    title: {
-        fontSize: 30,
-        color: colors.darkBlue
-    },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 12,
+    marginBottom: 12,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  
+  headerTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+
+  headerContent: {
+    flex: 1,
+  },
+  
+  placeholder: {
+    width: 40,
+    height: 40,
+  },
+
+  headerSubtitle: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
 });

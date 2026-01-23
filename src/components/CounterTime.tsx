@@ -1,14 +1,31 @@
 import React, { useEffect, useState } from 'react'
 import { View, Text, StyleSheet } from 'react-native';
-import { colors } from '../theme/platformTheme';
 
 interface PropsCounterTime {
     minutos: number;
     onEnd: () => void;
+    onTimeUpdate?: (percentage: number) => void;
 }
 
-export const CounterTime = ({minutos,onEnd}:PropsCounterTime) => {
+export const CounterTime = ({minutos, onEnd, onTimeUpdate}: PropsCounterTime) => {
     const [time, setTime] = useState({minutos, segundos: 0});
+    
+    // 🎨 Calcular porcentaje de tiempo restante
+    const totalSegundos = minutos * 60;
+    const segundosRestantes = (time.minutos * 60) + time.segundos;
+    const porcentaje = (segundosRestantes / totalSegundos) * 100;
+    
+    // 🎨 Color dinámico según porcentaje
+    const getTimerColor = () => {
+        if (porcentaje > 50) {
+            return '#34C759'; // Verde
+        } else if (porcentaje > 20) {
+            return '#FF9500'; // Naranja
+        } else {
+            return '#FF3B30'; // Rojo
+        }
+    };
+    
     useEffect(() => {
         let min = time.minutos;
         let seg = time.segundos;
@@ -24,33 +41,35 @@ export const CounterTime = ({minutos,onEnd}:PropsCounterTime) => {
                 setTime({minutos: min,segundos: seg});
             }
         },1000);
-        return () => {//se limpia el interval para que no siga ejecutandose al desmontar el componente
+        return () => {
             clearInterval(counter);
         }
-    },[]);
+    },[time]);
+    
+    // 🔥 Notificar cambio de porcentaje
+    useEffect(() => {
+        if (onTimeUpdate) {
+            onTimeUpdate(porcentaje);
+        }
+    }, [porcentaje]);
 
     return (
         <View style={styles.container}>
-            <Text style={styles.timer}>{time.minutos.toString().padStart(2,'0')}:{time.segundos.toString().padStart(2,'0')}</Text>
+            <Text style={[styles.timer, { color: getTimerColor() }]}>
+                {time.minutos.toString().padStart(2,'0')}:{time.segundos.toString().padStart(2,'0')}
+            </Text>
         </View>  
     )
 }
 
 const styles = StyleSheet.create({
     container: {
-        position: 'absolute',
-        right: 10,
-        top: 50,
-        zIndex: 999,
-        padding: 10,
-        borderRadius: 5,
-        backgroundColor: colors.softBlue,
-        borderWidth: 1,
-        opacity: 0.8,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     timer: {
-        color: colors.darkBlue,
-        fontWeight: 'bold',
-        fontSize: 20,
+        fontWeight: '700',
+        fontSize: 20, // 🔥 MÁS GRANDE para el footer
+        letterSpacing: 1.5,
     }
 });
