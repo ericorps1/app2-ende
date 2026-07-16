@@ -1,8 +1,9 @@
 import React from 'react'
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { formatDate } from '../hooks/useFormats';
-import { colors, platformTheme } from '../theme/platformTheme';
-import { FotoPerfil } from './FotoPerfil';
+import { colors } from '../theme/platformTheme';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext';
 
 interface PropsCardSalaPreview {
     id_sal: number;
@@ -17,78 +18,118 @@ interface PropsCardSalaPreview {
 }
 
 export const CardSalaPreview = ({id_sal,urlImg,styleImg,nombre,grupo,title,lastSms,lastFecMsg,onPressCardSala}:PropsCardSalaPreview) => {
+    const { colors: themeColors } = useTheme();
     const fecLastMsg = lastFecMsg ? formatDate(lastFecMsg.split(' ')[0], '/') : null;
+    const hasUnread = false;
+    
     return (
-        <TouchableOpacity activeOpacity={0.5} style={styles.containerCard} onPress={()=>onPressCardSala(id_sal,nombre)}>
-            <Image 
-                source={{ uri: urlImg}}
-                style={ styleImg }
-            />
-            <View style={styles.containerInfoSala}>
-                <View style={platformTheme.fila}>
-                    <Text style={styles.textTitleSala}>{title}</Text>
-                    {grupo && <Text style={styles.textGrupo}>{grupo}</Text>}
-                </View>
-                <Text style={styles.textDescSala}>{nombre}</Text>
-                {lastSms!=='' && <Text style={styles.textLastMsg}>{lastSms.slice(0, 35)}{lastSms.length>35 ? '...' : ''}</Text>}
+        <TouchableOpacity 
+            activeOpacity={0.7} 
+            style={[styles.container, { 
+                backgroundColor: themeColors.backgroundCard,
+                borderBottomColor: themeColors.borderGray 
+            }]} 
+            onPress={()=>onPressCardSala(id_sal,nombre)}
+        >
+            <View style={styles.avatarContainer}>
+                <Image 
+                    source={{ uri: urlImg}}
+                    style={styleImg}
+                />
+                {hasUnread && <View style={styles.unreadDot} />}
             </View>
-            {fecLastMsg &&
-                <View style={styles.containerFecLastMsg}>
-                    <Text style={styles.textFechaLastMsg}>{fecLastMsg}</Text>
+
+            <View style={styles.content}>
+                <View style={styles.header}>
+                    <View style={styles.titleRow}>
+                        <Text style={[styles.nombre, { color: themeColors.textPrimary }]} numberOfLines={1}>
+                            {nombre}
+                        </Text>
+                        {grupo && (
+                            <View style={[styles.groupBadge, { backgroundColor: themeColors.textPrimary }]}>
+                                <Icon name="account-group" size={10} color={themeColors.backgroundCard} />
+                            </View>
+                        )}
+                    </View>
+                    {fecLastMsg && (
+                        <Text style={[styles.fecha, { color: themeColors.textTertiary }]}>{fecLastMsg}</Text>
+                    )}
                 </View>
-            }
+
+                {lastSms !== '' && (
+                    <Text style={[styles.lastMessage, { color: themeColors.textSecondary }]} numberOfLines={2}>
+                        {lastSms}
+                    </Text>
+                )}
+            </View>
+
+            <Icon name="chevron-right" size={20} color={themeColors.borderGray} style={styles.chevron} />
         </TouchableOpacity>
     )
 }
 
 const styles = StyleSheet.create({
-    containerCard: {
-        ...platformTheme.fila,
-        paddingHorizontal: 10,
-        backgroundColor: 'white',
-        paddingVertical: 10,
-        alignItems: 'center'
+    container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
     },
-    containerInfoSala: {
-        alignContent: 'center',
-        // alignItems: 'center',
-        alignSelf: 'center',
-        flex: 3,
+    avatarContainer: {
+        position: 'relative',
+        marginRight: 14,
     },
-    textTitleSala: {
-        backgroundColor: colors.yellow,
-        borderRadius: 10,
-        paddingHorizontal: 5,
-        color: colors.darkBlue,
-        fontWeight: 'bold',
-        width: 'auto',
+    unreadDot: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: '#FF3B30',
+        borderWidth: 2,
+        borderColor: '#FFF',
     },
-    textGrupo: {
-        backgroundColor: colors.blue,
-        borderRadius: 10,
-        paddingHorizontal: 5,
-        color: 'white',
-        fontWeight: 'bold',
-        width: 'auto',
-        marginLeft: 5
-    },
-    textDescSala: {
-        color: colors.darkSilver,
-        fontWeight: 'bold',
-        fontSize: 18,
-    },
-    textLastMsg: {
-        color: colors.darkSilver,
-        fontWeight: 'bold',
-        fontSize: 15
-    },
-    containerFecLastMsg: {
+    content: {
         flex: 1,
-        alignItems: 'flex-end'
+        justifyContent: 'center',
     },
-    textFechaLastMsg: {
-        color: colors.darkBlue,
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 4,
+    },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
         flex: 1,
-        fontSize: 12
-    }
+        marginRight: 8,
+    },
+    nombre: {
+        fontSize: 16,
+        fontWeight: '600',
+        flex: 1,
+    },
+    groupBadge: {
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: 6,
+    },
+    fecha: {
+        fontSize: 12,
+        fontWeight: '500',
+    },
+    lastMessage: {
+        fontSize: 14,
+        lineHeight: 18,
+        fontFamily: 'NotoColorEmoji',
+    },
+    chevron: {
+        marginLeft: 8,
+    },
 });

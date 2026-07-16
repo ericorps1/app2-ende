@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4D8F98DC20531ADC27AFBAEF36BF6957"
-               BuildableName = "libStripeUICore.a"
+               BuildableName = "StripeUICore.framework"
                BlueprintName = "StripeUICore"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

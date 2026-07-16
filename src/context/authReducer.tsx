@@ -46,6 +46,7 @@ export interface DataAlumno {
     estatus_documentacion2: null | string;
     carga_alumno: null | number | string;
     nom_pla: null | string;
+    tel_pla: null | string;
 }
 
 type AuthAction = 

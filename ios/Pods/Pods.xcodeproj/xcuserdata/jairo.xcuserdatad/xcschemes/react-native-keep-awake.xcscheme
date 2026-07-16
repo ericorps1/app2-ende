@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "AC3F6CC5B04BCBA2AEFE648CEA9F5A2A"
-               BuildableName = "libreact-native-keep-awake.a"
+               BuildableName = "react_native_keep_awake.framework"
                BlueprintName = "react-native-keep-awake"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

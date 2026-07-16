@@ -27,9 +27,7 @@ export const AvisosEstudiante = () => {
         return true;
     }
     return (
-      <View style={ styles.container }>
-        <View style={[platformTheme.shadowBox, { backgroundColor: 'white', borderRadius: 10 }]}>
-          <View>
+        <View style={styles.container}>
             <TouchableOpacity 
                 style={[
                     styles.containerTitleAviso, 
@@ -43,14 +41,7 @@ export const AvisosEstudiante = () => {
             >
                 <Text style={styles.textTitle}>Avisos</Text>
             </TouchableOpacity>
-            <View style={[
-              styles.containerActPend, 
-              {
-                height: viewContent ? 'auto' : 0,
-                opacity: viewContent ? 1 : 0,
-                borderWidth: viewContent ? 1 : 0,
-              }
-            ]}>
+            <View style={[styles.containerActPend, {height: viewContent ? 'auto' : 0, opacity: viewContent ? 1 : 0}]}>
                 {
                     loadingAvi ? 
                         <View style={{marginVertical: 20}}>
@@ -70,17 +61,14 @@ export const AvisosEstudiante = () => {
                             </View>
                 }
             </View>
-          </View>
         </View>
-      </View>
     )
 }
 
 const styles = StyleSheet.create({
     container: {
-      paddingHorizontal: 10,
-      backgroundColor: 'transparent',
-      marginTop: 10,
+        ...platformTheme.shadowBox,
+        padding: 10,
     },
     containerTitleAviso: {
         overflow: 'hidden',
@@ -97,6 +85,9 @@ const styles = StyleSheet.create({
         backgroundColor: colors.primary,
     },
     containerActPend: {
+        borderLeftWidth: 1,
+        borderRightWidth: 1,
+        borderBottomWidth: 1,
         borderColor: colors.primary,
         borderBottomRightRadius: 10,
         borderBottomLeftRadius: 10,

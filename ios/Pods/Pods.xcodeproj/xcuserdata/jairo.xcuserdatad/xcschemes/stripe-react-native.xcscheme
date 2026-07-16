@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "165BFA17D65F47AD584DFDB7BB3E7C96"
-               BuildableName = "libstripe-react-native.a"
+               BuildableName = "stripe_react_native.framework"
                BlueprintName = "stripe-react-native"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

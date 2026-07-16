@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "6CC694C2F992EC3D5A5154B5EAB27C98"
-               BuildableName = "libRNCalendarEvents.a"
+               BuildableName = "RNCalendarEvents.framework"
                BlueprintName = "RNCalendarEvents"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

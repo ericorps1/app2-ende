@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "C21297404131D607701C71A8A9959998"
-               BuildableName = "libreact-native-get-random-values.a"
+               BuildableName = "react_native_get_random_values.framework"
                BlueprintName = "react-native-get-random-values"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

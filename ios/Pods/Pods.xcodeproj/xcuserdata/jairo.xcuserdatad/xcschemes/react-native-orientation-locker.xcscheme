@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "1092C13E1E1172209537C28D0C8D4D3C"
-               BuildableName = "libreact-native-orientation-locker.a"
+               BuildableName = "react_native_orientation_locker.framework"
                BlueprintName = "react-native-orientation-locker"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

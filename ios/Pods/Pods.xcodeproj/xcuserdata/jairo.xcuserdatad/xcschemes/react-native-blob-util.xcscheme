@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B6BA43A49642C6F9C180CC73439E7B09"
-               BuildableName = "libreact-native-blob-util.a"
+               BuildableName = "react_native_blob_util.framework"
                BlueprintName = "react-native-blob-util"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

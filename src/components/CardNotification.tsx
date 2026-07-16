@@ -1,73 +1,103 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import { Notification } from "../interfaces/appInterfaces";
-import { colors, platformTheme } from "../theme/platformTheme";
-import FontAwesome5Icon from "react-native-vector-icons/FontAwesome5";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/core";
+import { useTheme } from "../context/ThemeContext";
 
 interface CardNotificationProps {
   notification: Notification;
 }
 
 export const CardNotification = ({notification}:CardNotificationProps) => {
+  const { colors: themeColors, theme } = useTheme();
   const navigation = useNavigation<any>();
+  const isUnread = notification.est_not !== 'Leida';
+  
+  // Color de fondo para notificaciones no leídas
+  const unreadBgColor = theme === 'dark' 
+    ? '#3A3A3C' // 👈 Gris más claro y visible
+    : '#F0F8FF'; // Azul claro en modo claro
+  
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
-      style={[styles.container, {backgroundColor: notification.est_not === 'Leida' ? colors.white : colors.softSilver}]}
+      activeOpacity={0.7}
+      style={[
+        styles.container, 
+        { 
+          backgroundColor: themeColors.backgroundGray,
+          borderBottomColor: themeColors.borderGray 
+        },
+        isUnread && { backgroundColor: unreadBgColor }
+      ]}
       onPress={() => navigation.navigate('DetalleNotificacion', { notification })}
     >
-      <View style={ styles.iconWrapper }>
-        <FontAwesome5Icon name={'bell'} style={ styles.icon } />
+      <View style={styles.leftSection}>
+        <View style={[styles.iconWrapper, { backgroundColor: themeColors.backgroundCard }]}>
+          <Icon name="bell-outline" size={20} color={themeColors.textPrimary} />
+        </View>
+        {isUnread && <View style={styles.unreadDot} />}
       </View>
-      <View style={styles.contaierInfoActividad}>
-        <Text style={styles.titleActividad}>{ notification.tit_not }</Text>
-        <Text>{notification.men_not.length > 90 ? `${notification.men_not.substring(0, 90)}...` : notification.men_not}</Text>
+      <View style={styles.content}>
+        <Text 
+          style={[
+            styles.title, 
+            { color: themeColors.textPrimary },
+            isUnread && styles.unreadTitle
+          ]} 
+          numberOfLines={1}
+        >
+          {notification.tit_not}
+        </Text>
+        <Text style={[styles.message, { color: themeColors.textSecondary }]} numberOfLines={2}>
+          {notification.men_not}
+        </Text>
       </View>
+      <Icon name="chevron-right" size={20} color={themeColors.borderGray} />
     </TouchableOpacity>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
-    ...platformTheme.fila,
-    padding: 5,
-    marginBottom: 2,
-    borderRadius: 10
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
   },
-  contaierInfoActividad: {
-    marginLeft: 5,
-    width: '100%',
-    flex: 1,
-  },
-  titleActividad: {
-    fontSize: 16,
-    color: colors.darkBlue,
-    textTransform: 'uppercase',
-    fontWeight: 'bold',
-  },
-  descActividad: {
-    fontSize: 14,
-    color: colors.darkSilver,
-  },
-  containerFooterAct: {
-    flex: 1,
-    justifyContent: 'flex-end'
-  },
-  textFooter: {
-    fontSize: 12,
-    marginBottom: 5
-  },
-  icon: {
-    color: colors.primary,
-    fontSize: 20,
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 14,
   },
   iconWrapper: {
-    borderRadius: 40,
-    backgroundColor: '#f5f5f5',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
-    width: 50,
-    height: 50,
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4A90E2',
+    marginLeft: -8,
+  },
+  content: {
+    flex: 1,
+    marginRight: 10,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 3,
+  },
+  unreadTitle: {
+    fontWeight: '700',
+  },
+  message: {
+    fontSize: 14,
+    lineHeight: 19,
   },
 });

@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A979F9D3632CD5F2F7518F9A362CBAE3"
-               BuildableName = "libPromisesSwift.a"
+               BuildableName = "Promises.framework"
                BlueprintName = "PromisesSwift"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

@@ -12,6 +12,7 @@ import { Platform, NativeEventEmitter, NativeModules, View, Text } from 'react-n
 import { Provider as PaperProvider } from 'react-native-paper';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import { StripeWrapper } from './src/components/StripeWrapper';
+import { ThemeProvider } from './src/context/ThemeContext';
 
 
 if (Platform.OS === 'android') {
@@ -34,13 +35,15 @@ const AppState = ({ children }: any ) => {
 
 const App = () => {
   return (
-    <Provider store={store}>
-      <NavigationContainer>
-        <AppState>
-          <Navigator />
-        </AppState>
-      </NavigationContainer>
-    </Provider>
+    <ThemeProvider>
+      <Provider store={store}>
+        <NavigationContainer>
+          <AppState>
+            <Navigator />
+          </AppState>
+        </NavigationContainer>
+      </Provider>
+    </ThemeProvider>
   )
 }
 

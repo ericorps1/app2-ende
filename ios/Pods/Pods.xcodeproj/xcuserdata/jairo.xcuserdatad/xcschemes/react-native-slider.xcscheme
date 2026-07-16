@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A4EF87F5681665EAE943D9B06BBB17DF"
-               BuildableName = "libreact-native-slider.a"
+               BuildableName = "react_native_slider.framework"
                BlueprintName = "react-native-slider"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

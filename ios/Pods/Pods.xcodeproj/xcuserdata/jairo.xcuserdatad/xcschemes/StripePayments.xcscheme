@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "1DFC6E27E6C76D8B0A836C5D658B038D"
-               BuildableName = "libStripePayments.a"
+               BuildableName = "StripePayments.framework"
                BlueprintName = "StripePayments"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

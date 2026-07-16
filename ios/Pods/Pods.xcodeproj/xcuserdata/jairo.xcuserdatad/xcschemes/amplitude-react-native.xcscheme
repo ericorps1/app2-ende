@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "F75677EFAEF65C65928C94BC50D72296"
-               BuildableName = "libamplitude-react-native.a"
+               BuildableName = "amplitude_react_native.framework"
                BlueprintName = "amplitude-react-native"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

@@ -1,108 +1,208 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { View, Text, ScrollView, StyleSheet, TextInput, useWindowDimensions, TouchableOpacity } from 'react-native';
+import React, { useCallback, useContext, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import endeApi from '../api/estudianteAPI';
 import { AuthContext } from '../context/AuthContext';
 import { ActividadPendiente } from '../interfaces/appInterfaces';
-import { colors, platformTheme } from '../theme/platformTheme';
 import { CardActividadPendiente } from './CardActividadPendiente';
-import { LoadingScreen } from '../screens/LoadingScreen';
+import { useFocusEffect } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useTheme } from '../context/ThemeContext';
 
 export const ActividadesPendientes = () => {
+  const { colors: themeColors } = useTheme();
   const [loadingAct, setLoadingAct] = useState(false);
   const [actividadesPendientes, setActividadesPendientes] = useState([]);
-  const { data_alumno } = useContext( AuthContext );
-  const [viewContent, setViewContent] = useState(false)
-  useEffect(() => {
-    getActividadesPendientes();
-    return () => {}
-  }, [])
-  
-  const getActividadesPendientes = async() => {
-    setLoadingAct(true);
-    const {data} = await endeApi.get(`notificaciones_actividad/${data_alumno?.id_alu}`);
-    if(data.trans){
-      setActividadesPendientes(data.data);
-    }
-    setLoadingAct(false);
-  }
+  const { data_alumno } = useContext(AuthContext);
+  const [viewContent, setViewContent] = useState(true);
 
-  const {height} = useWindowDimensions();
+  useFocusEffect(
+    useCallback(() => {
+      getActividadesPendientes();
+      return () => {};
+    }, [])
+  );
+
+  const getActividadesPendientes = async () => {
+    setLoadingAct(true);
+    try {
+      const { data } = await endeApi.get(`notificaciones_actividad/${data_alumno?.id_alu}`);
+      if (data.trans) {
+        setActividadesPendientes(data.data);
+      }
+    } catch (error) {
+      console.error('Error cargando actividades:', error);
+      setActividadesPendientes([]);
+    } finally {
+      setLoadingAct(false);
+    }
+  };
+
+  const totalActividades = actividadesPendientes.length;
 
   return (
-    <View style={ styles.container }>
-      <View style={[platformTheme.shadowBox, { backgroundColor: 'white', borderRadius: 10 }]}>
-        <View>
-          <TouchableOpacity 
-            style={[
-              styles.containerTitleActPend, 
-              {
-                borderBottomStartRadius: viewContent ? 0 : 10,
-                borderBottomEndRadius: viewContent ? 0 : 10,
-              }
-            ]}
-            activeOpacity={0.9}
-            onPress={()=>setViewContent(!viewContent)}
-          >
-            <Text style={styles.textTitle}>Actividades pendientes</Text>
-          </TouchableOpacity>
-          <View style={[
-            styles.containerActPend, 
-            {
-              height: viewContent ? 'auto' : 0,
-              opacity: viewContent ? 1 : 0,
-              borderWidth: viewContent ? 1 : 0,
-            }
-          ]}>
-            {
-              loadingAct ? 
-                <View style={{marginVertical: 20}}>
-                  <LoadingScreen text='Cargando actividades pendientes...'/>
-                </View>
-              :
-                actividadesPendientes.length>0 ?
-                  actividadesPendientes.map((actividadPendiente:ActividadPendiente)=>
-                    <CardActividadPendiente
-                      key={actividadPendiente.id}
-                      actividadPendiente={actividadPendiente}
-                      viewType='normal'
-                    />
-                  )
-                :
-                  <View style={{marginVertical: 20}}>
-                    <Text style={{textAlign: 'center', marginHorizontal: 20}}>Actualmente no presenta actividades pendientes</Text>
-                  </View>
-            }
+    <View style={[styles.container, { 
+      backgroundColor: themeColors.backgroundCard,
+      borderColor: themeColors.borderGray 
+    }]}>
+      {/* HEADER */}
+      <TouchableOpacity
+        style={styles.header}
+        activeOpacity={0.7}
+        onPress={() => setViewContent(!viewContent)}
+      >
+        <View style={styles.headerLeft}>
+          <View style={[styles.iconContainer, { backgroundColor: themeColors.backgroundGray }]}>
+            <Icon name="clipboard-list-outline" size={22} color={themeColors.textPrimary} />
+          </View>
+          <View style={styles.titleContainer}>
+            <Text style={[styles.title, { color: themeColors.textPrimary }]}>
+              Actividades pendientes
+            </Text>
+            {totalActividades > 0 && (
+              <Text style={[styles.subtitle, { color: themeColors.textSecondary }]}>
+                {totalActividades} {totalActividades === 1 ? 'actividad' : 'actividades'}
+              </Text>
+            )}
           </View>
         </View>
-      </View>
+
+        <View style={styles.headerRight}>
+          {totalActividades > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{totalActividades}</Text>
+            </View>
+          )}
+          <Icon
+            name={viewContent ? 'chevron-up' : 'chevron-down'}
+            size={24}
+            color={themeColors.textSecondary}
+          />
+        </View>
+      </TouchableOpacity>
+
+      {/* CONTENT */}
+      {viewContent && (
+        <View style={[styles.content, { borderTopColor: themeColors.borderGray }]}>
+          {loadingAct ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size={32} color={themeColors.textPrimary} />
+              <Text style={[styles.loadingText, { color: themeColors.textSecondary }]}>
+                Cargando actividades...
+              </Text>
+            </View>
+          ) : totalActividades > 0 ? (
+            <View style={styles.actividadesContainer}>
+              {actividadesPendientes.map((actividadPendiente: ActividadPendiente) => (
+                <CardActividadPendiente
+                  key={actividadPendiente.id}
+                  actividadPendiente={actividadPendiente}
+                  viewType="normal"
+                />
+              ))}
+            </View>
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Icon name="check-circle-outline" size={48} color="#4CAF50" />
+              <Text style={[styles.emptyTitle, { color: themeColors.textPrimary }]}>
+                ¡Todo completado!
+              </Text>
+              <Text style={[styles.emptyMessage, { color: themeColors.textSecondary }]}>
+                No tienes actividades pendientes
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 10,
-    backgroundColor: 'transparent',
-    marginTop: 10,
-  },
-  containerTitleActPend: {
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
     overflow: 'hidden',
-    borderTopRightRadius: 10,
-    borderTopLeftRadius: 10,
-    height: 50
   },
-  textTitle: {
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
-    fontSize: 20,
-    fontWeight: 'bold',
-    padding: 10,
-    color: 'white',
-    backgroundColor: colors.primary,
+    marginRight: 12,
   },
-  containerActPend: {
-    borderColor: colors.primary,
-    borderBottomRightRadius: 10,
-    borderBottomLeftRadius: 10,
-    backgroundColor: 'white',
-  }
+  iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  titleContainer: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  subtitle: {
+    fontSize: 13,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  badge: {
+    backgroundColor: '#F44336',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  badgeText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  content: {
+    borderTopWidth: 1,
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+  },
+  actividadesContainer: {
+    padding: 12,
+  },
+  emptyContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyMessage: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
 });

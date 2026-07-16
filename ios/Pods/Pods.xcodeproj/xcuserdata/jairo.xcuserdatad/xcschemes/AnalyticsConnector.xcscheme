@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "57B4D8FBD7F7477AD9F5C6FE1922FDAE"
-               BuildableName = "libAnalyticsConnector.a"
+               BuildableName = "AnalyticsConnector.framework"
                BlueprintName = "AnalyticsConnector"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

@@ -1,22 +1,32 @@
 import React from 'react';
 import { Text, View, ColorValue, StyleSheet, TouchableOpacity } from 'react-native';
-import FontAwesome5Icon from 'react-native-vector-icons/FontAwesome5';
-import { colors, platformTheme } from '../theme/platformTheme';
+import { useTheme } from '../context/ThemeContext';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface RecursoTeoricoProps {
   icon: string;
   text: string;
-  iconColor: ColorValue;
+  iconColor?: ColorValue;
   onPress: () => void;
 }
 
-export const RecursoTeorico = ({ icon, text, iconColor, onPress }: RecursoTeoricoProps) => {
+export const RecursoTeorico = ({ icon, text, iconColor = '#000', onPress }: RecursoTeoricoProps) => {
+  const { colors: themeColors } = useTheme();
+
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.8}>
-      <View style={[styles.iconContainer, { backgroundColor: iconColor }]}>
-        <FontAwesome5Icon name={icon} color="#fff" style={styles.icon} />
+    <TouchableOpacity 
+      style={[styles.container, { 
+        backgroundColor: themeColors.backgroundCard, 
+        borderColor: themeColors.borderGray 
+      }]} 
+      onPress={onPress} 
+      activeOpacity={0.6}
+    >
+      <View style={[styles.iconContainer, { backgroundColor: `${iconColor}15` }]}>
+        <Icon name={icon} size={22} color={iconColor} />
       </View>
-      <Text style={styles.text}>{text}</Text>
+      <Text style={[styles.text, { color: themeColors.textPrimary }]} numberOfLines={2}>{text}</Text>
+      <Icon name="chevron-right" size={18} color={themeColors.textSecondary} />
     </TouchableOpacity>
   );
 };
@@ -24,37 +34,24 @@ export const RecursoTeorico = ({ icon, text, iconColor, onPress }: RecursoTeoric
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#f7f9fc',
-    borderRadius: 12,
+    borderRadius: 10,
     padding: 12,
-    marginVertical: 8,
-    marginHorizontal: 10,
+    marginBottom: 8,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
+    borderWidth: 1,
   },
   iconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  icon: {
-    fontSize: 22,
+    marginRight: 14,
   },
   text: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: '500',
-    color: colors.darkBlue,
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20,
   },
 });

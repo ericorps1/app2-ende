@@ -1,5 +1,5 @@
 import React, {useContext, useState, useEffect} from 'react'
-import { View, ScrollView, Image, StyleSheet } from 'react-native';
+import { View, ScrollView, Image, StyleSheet, Dimensions, TouchableOpacity, RefreshControl } from 'react-native';
 import { AuthContext } from '../context/AuthContext';
 import { Portal, TextInput, Modal, Text, Button, Provider, Avatar, Divider, DefaultTheme } from 'react-native-paper';
 import { platformTheme, colors } from '../theme/platformTheme';
@@ -14,11 +14,18 @@ import { GradientBackground } from '../components/GradientBackground';
 import { ModalMessages } from '../components/ModalMessages';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { requestCameraPermission } from '../hooks/usePermisions';
+import RenderPdf from '../components/RenderUrlPdf';
+import { AddDomiciliation } from '../components/AddDomiciliation';
+import { useTheme } from '../context/ThemeContext';
+
+const { width } = Dimensions.get('window');
 
 export const Cuenta = () => {
+    const { theme, toggleTheme, colors: themeColors } = useTheme();
     const { data_alumno, checkToken } = useContext( AuthContext );
     const [infoAlumno, setInfoAlumno] = useState<DataProfileAlumno|any>([]);
     const [loadingAccount, setLoadingAccount] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [modalText, setModalText] = useState('');
     const [loadingForm, setLoadingForm] = useState(false);
     const [typeMsgModal, setTypeMsgModal] = useState<TypesMsgModalType>('success')
@@ -29,6 +36,45 @@ export const Cuenta = () => {
     const [loadingActuCont, setLoadingActuCont] = useState(false)
     const [objImg, setObjImg] = useState<ImagePickerResponse>()
     const [visible, setVisible] = useState(false);
+    const [scrollEnabled, setScrollEnabled] = useState(true);
+    
+    const [domiciliation, setDomiciliation] = useState({
+        isSaved: false,
+        card_no: '',
+        exp_month: '',
+        exp_year: '',
+        brand: ''
+    });
+
+    useEffect(() => {
+        getDataProfile();
+        getDomiciliation();
+    }, [])
+
+    const getStatusStyle = (status: string | undefined) => {
+        if (!status) return { color: '#999', dotColor: '#999' };
+        
+        const statusUpper = status.toUpperCase();
+        
+        if (statusUpper === 'ACTIVO' || statusUpper === 'REINGRESO') {
+            return { color: '#34C759', dotColor: '#34C759' };
+        }
+        
+        if (statusUpper === 'BAJA' || statusUpper === 'NP') {
+            return { color: '#FF6B6B', dotColor: '#FF6B6B' };
+        }
+        
+        return { color: '#999', dotColor: '#999' };
+    };
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await Promise.all([
+            getDataProfile(),
+            getDomiciliation()
+        ]);
+        setRefreshing(false);
+    }
 
     const getDataProfile = async () => {
         try { 
@@ -50,14 +96,35 @@ export const Cuenta = () => {
             setLoadingAccount(false);
         } catch (error:any) {
             console.log('getDataProfile',error);
+            setLoadingAccount(false);
         }
     }
 
-    useEffect(() => {
-        getDataProfile();
-    }, [])
+    const getDomiciliation = async() => {
+        try {
+            const {data} = await cafeApi.get('/domiciliacion/' + data_alumno?.id_alu_ram || '');
+            if(data.data){
+                setDomiciliation({
+                    isSaved: true,
+                    card_no: data.data.last_4,
+                    exp_month: data.data.exp_month,
+                    exp_year: data.data.exp_year,
+                    brand: data.data.brand
+                });
+            } else {
+                setDomiciliation({
+                    isSaved: false,
+                    card_no: '',
+                    exp_month: '',
+                    exp_year: '',
+                    brand: ''
+                });
+            }
+        } catch (error:any) {
+            console.log('getDomiciliation', error);
+        }
+    };
 
-    
     const updateInfo = async () => {
         const valTel = valFormInput(infoAlumno.tel_alu, 'Teléfono', 1, 10, true);
         if(valTel!==true){
@@ -228,221 +295,399 @@ export const Cuenta = () => {
         }
         setLoadingActuCont(false);
     }
+
+    const statusStyle = getStatusStyle(data_alumno?.estatus_general);
+
     return (
         (loadingAccount) 
         ? <LoadingScreen/>
         : <Provider theme={DefaultTheme}>
             <Portal>
-                <ScrollView>
-                    <GradientBackground primaryColor={'#000000'} secondaryColor={'#FFFFFF'}>
-                        <View style={ styles.viewAvatar }>
-                            { (data_alumno?.fot_alu || newProfilePic!=='') 
-                                ? (
-                                    <Image 
-                                        source={{ uri: (newProfilePic==='') ? 'https://plataforma.ahjende.com/uploads/'+data_alumno?.fot_alu : newProfilePic}}
-                                        style={ platformTheme.avatar }
-                                    />
-                                )
-                                : (
-                                    <Avatar.Text style={ platformTheme.avatar } label={FormatNameAvatar(data_alumno?.nom_alu)} />
-                                )
-                            }
-                            <Text style={ platformTheme.avatarName }> { data_alumno?.nom_alu } </Text>
-                            <View style={ [styles.buttonList, platformTheme.fila] }>
-                                {   (newProfilePic==='')
-                                ?   (
-                                        <>
-                                            <Button 
-                                                icon={() => <Icon name="camera" size={20} color="white" />}
-                                                textColor='white'
-                                                onPress={() => getPhoto('photo')}
-                                                style={ [platformTheme.btnInfo, platformTheme.btn] }
-                                            >CAMARA</Button>
-                                            <Button
-                                                icon="image"
-                                                textColor='white'
-                                                onPress={() => getPhoto('img')}
-                                                style={ [platformTheme.btnSuccess, platformTheme.btn] }
-                                            >GALERIA</Button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Button 
-                                                icon="pencil"
-                                                textColor='white'
-                                                onPress={ () => uploadImg() }
-                                                style={ [platformTheme.btnSuccess, platformTheme.btn, styles.botonActualizar] }
-                                                disabled={uploading}
-                                                loading={ uploading }
-                                            >{ !uploading ? 'ACTUALIZAR' : 'SUBIENDO...' }</Button>
-                                            <Button 
-                                                icon="cancel"
-                                                textColor='white'
-                                                onPress={ () => setNewProfilePic('') } 
-                                                style={ [platformTheme.btnDanger, platformTheme.btn] }
-                                                disabled={uploading}
-                                            >Cancelar</Button>
-                                        </>
+                <ScrollView 
+                    showsVerticalScrollIndicator={false} 
+                    scrollEnabled={scrollEnabled}
+                    style={[styles.container, { backgroundColor: themeColors.background }]}
+                    refreshControl={
+                        <RefreshControl 
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            tintColor={themeColors.textPrimary}
+                            colors={[themeColors.textPrimary]}
+                        />
+                    }
+                >
+                    <View style={[styles.heroSection, { backgroundColor: themeColors.backgroundCard, borderBottomColor: themeColors.borderGray }]}>
+                        <View style={styles.heroContent}>
+                            <TouchableOpacity onPress={() => getPhoto('img')} activeOpacity={0.8}>
+                                { (data_alumno?.fot_alu || newProfilePic!=='') 
+                                    ? (
+                                        <Image 
+                                            source={{ uri: (newProfilePic==='') ? 'https://plataforma.ahjende.com/uploads/'+data_alumno?.fot_alu : newProfilePic}}
+                                            style={styles.heroAvatar}
+                                        />
+                                    )
+                                    : (
+                                        <View style={[styles.heroAvatar, { backgroundColor: themeColors.textPrimary }]}>
+                                            <Text style={[styles.heroAvatarText, { color: themeColors.backgroundCard }]}>
+                                                {FormatNameAvatar(data_alumno?.nom_alu)}
+                                            </Text>
+                                        </View>
                                     )
                                 }
+                                <View style={[styles.cameraIconBadge, { backgroundColor: themeColors.textPrimary, borderColor: themeColors.backgroundCard }]}>
+                                    <Icon name="camera" size={16} color={themeColors.backgroundCard} />
+                                </View>
+                            </TouchableOpacity>
+                            
+                            <Text style={[styles.heroName, { color: themeColors.textPrimary }]}>{data_alumno?.nom_alu}</Text>
+                            
+                            <View style={[styles.statusBadge, { backgroundColor: themeColors.backgroundGray }]}>
+                                <View style={[styles.statusDot, { backgroundColor: statusStyle.dotColor }]} />
+                                <Text style={[styles.statusText, { color: statusStyle.color }]}>
+                                    {data_alumno?.estatus_general}
+                                </Text>
+                            </View>
+
+                            <View style={styles.plantelBadge}>
+                                <Icon name="map-marker-outline" size={14} color={themeColors.textSecondary} />
+                                <Text style={[styles.plantelText, { color: themeColors.textSecondary }]}>
+                                    {data_alumno?.nom_pla}
+                                </Text>
                             </View>
                         </View>
-                    </GradientBackground>
-                    <Divider/>
-                    <View style={ styles.formContainer }>
-                        <View style={{ flex:1 }}>
-                            <Text style={ styles.title }> Información personal </Text>
-                        </View>
-                        <TextInput
-                            keyboardType='phone-pad'
-                            mode="outlined"
-                            label="Teléfono"
-                            placeholder="Ingrese su número de teléfono"
-                            // right={<TextInput.Affix text="/100" />}
-                            activeOutlineColor={colors.primary}
-                            value={ infoAlumno?.tel_alu }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoAlumno({...infoAlumno, tel_alu: value}) }
-                        />
-                        <Divider style={styles.divider}/>
-                        <TextInput
-                            mode="outlined"
-                            label="Dirección"
-                            placeholder="Ingrese su dirección"
-                            activeOutlineColor={colors.primary}
-                            value={ infoAlumno?.dir_alu }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoAlumno({...infoAlumno, dir_alu: value}) }
-                        />
-                        <Divider style={styles.divider}/>
-                        <TextInput
-                            mode="outlined"
-                            label="Colonia"
-                            placeholder="Ingrese la colonia"
-                            activeOutlineColor={colors.primary}
-                            value={ infoAlumno?.col_alu }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoAlumno({...infoAlumno, col_alu: value}) }
-                        />
-                        <Divider style={styles.divider}/>
-                        <TextInput
-                            mode="outlined"
-                            label="Delegación"
-                            placeholder="Ingrese su delegación"
-                            activeOutlineColor={colors.primary}
-                            value={ infoAlumno?.del_alu }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoAlumno({...infoAlumno, del_alu: value}) }
-                        />
-                        <Divider style={styles.divider}/>
-                        <TextInput
-                            mode="outlined"
-                            label="Entidad"
-                            placeholder="Ingrese su entidad"
-                            activeOutlineColor={colors.primary}
-                            value={ infoAlumno?.ent_alu }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoAlumno({...infoAlumno, ent_alu: value}) }
-                        />
-                        <Divider style={styles.divider}/>
-                        <TextInput
-                            mode="outlined"
-                            label="Correo electrónico"
-                            placeholder="Ingrese su correo electrónico personal"
-                            activeOutlineColor={colors.primary}
-                            value={ infoAlumno?.cor1_alu }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoAlumno({...infoAlumno, cor1_alu: value}) }
-                        />
-                        <Divider style={styles.divider}/>
-                        <TextInput
-                            mode="outlined"
-                            label="CURP"
-                            placeholder="Ingrese su CURP"
-                            activeOutlineColor={colors.primary}
-                            value={ infoAlumno?.cur_alu }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoAlumno({...infoAlumno, cur_alu: value}) }
-                        />
-                        <View style={ [styles.buttonList, platformTheme.fila, {alignSelf:'center', marginTop: 10}] }>
-                            <Button 
-                                icon="pencil"
-                                mode="contained"
-                                onPress={ updateInfo }
-                                disabled={ loadingForm }
-                                loading={ loadingForm }
-                                style={ [styles.botonActualizar, platformTheme.btn] }
-                            >
-                                ACTUALIZAR
-                            </Button>
-                            <Button 
-                                icon="lock"
-                                mode="contained"
-                                onPress={ () => setModalContrasena(true) }
-                                style={ [platformTheme.btnSuccess, platformTheme.btn] }
-                            >
-                                CONTRASEÑA
-                            </Button>
-                        </View>
+                        
+                        {newProfilePic !== '' && (
+                            <View style={styles.photoActions}>
+                                <TouchableOpacity 
+                                    style={styles.photoActionButton}
+                                    onPress={uploadImg}
+                                    disabled={uploading}
+                                    activeOpacity={0.7}
+                                >
+                                    <Icon name="check" size={18} color="#34C759" />
+                                    <Text style={styles.photoActionText}>Guardar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity 
+                                    style={[styles.photoActionButton, styles.cancelButton, { backgroundColor: themeColors.backgroundGray }]}
+                                    onPress={() => setNewProfilePic('')}
+                                    disabled={uploading}
+                                    activeOpacity={0.7}
+                                >
+                                    <Icon name="close" size={18} color={themeColors.textSecondary} />
+                                    <Text style={[styles.photoActionText, styles.cancelText, { color: themeColors.textSecondary }]}>
+                                        Cancelar
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        )}
                     </View>
+
+                    <View style={[styles.section, { backgroundColor: themeColors.backgroundCard }]}>
+                        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>Información personal</Text>
+                        
+                        <View style={styles.inputContainer}>
+                            <Text style={[styles.label, { color: themeColors.textSecondary }]}>Teléfono</Text>
+                            <TextInput
+                                keyboardType='phone-pad'
+                                mode="flat"
+                                placeholder="Ingresa tu número"
+                                placeholderTextColor={themeColors.textTertiary}
+                                textColor={themeColors.textPrimary}
+                                underlineColor="transparent"
+                                activeUnderlineColor="transparent"
+                                value={infoAlumno?.tel_alu}
+                                style={[styles.input, { backgroundColor: themeColors.backgroundGray }]}
+                                theme={{
+                                    colors: {
+                                        text: themeColors.textPrimary,
+                                        placeholder: themeColors.textTertiary,
+                                    }
+                                }}
+                                onChangeText={(value) => setInfoAlumno({...infoAlumno, tel_alu: value})}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={[styles.label, { color: themeColors.textSecondary }]}>Dirección</Text>
+                            <TextInput
+                                mode="flat"
+                                placeholder="Calle y número"
+                                placeholderTextColor={themeColors.textTertiary}
+                                textColor={themeColors.textPrimary}
+                                underlineColor="transparent"
+                                activeUnderlineColor="transparent"
+                                value={infoAlumno?.dir_alu}
+                                style={[styles.input, { backgroundColor: themeColors.backgroundGray }]}
+                                theme={{
+                                    colors: {
+                                        text: themeColors.textPrimary,
+                                        placeholder: themeColors.textTertiary,
+                                    }
+                                }}
+                                onChangeText={(value) => setInfoAlumno({...infoAlumno, dir_alu: value})}
+                            />
+                        </View>
+
+                        <View style={styles.inputRow}>
+                            <View style={[styles.inputContainer, styles.inputHalf]}>
+                                <Text style={[styles.label, { color: themeColors.textSecondary }]}>Colonia</Text>
+                                <TextInput
+                                    mode="flat"
+                                    placeholder="Colonia"
+                                    placeholderTextColor={themeColors.textTertiary}
+                                    textColor={themeColors.textPrimary}
+                                    underlineColor="transparent"
+                                    activeUnderlineColor="transparent"
+                                    value={infoAlumno?.col_alu}
+                                    style={[styles.input, { backgroundColor: themeColors.backgroundGray }]}
+                                    theme={{
+                                        colors: {
+                                            text: themeColors.textPrimary,
+                                            placeholder: themeColors.textTertiary,
+                                        }
+                                    }}
+                                    onChangeText={(value) => setInfoAlumno({...infoAlumno, col_alu: value})}
+                                />
+                            </View>
+                            <View style={[styles.inputContainer, styles.inputHalf]}>
+                                <Text style={[styles.label, { color: themeColors.textSecondary }]}>Delegación</Text>
+                                <TextInput
+                                    mode="flat"
+                                    placeholder="Delegación"
+                                    placeholderTextColor={themeColors.textTertiary}
+                                    textColor={themeColors.textPrimary}
+                                    underlineColor="transparent"
+                                    activeUnderlineColor="transparent"
+                                    value={infoAlumno?.del_alu}
+                                    style={[styles.input, { backgroundColor: themeColors.backgroundGray }]}
+                                    theme={{
+                                        colors: {
+                                            text: themeColors.textPrimary,
+                                            placeholder: themeColors.textTertiary,
+                                        }
+                                    }}
+                                    onChangeText={(value) => setInfoAlumno({...infoAlumno, del_alu: value})}
+                                />
+                            </View>
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={[styles.label, { color: themeColors.textSecondary }]}>Entidad</Text>
+                            <TextInput
+                                mode="flat"
+                                placeholder="Estado"
+                                placeholderTextColor={themeColors.textTertiary}
+                                textColor={themeColors.textPrimary}
+                                underlineColor="transparent"
+                                activeUnderlineColor="transparent"
+                                value={infoAlumno?.ent_alu}
+                                style={[styles.input, { backgroundColor: themeColors.backgroundGray }]}
+                                theme={{
+                                    colors: {
+                                        text: themeColors.textPrimary,
+                                        placeholder: themeColors.textTertiary,
+                                    }
+                                }}
+                                onChangeText={(value) => setInfoAlumno({...infoAlumno, ent_alu: value})}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={[styles.label, { color: themeColors.textSecondary }]}>Correo electrónico</Text>
+                            <TextInput
+                                mode="flat"
+                                placeholder="correo@ejemplo.com"
+                                placeholderTextColor={themeColors.textTertiary}
+                                textColor={themeColors.textPrimary}
+                                keyboardType="email-address"
+                                underlineColor="transparent"
+                                activeUnderlineColor="transparent"
+                                value={infoAlumno?.cor1_alu}
+                                style={[styles.input, { backgroundColor: themeColors.backgroundGray }]}
+                                theme={{
+                                    colors: {
+                                        text: themeColors.textPrimary,
+                                        placeholder: themeColors.textTertiary,
+                                    }
+                                }}
+                                onChangeText={(value) => setInfoAlumno({...infoAlumno, cor1_alu: value})}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Text style={[styles.label, { color: themeColors.textSecondary }]}>CURP</Text>
+                            <TextInput
+                                mode="flat"
+                                placeholder="18 caracteres"
+                                placeholderTextColor={themeColors.textTertiary}
+                                textColor={themeColors.textPrimary}
+                                underlineColor="transparent"
+                                activeUnderlineColor="transparent"
+                                value={infoAlumno?.cur_alu}
+                                style={[styles.input, { backgroundColor: themeColors.backgroundGray }]}
+                                theme={{
+                                    colors: {
+                                        text: themeColors.textPrimary,
+                                        placeholder: themeColors.textTertiary,
+                                    }
+                                }}
+                                onChangeText={(value) => setInfoAlumno({...infoAlumno, cur_alu: value})}
+                            />
+                        </View>
+
+                        <TouchableOpacity 
+                            style={[styles.primaryButton, { backgroundColor: themeColors.textPrimary }]}
+                            onPress={updateInfo}
+                            disabled={loadingForm}
+                            activeOpacity={0.7}
+                        >
+                            {loadingForm && <Icon name="loading" size={18} color={themeColors.backgroundCard} style={styles.buttonIcon} />}
+                            <Text style={[styles.primaryButtonText, { color: themeColors.backgroundCard }]}>
+                                {loadingForm ? 'Guardando cambios' : 'Guardar cambios'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={[styles.section, { backgroundColor: themeColors.backgroundCard }]}>
+                        <Text style={[styles.sectionTitle, { color: themeColors.textPrimary }]}>Seguridad</Text>
+                        
+                        <TouchableOpacity 
+                            style={styles.menuItem}
+                            onPress={() => setModalContrasena(true)}
+                            activeOpacity={0.7}
+                        >
+                            <View style={[styles.menuItemIcon, { backgroundColor: themeColors.backgroundGray }]}>
+                                <Icon name="lock-outline" size={20} color={themeColors.textPrimary} />
+                            </View>
+                            <View style={styles.menuItemContent}>
+                                <Text style={[styles.menuItemTitle, { color: themeColors.textPrimary }]}>Contraseña</Text>
+                                <Text style={[styles.menuItemSubtitle, { color: themeColors.textSecondary }]}>
+                                    Cambiar contraseña de acceso
+                                </Text>
+                            </View>
+                            <Icon name="chevron-right" size={20} color={themeColors.borderGray} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            style={styles.menuItem}
+                            onPress={toggleTheme}
+                            activeOpacity={0.7}
+                        >
+                            <View style={[styles.menuItemIcon, { backgroundColor: themeColors.backgroundGray }]}>
+                                <Icon 
+                                    name={theme === 'dark' ? 'weather-night' : 'white-balance-sunny'} 
+                                    size={20} 
+                                    color={themeColors.textPrimary} 
+                                />
+                            </View>
+                            <View style={styles.menuItemContent}>
+                                <Text style={[styles.menuItemTitle, { color: themeColors.textPrimary }]}>
+                                    Modo oscuro
+                                </Text>
+                                <Text style={[styles.menuItemSubtitle, { color: themeColors.textSecondary }]}>
+                                    {theme === 'dark' ? 'Activado' : 'Desactivado'}
+                                </Text>
+                            </View>
+                            <View style={[
+                                styles.switchToggle, 
+                                { backgroundColor: theme === 'dark' ? '#00BFA5' : '#E0E0E0' }
+                            ]}>
+                                <View style={[
+                                    styles.switchThumb,
+                                    theme === 'dark' && styles.switchThumbActive
+                                ]} />
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+
+                    <AddDomiciliation
+                        domiciliation={domiciliation}
+                        updateDomiciliation={getDomiciliation}
+                    />
+
+                    <RenderPdf
+                        title="Solicitud de Inscripción"
+                        patterScrollEnabled={setScrollEnabled}
+                        pdfUrl={`https://plataforma.ahjende.com/solicitud_inscripcion.php?id_alu_ram=${data_alumno?.id_alu_ram}`}
+                        patterStyle={{ marginHorizontal: 16, marginVertical: 20 }}
+                    />
                 </ScrollView>
-                <Modal visible={modalContrasena} onDismiss={()=>setModalContrasena(false)} contentContainerStyle={platformTheme.modalContainer}>
-                    <View>
-                        <Text style={ { ...styles.title, fontWeight: '600' } }>CAMBIAR CONTRASEÑA</Text>
-                    </View>
-                    <View>
-                        <TextInput
-                            secureTextEntry={true}
-                            mode="outlined"
-                            label="Contraseña anterior"
-                            placeholder="Ingrese la contraseña actual de su cuenta"
-                            activeOutlineColor={colors.primary}
-                            value={ infoContra.ante_con }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoContra({...infoContra, ante_con: value}) }
-                        />
-                    </View>
-                    <View>
-                        <TextInput
-                            secureTextEntry={true}
-                            mode="outlined"
-                            label="Nueva contraseña"
-                            placeholder="Ingrese la nueva contraseña"
-                            activeOutlineColor={colors.primary}
-                            value={ infoContra.nuev_con }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoContra({...infoContra, nuev_con: value}) }
-                        />
-                    </View>
-                    <View>
-                        <TextInput
-                            secureTextEntry={true}
-                            mode="outlined"
-                            label="Confirmar contraseña"
-                            placeholder="Vuelva a ingresar la nueva contraseña"
-                            activeOutlineColor={colors.primary}
-                            value={ infoContra.conf_con }
-                            style={ styles.inputStyle }
-                            onChangeText={ (value) => setInfoContra({...infoContra, conf_con: value}) }
-                        />
-                    </View>
-                    <View style={ [styles.buttonContainer, platformTheme.fila, {marginTop: 10, alignSelf:'center'}] }>
-                        <Button 
-                            icon='pencil'
-                            onPress={ cambiarContrasena }
-                            style={ [styles.botonCerrar, platformTheme.btn] }
-                            textColor='white'
-                            disabled={loadingActuCont}
-                            loading={loadingActuCont}
-                        >ACTUALIZAR</Button>
-                        <Button 
-                            icon='cancel'
-                            onPress={ () => setModalContrasena(false) }
-                            style={ [styles.botonCerrar, platformTheme.btn, platformTheme.btnDanger] }
-                            textColor='white'
-                            disabled={loadingActuCont}
-                        >CANCELAR</Button>
-                    </View>
+                
+                <Modal visible={modalContrasena} onDismiss={()=>setModalContrasena(false)} contentContainerStyle={[styles.modal, { backgroundColor: themeColors.backgroundCard }]}>
+                    <Text style={[styles.modalTitle, { color: themeColors.textPrimary }]}>Cambiar contraseña</Text>
+                    <Text style={[styles.modalSubtitle, { color: themeColors.textSecondary }]}>
+                        Ingresa tu contraseña actual y elige una nueva
+                    </Text>
+                    
+                    <TextInput
+                        secureTextEntry={true}
+                        mode="flat"
+                        label="Contraseña actual"
+                        textColor={themeColors.textPrimary}
+                        underlineColor="transparent"
+                        activeUnderlineColor="transparent"
+                        value={infoContra.ante_con}
+                        style={[styles.modalInput, { backgroundColor: themeColors.backgroundGray }]}
+                        theme={{
+                            colors: {
+                                text: themeColors.textPrimary,
+                                placeholder: themeColors.textTertiary,
+                            }
+                        }}
+                        onChangeText={(value) => setInfoContra({...infoContra, ante_con: value})}
+                    />
+                    <TextInput
+                        secureTextEntry={true}
+                        mode="flat"
+                        label="Nueva contraseña"
+                        textColor={themeColors.textPrimary}
+                        underlineColor="transparent"
+                        activeUnderlineColor="transparent"
+                        value={infoContra.nuev_con}
+                        style={[styles.modalInput, { backgroundColor: themeColors.backgroundGray }]}
+                        theme={{
+                            colors: {
+                                text: themeColors.textPrimary,
+                                placeholder: themeColors.textTertiary,
+                            }
+                        }}
+                        onChangeText={(value) => setInfoContra({...infoContra, nuev_con: value})}
+                    />
+                    <TextInput
+                        secureTextEntry={true}
+                        mode="flat"
+                        label="Confirmar contraseña"
+                        textColor={themeColors.textPrimary}
+                        underlineColor="transparent"
+                        activeUnderlineColor="transparent"
+                        value={infoContra.conf_con}
+                        style={[styles.modalInput, { backgroundColor: themeColors.backgroundGray }]}
+                        theme={{
+                            colors: {
+                                text: themeColors.textPrimary,
+                                placeholder: themeColors.textTertiary,
+                            }
+                        }}
+                        onChangeText={(value) => setInfoContra({...infoContra, conf_con: value})}
+                    />
+                    <TouchableOpacity 
+                        style={[styles.primaryButton, { backgroundColor: themeColors.textPrimary }]}
+                        onPress={cambiarContrasena}
+                        disabled={loadingActuCont}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={[styles.primaryButtonText, { color: themeColors.backgroundCard }]}>
+                            {loadingActuCont ? 'Actualizando...' : 'Actualizar contraseña'}
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={[styles.secondaryButton, { backgroundColor: themeColors.backgroundGray }]}
+                        onPress={() => setModalContrasena(false)}
+                        disabled={loadingActuCont}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={[styles.secondaryButtonText, { color: themeColors.textPrimary }]}>Cancelar</Text>
+                    </TouchableOpacity>
                 </Modal>
                 <ModalMessages visible={visible} typeMsgModal={typeMsgModal} modalText={modalText} onDismiss={()=>setVisible(false)}/>
             </Portal>
@@ -451,42 +696,232 @@ export const Cuenta = () => {
 }
 
 const styles = StyleSheet.create({
-    viewAvatar: {
-        ...platformTheme.avatarContent,
-        marginBottom: 20,
+    container: {
+        flex: 1,
     },
-    formContainer: {
-        marginHorizontal: 20,
-        marginVertical: 20,
-    },
-    buttonList: {
-        alignItems: 'center'
-    },
-    title: {
-        color: colors.darkBlue,
-        fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 10,
-    },
-    inputStyle: {
-        marginBottom: 5,
-        height: 40,
-        
-    },
-    botonActualizar: {
-        backgroundColor: colors.info,
-    },
-    buttonContainer: {
+    heroSection: {
+        paddingTop: 60,
+        paddingBottom: 32,
         alignItems: 'center',
+        borderBottomWidth: 1,
     },
-    botonCerrar: {
-        backgroundColor: colors.info,
-        color: 'white'
+    heroContent: {
+        alignItems: 'center',
+        width: '100%',
     },
-    divider: {
-        height: 1,
-        backgroundColor: 'black',
-        opacity: 0.2,
-        marginVertical: 5
+    heroAvatar: {
+        width: 90,
+        height: 90,
+        borderRadius: 45,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    heroAvatarText: {
+        fontSize: 32,
+        fontWeight: '700',
+    },
+    cameraIconBadge: {
+        position: 'absolute',
+        bottom: 16,
+        right: -2,
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 3,
+    },
+    heroName: {
+        fontSize: 24,
+        fontWeight: '700',
+        marginBottom: 8,
+        textAlign: 'center',
+        paddingHorizontal: 20,
+    },
+    statusBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 12,
+        gap: 6,
+        marginBottom: 12,
+    },
+    statusDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+    },
+    statusText: {
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    plantelBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    plantelText: {
+        fontSize: 13,
+        fontWeight: '500',
+    },
+    photoActions: {
+        flexDirection: 'row',
+        marginTop: 20,
+        paddingHorizontal: 20,
+        gap: 8,
+        width: '100%',
+    },
+    photoActionButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 44,
+        borderRadius: 10,
+        backgroundColor: '#E8F5E9',
+        gap: 6,
+    },
+    cancelButton: {
+    },
+    photoActionText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#34C759',
+    },
+    cancelText: {
+    },
+    section: {
+        marginTop: 12,
+        paddingHorizontal: 20,
+        paddingVertical: 20,
+    },
+    sectionTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+        marginBottom: 20,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    inputContainer: {
+        marginBottom: 16,
+    },
+    inputRow: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    inputHalf: {
+        flex: 1,
+    },
+    label: {
+        fontSize: 12,
+        fontWeight: '600',
+        marginBottom: 8,
+        textTransform: 'uppercase',
+        letterSpacing: 0.3,
+    },
+    input: {
+        borderRadius: 10,
+        fontSize: 15,
+        height: 48,
+        paddingHorizontal: 14,
+    },
+    primaryButton: {
+        flexDirection: 'row',
+        height: 48,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 8,
+        gap: 8,
+    },
+    buttonIcon: {
+        marginRight: -4,
+    },
+    primaryButtonText: {
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    secondaryButton: {
+        height: 48,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    secondaryButtonText: {
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    menuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 14,
+    },
+    menuItemIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 14,
+    },
+    menuItemContent: {
+        flex: 1,
+    },
+    menuItemTitle: {
+        fontSize: 15,
+        fontWeight: '600',
+        marginBottom: 2,
+    },
+    menuItemSubtitle: {
+        fontSize: 13,
+    },
+    switchToggle: {
+        width: 50,
+        height: 30,
+        borderRadius: 15,
+        padding: 2,
+        justifyContent: 'center',
+    },
+    switchThumb: {
+        width: 26,
+        height: 26,
+        borderRadius: 13,
+        backgroundColor: '#FFF',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 3,
+        elevation: 3,
+    },
+    switchThumbActive: {
+        alignSelf: 'flex-end',
+    },
+    modal: {
+        marginHorizontal: 20,
+        borderRadius: 16,
+        padding: 24,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        marginBottom: 6,
+    },
+    modalSubtitle: {
+        fontSize: 14,
+        marginBottom: 24,
+    },
+    modalInput: {
+        borderRadius: 10,
+        marginBottom: 14,
+        height: 48,
+        paddingHorizontal: 14,
     },
 });
