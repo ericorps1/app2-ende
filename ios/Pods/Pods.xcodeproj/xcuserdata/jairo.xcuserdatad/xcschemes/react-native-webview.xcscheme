@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D18C49071FC5370C25F5758A85BA5F6"
-               BuildableName = "libreact-native-webview.a"
+               BuildableName = "react_native_webview.framework"
                BlueprintName = "react-native-webview"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

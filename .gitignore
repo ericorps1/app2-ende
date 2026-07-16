@@ -15,3 +15,6 @@ build/
 ios/Pods/JitsiWebRTC/WebRTC.xcframework/ios-arm64/dSYMs/WebRTC.dSYM/Contents/Resources/DWARF/WebRTC
 ios/Pods/JitsiWebRTC/WebRTC.xcframework/ios-arm64_x86_64-simulator/dSYMs/WebRTC.dSYM/Contents/Resources/DWARF/WebRTC
 ios/Pods/JitsiWebRTC/WebRTC.xcframework/macos-arm64_x86_64/dSYMs/WebRTC.dSYM/Contents/Resources/DWARF/WebRTC
+# iOS Pods - generados por CocoaPods, no deben commitearse
+ios/Pods/
+ios/build/

@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "6514D69CB93B41626AE1A05581F97B07"
-               BuildableName = "libreact-native-background-timer.a"
+               BuildableName = "react_native_background_timer.framework"
                BlueprintName = "react-native-background-timer"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

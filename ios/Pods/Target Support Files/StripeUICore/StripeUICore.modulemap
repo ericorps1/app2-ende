@@ -1,4 +1,4 @@
-module StripeUICore {
+framework module StripeUICore {
   umbrella header "StripeUICore-umbrella.h"
 
   export *

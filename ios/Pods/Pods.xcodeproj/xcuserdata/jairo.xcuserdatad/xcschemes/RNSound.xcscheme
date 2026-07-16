@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "5CCB99E63FCEF3B56DC0BD71DFEC4618"
-               BuildableName = "libRNSound.a"
+               BuildableName = "RNSound.framework"
                BlueprintName = "RNSound"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

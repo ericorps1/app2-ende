@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "951971F966B90DEAB7D250D9C65A8AC1"
-               BuildableName = "libreact-native-pdf.a"
+               BuildableName = "react_native_pdf.framework"
                BlueprintName = "react-native-pdf"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

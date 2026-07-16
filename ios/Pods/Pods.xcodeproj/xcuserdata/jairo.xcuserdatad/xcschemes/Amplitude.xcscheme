@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "D3A90B0F4EBD528FD468C3F3BCC31CD7"
-               BuildableName = "libAmplitude.a"
+               BuildableName = "Amplitude.framework"
                BlueprintName = "Amplitude"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

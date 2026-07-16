@@ -1,4 +1,4 @@
-module AnalyticsConnector {
+framework module AnalyticsConnector {
   umbrella header "AnalyticsConnector-umbrella.h"
 
   export *

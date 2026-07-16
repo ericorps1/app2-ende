@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "3E5D106F8D3D591BD871408EEE0CC9FD"
-               BuildableName = "libreact-native-video.a"
+               BuildableName = "react_native_video.framework"
                BlueprintName = "react-native-video"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

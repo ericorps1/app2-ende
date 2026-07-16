@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "785C5367730CB0A4E3481736ED7435F8"
-               BuildableName = "libreact-native-performance.a"
+               BuildableName = "react_native_performance.framework"
                BlueprintName = "react-native-performance"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "67480ABD6E8C8DF91CE22CB12F156E5B"
-               BuildableName = "libRNWatch.a"
+               BuildableName = "RNWatch.framework"
                BlueprintName = "RNWatch"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

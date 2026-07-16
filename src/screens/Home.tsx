@@ -6,11 +6,11 @@ import PaperMessages from '../components/PaperMessages';
 import { colors, platformTheme } from '../theme/platformTheme';
 import { ActividadesPendientes } from '../components/ActividadesPendientes';
 import { baseUrlSite } from '../hooks/useGlobal';
-// import { requestUserPermission, NotificationListener } from '../utils/pushnotification_helper';
+import { requestUserPermission, NotificationListener } from '../utils/pushnotification_helper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DeviceInfo from 'react-native-device-info';
 import { PagosAnticipadosVencidos } from '../components/PagosAnticipadosVencidos';
-// import { getMessaging } from '@react-native-firebase/messaging';
+import messaging from '@react-native-firebase/messaging';
 import endeApi from '../api/estudianteAPI';
 import { useAppDispatch } from '../app/hooks';
 import { addNotifications } from '../features/notifications/dataNotificationsSlice';
@@ -40,16 +40,16 @@ export const Home = () => {
   useEffect(() => {
     initializeHome();
     
-    // const unsubscribeMessage = getMessaging().onMessage(handleIncomingMessage);
-    // const unsubscribeOpen = getMessaging().onNotificationOpenedApp(handleNotificationOpen);
-    // const unsubscribeTokenRefresh = getMessaging().onTokenRefresh(handleTokenRefresh);
+    const unsubscribeMessage = messaging().onMessage(handleIncomingMessage);
+    const unsubscribeOpen = messaging().onNotificationOpenedApp(handleNotificationOpen);
+    const unsubscribeTokenRefresh = messaging().onTokenRefresh(handleTokenRefresh);
 
     return () => {
       setEncuestasPendientes([]);
       setBanners([]);
-      // unsubscribeMessage();
-      // unsubscribeOpen();
-      // unsubscribeTokenRefresh();
+      unsubscribeMessage();
+      unsubscribeOpen();
+      unsubscribeTokenRefresh();
     };
   }, []);
 
@@ -68,7 +68,7 @@ export const Home = () => {
 
   const initializeHome = async () => {
     await validarToken();
-    // NotificationListener();
+    NotificationListener();
     await Promise.all([
       getCarruselesAlumno(),
       getEncuestasAlumno(),
@@ -136,7 +136,7 @@ export const Home = () => {
 
   const validarToken = async () => {
     try {
-      // await requestUserPermission();
+      await requestUserPermission();
       const token = await AsyncStorage.getItem('fcmtoken');
       
       if (!token) return;

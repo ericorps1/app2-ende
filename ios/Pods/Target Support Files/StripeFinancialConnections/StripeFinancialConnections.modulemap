@@ -1,4 +1,4 @@
-module StripeFinancialConnections {
+framework module StripeFinancialConnections {
   umbrella header "StripeFinancialConnections-umbrella.h"
 
   export *

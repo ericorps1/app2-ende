@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "1467B2CB665E9E6A20029045D066FDE4"
-               BuildableName = "libreact-native-splash-screen.a"
+               BuildableName = "react_native_splash_screen.framework"
                BlueprintName = "react-native-splash-screen"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>

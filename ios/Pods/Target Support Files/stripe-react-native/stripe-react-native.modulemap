@@ -1,4 +1,4 @@
-module stripe_react_native {
+framework module stripe_react_native {
   umbrella header "stripe-react-native-umbrella.h"
 
   export *

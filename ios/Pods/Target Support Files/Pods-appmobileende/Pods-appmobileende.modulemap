@@ -1,4 +1,4 @@
-module Pods_appmobileende {
+framework module Pods_appmobileende {
   umbrella header "Pods-appmobileende-umbrella.h"
 
   export *

@@ -25,6 +25,6 @@
 #import "react/utils/Telemetry.h"
 #import "react/utils/to_underlying.h"
 
-FOUNDATION_EXPORT double react_utilsVersionNumber;
-FOUNDATION_EXPORT const unsigned char react_utilsVersionString[];
+FOUNDATION_EXPORT double React_utilsVersionNumber;
+FOUNDATION_EXPORT const unsigned char React_utilsVersionString[];
 
